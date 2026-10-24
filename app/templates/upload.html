@@ -13,7 +13,7 @@
 
   <div class="card" style="padding: 2.5rem;">
     <div id="dropzone" class="dropzone" data-max-mb="100" data-allowed-exts="pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm">
-      <input type="file" id="file-input" style="display: none;">
+      <input type="file" id="file-input" multiple webkitdirectory directory style="display: none;">
       
       <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
@@ -21,9 +21,9 @@
         <path d="m16 16-4-4-4 4"></path>
       </svg>
 
-      <h3 class="dropzone-title">Click to select or drag and drop your file</h3>
+      <h3 class="dropzone-title">Click to select files, a whole folder, or drag & drop</h3>
       <p class="dropzone-hint">
-        Allowed formats: PDF, PNG, JPG, TXT, CSV, DOCX, XLSX, PPTX, ZIP • Max 100 MB
+        Single files, multiple files, or entire folders auto-bundled into a secure ZIP • Max 100 MB per 12 hours
       </p>
 
       <!-- Selected File Preview -->

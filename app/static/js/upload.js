@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .split(",")
     .map(e => e.trim().toLowerCase());
 
-  let selectedFile = null;
+  let selectedFiles = [];
 
   function showError(msg) {
     if (errorContainer) {
@@ -46,47 +46,61 @@ document.addEventListener("DOMContentLoaded", () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
-  function handleFileSelect(file) {
+  function handleFilesSelect(fileList) {
     clearError();
-    if (!file) return;
+    if (!fileList || fileList.length === 0) return;
 
-    // Pre-validation 1: File size
-    if (file.size > MAX_SIZE_BYTES) {
-      showError(`File size (${formatBytes(file.size)}) exceeds the maximum allowed limit of ${MAX_SIZE_MB} MB.`);
+    const filesArray = Array.from(fileList);
+    let totalBytes = 0;
+
+    for (const file of filesArray) {
+      totalBytes += file.size;
+
+      // Check extension unless it's a folder or bundle entry
+      const nameParts = file.name.split(".");
+      const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "";
+      if (ext && !ALLOWED_EXTS.includes(ext)) {
+        showError(`Disallowed file extension '.${ext}' in '${file.name}'. Allowed types: ${ALLOWED_EXTS.join(", ")}`);
+        return;
+      }
+    }
+
+    if (totalBytes > MAX_SIZE_BYTES) {
+      showError(`Total size (${formatBytes(totalBytes)}) exceeds the 100 MB limit.`);
       return;
     }
 
-    // Pre-validation 2: File extension
-    const nameParts = file.name.split(".");
-    const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "";
-    if (!ALLOWED_EXTS.includes(ext)) {
-      showError(`Disallowed file extension '.${ext}'. Allowed types: ${ALLOWED_EXTS.join(", ")}`);
-      return;
+    selectedFiles = filesArray;
+
+    if (fileNameDisplay) {
+      if (filesArray.length === 1) {
+        fileNameDisplay.textContent = filesArray[0].name;
+      } else {
+        fileNameDisplay.textContent = `Bundle: ${filesArray.length} items (${filesArray[0].name} + ${filesArray.length - 1} more)`;
+      }
     }
-
-    selectedFile = file;
-
-    if (fileNameDisplay) fileNameDisplay.textContent = file.name;
-    if (fileSizeDisplay) fileSizeDisplay.textContent = formatBytes(file.size);
+    if (fileSizeDisplay) fileSizeDisplay.textContent = formatBytes(totalBytes);
     if (filePreview) filePreview.style.display = "block";
 
     // Auto-upload immediately upon valid file selection
-    startUpload(file);
+    startUpload(filesArray);
   }
 
-  function startUpload(file) {
-    if (!file) return;
+  function startUpload(files) {
+    if (!files || files.length === 0) return;
     clearError();
     if (uploadBtn) {
       uploadBtn.setAttribute("disabled", "true");
-      uploadBtn.textContent = "Uploading & Hashing...";
+      uploadBtn.textContent = files.length > 1 ? "Bundling & Uploading..." : "Uploading & Hashing...";
     }
     if (progressContainer) progressContainer.style.display = "block";
     if (progressBar) progressBar.style.width = "0%";
     if (progressPercent) progressPercent.textContent = "0%";
 
     const formData = new FormData();
-    formData.append("file", file);
+    for (const file of files) {
+      formData.append("file", file);
+    }
 
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfMeta ? csrfMeta.content : "";
@@ -104,7 +118,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (evt.lengthComputable) {
         const percent = Math.round((evt.loaded / evt.total) * 100);
         if (progressBar) progressBar.style.width = `${percent}%`;
-        if (progressPercent) progressPercent.textContent = `${percent}% (Transferring to encrypted vault)`;
+        if (progressPercent) {
+          progressPercent.textContent = `${percent}% (${files.length > 1 ? 'Bundling folder & transferring' : 'Transferring to encrypted vault'})`;
+        }
       }
     });
 
@@ -113,7 +129,6 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const data = JSON.parse(xhr.responseText);
           if (progressPercent) progressPercent.textContent = "100% (Verifying SHA-256...)";
-          // Redirect directly to the 8-digit sharing page
           window.location.href = `/share/${data.token}?just_uploaded=true`;
         } catch (e) {
           showError("Unexpected response format from server.");
@@ -148,8 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // File input change
   fileInput.addEventListener("change", (e) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelect(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      handleFilesSelect(e.target.files);
     }
   });
 
@@ -173,14 +188,15 @@ document.addEventListener("DOMContentLoaded", () => {
   dropzone.addEventListener("drop", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
+    dropzone.classList.remove("dragover");
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFilesSelect(e.dataTransfer.files);
     }
   });
 
   // Trigger file selection on dropzone click (prevent re-triggering if user clicks inside preview/btn)
   dropzone.addEventListener("click", (e) => {
-    if (e.target.closest("#file-preview") || e.target.closest("button") || e.target.closest("a")) {
+    if (e.target.closest("#file-preview") || e.target.closest("button") || e.target.closest("a") || e.target.closest(".folder-select-btn")) {
       return;
     }
     fileInput.click();
@@ -190,8 +206,8 @@ document.addEventListener("DOMContentLoaded", () => {
     uploadBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (selectedFile) {
-        startUpload(selectedFile);
+      if (selectedFiles.length > 0) {
+        startUpload(selectedFiles);
       } else {
         fileInput.click();
       }

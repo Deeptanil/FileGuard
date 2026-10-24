@@ -125,3 +125,53 @@ def test_7_empty_upload_handled_safely(client, db_session):
     res = client.post("/api/files", data=data, content_type="multipart/form-data")
     assert res.status_code == 400
 
+
+def test_38_multi_file_bundle_creates_valid_zip(client, db_session):
+    """Test 38: Uploading multiple files auto-bundles them into a valid ZIP archive."""
+    csrf = get_client_with_csrf(client)
+    data = {
+        "file": [
+            (io.BytesIO(b"Hello world from file 1"), "file1.txt"),
+            (io.BytesIO(b"Hello world from file 2"), "file2.txt")
+        ],
+        "csrf_token": csrf
+    }
+    res = client.post("/api/files", data=data, content_type="multipart/form-data")
+    assert res.status_code == 201
+    json_data = res.get_json()
+    assert json_data["filename"].endswith(".zip")
+    assert json_data["token"] is not None
+
+
+def test_39_ip_12_hour_quota_enforced(client, db_session):
+    """Test 39: IP upload quota restricts uploads beyond 100 MB in 12 hours."""
+    from app.models import FileRecord, utc_now
+    from datetime import timedelta
+
+    # Simulate 99 MB uploaded within last 2 hours by test IP 127.0.0.1
+    rec = FileRecord(
+        storage_id="quota_test_fake_id_12345",
+        original_filename="large.zip",
+        file_size=99 * 1024 * 1024,
+        file_extension="zip",
+        detected_mime_type="application/zip",
+        sha256_reference="0" * 64,
+        share_token_hash="0" * 64,
+        uploaded_at=utc_now() - timedelta(hours=2),
+        expires_at=utc_now() + timedelta(hours=10),
+        status="active",
+        uploader_ip="127.0.0.1"
+    )
+    db_session.add(rec)
+    db_session.commit()
+
+    csrf = get_client_with_csrf(client)
+    # Attempting to upload 3 MB more (99 MB + 3 MB = 102 MB > 100 MB quota)
+    data = {
+        "file": (io.BytesIO(b"A" * (3 * 1024 * 1024)), "another.txt"),
+        "csrf_token": csrf
+    }
+    res = client.post("/api/files", data=data, content_type="multipart/form-data", environ_base={"REMOTE_ADDR": "127.0.0.1"})
+    assert res.status_code == 429
+    assert "12-Hour upload quota exceeded" in res.get_json()["error"]
+

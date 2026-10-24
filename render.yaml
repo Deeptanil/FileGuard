@@ -14,8 +14,12 @@ services:
         generateValue: true
       - key: EXPIRATION_HOURS
         value: "12"
+      - key: IP_QUOTA_HOURS
+        value: "12"
+      - key: IP_QUOTA_MB
+        value: "100"
       - key: MAX_CONTENT_LENGTH_MB
-        value: "50"
+        value: "100"
       - key: ALLOWED_EXTENSIONS
         value: "pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm"
       - key: ADMIN_USERNAME

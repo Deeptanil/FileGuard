@@ -21,6 +21,8 @@ class FileRecord(db.Model):
     uploaded_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False, index=True)
     status = db.Column(db.String(32), default="active", nullable=False, index=True)  # active, expired, deleted, tampered
+    uploader_ip = db.Column(db.String(64), nullable=True, index=True)
+    is_bundle = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 

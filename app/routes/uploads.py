@@ -1,8 +1,11 @@
 import io
+import os
+import zipfile
 import base64
 from datetime import timedelta
 import qrcode
 from flask import Blueprint, request, jsonify, render_template, current_app, redirect, url_for
+from sqlalchemy import func
 from app.extensions import db, limiter
 from app.models import FileRecord, utc_now
 from app.storage import save_upload_stream, StorageError, delete_stored_file
@@ -11,11 +14,44 @@ from app.security import (
     sanitize_filename,
     generate_share_token,
     hash_token,
-    validate_csrf
+    validate_csrf,
+    get_client_ip
 )
 from app.audit import log_security_event, EVENT_UPLOAD_SUCCESS, EVENT_UPLOAD_REJECTED
 
 uploads_bp = Blueprint("uploads", __name__)
+
+
+def check_ip_upload_quota(client_ip: str, incoming_bytes: int) -> tuple[bool, str, int]:
+    """
+    Check if the client IP has exceeded the 12-hour upload limit (default 100 MB).
+    Returns (is_allowed, error_message, remaining_bytes).
+    """
+    quota_hours = current_app.config.get("IP_QUOTA_HOURS", 12)
+    quota_mb = current_app.config.get("IP_QUOTA_MB", 100)
+    quota_bytes = quota_mb * 1024 * 1024
+
+    since_time = utc_now() - timedelta(hours=quota_hours)
+
+    used_bytes = db.session.query(func.sum(FileRecord.file_size)).filter(
+        FileRecord.uploader_ip == client_ip,
+        FileRecord.uploaded_at >= since_time
+    ).scalar() or 0
+
+    remaining = max(0, quota_bytes - used_bytes)
+
+    if (used_bytes + incoming_bytes) > quota_bytes:
+        used_mb = round(used_bytes / (1024 * 1024), 1)
+        inc_mb = round(incoming_bytes / (1024 * 1024), 1)
+        msg = (
+            f"12-Hour upload quota exceeded for your device. "
+            f"You have uploaded {used_mb} MB in the last {quota_hours} hours. "
+            f"This upload ({inc_mb} MB) exceeds your remaining allowance of {round(remaining / (1024 * 1024), 1)} MB. "
+            f"Quota resets continuously over 12 hours."
+        )
+        return False, msg, remaining
+
+    return True, "", remaining
 
 
 def generate_qr_base64(url: str) -> str:
@@ -39,10 +75,12 @@ def generate_qr_base64(url: str) -> str:
 @limiter.limit("20 per minute")
 def upload_file():
     """
-    Handle secure file upload.
-    Validates CSRF, size, extension, MIME signature, computes SHA-256 reference hash,
-    and returns unique sharing link and QR code.
+    Handle secure file upload (single file or multiple files / folder bundled into a zip archive).
+    Validates CSRF, 12-hour per-IP quota (100 MB), individual and aggregate size,
+    extension whitelist, and MIME signatures before saving with SHA-256 integrity hash.
     """
+    client_ip = get_client_ip()
+
     # 1. CSRF validation
     csrf_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")
     if not validate_csrf(csrf_token):
@@ -55,55 +93,139 @@ def upload_file():
         return jsonify({"error": "Invalid or missing CSRF token"}), 403
 
     # 2. File presence validation
-    if "file" not in request.files:
-        return jsonify({"error": "No file part in upload request"}), 400
+    files = request.files.getlist("file") or request.files.getlist("files[]")
+    if not files or all(not f.filename for f in files):
+        return jsonify({"error": "No file or folder selected for upload"}), 400
 
-    file = request.files["file"]
-    if not file or not file.filename:
-        return jsonify({"error": "No file selected for upload"}), 400
+    # Filter out empty files
+    valid_files = [f for f in files if f and f.filename]
+    if not valid_files:
+        return jsonify({"error": "No valid files received"}), 400
 
-    # 3. Filename and extension inspection
-    clean_name, ext = sanitize_filename(file.filename)
-    is_allowed, ext, detected_mime = inspect_file_type(file.stream, file.filename)
+    max_mb = current_app.config.get("MAX_CONTENT_LENGTH_MB", 100)
+    max_bytes = max_mb * 1024 * 1024
+    allowed_exts = current_app.config["ALLOWED_EXTENSIONS"]
 
-    if not is_allowed:
-        log_security_event(
-            event_type=EVENT_UPLOAD_REJECTED,
-            outcome="BLOCKED",
-            severity="MEDIUM",
-            details={
-                "reason": "Disallowed file extension or magic signature mismatch",
-                "filename": clean_name,
-                "extension": ext
-            }
-        )
-        return jsonify({
-            "error": f"Disallowed file type '.{ext}'. Allowed types: {', '.join(sorted(current_app.config['ALLOWED_EXTENSIONS']))}"
-        }), 400
+    # 3. Handle Single File vs Multiple Files / Folder Bundle
+    if len(valid_files) == 1:
+        file = valid_files[0]
+        clean_name, ext = sanitize_filename(file.filename)
+        is_allowed, ext, detected_mime = inspect_file_type(file.stream, file.filename)
 
-    # 4. Save file to isolated storage & compute SHA-256
-    try:
-        storage_id, byte_size, sha256_hash = save_upload_stream(file.stream)
-    except StorageError as e:
-        log_security_event(
-            event_type=EVENT_UPLOAD_REJECTED,
-            outcome="BLOCKED",
-            severity="LOW",
-            details=str(e)
-        )
-        return jsonify({"error": str(e)}), 413
-    except Exception as e:
-        log_security_event(
-            event_type=EVENT_UPLOAD_REJECTED,
-            outcome="FAILURE",
-            severity="HIGH",
-            details=f"Unexpected storage error: {str(e)}"
-        )
-        return jsonify({"error": "Failed to process file storage"}), 500
+        if not is_allowed:
+            log_security_event(
+                event_type=EVENT_UPLOAD_REJECTED,
+                outcome="BLOCKED",
+                severity="MEDIUM",
+                details={
+                    "reason": "Disallowed file extension or magic signature mismatch",
+                    "filename": clean_name,
+                    "extension": ext
+                }
+            )
+            return jsonify({
+                "error": f"Disallowed file type '.{ext}'. Allowed types: {', '.join(sorted(allowed_exts))}"
+            }), 400
+
+        # Pre-check IP Quota
+        content_length = request.content_length or 0
+        quota_ok, quota_err, _ = check_ip_upload_quota(client_ip, content_length)
+        if not quota_ok:
+            log_security_event(
+                event_type=EVENT_UPLOAD_REJECTED,
+                outcome="BLOCKED",
+                severity="LOW",
+                details=quota_err
+            )
+            return jsonify({"error": quota_err}), 429
+
+        try:
+            storage_id, byte_size, sha256_hash = save_upload_stream(file.stream)
+        except StorageError as e:
+            return jsonify({"error": str(e)}), 413
+        except Exception as e:
+            return jsonify({"error": "Failed to process file storage"}), 500
+
+        is_bundle = False
+    else:
+        # Multiple files or folder upload -> automatically bundle into a clean ZIP archive
+        bundle_buffer = io.BytesIO()
+        total_bundle_size = 0
+        bundle_name = request.form.get("bundle_name", "").strip()
+        if not bundle_name:
+            # Derive sensible bundle name from first file or folder path
+            first_path = valid_files[0].filename.replace("\\", "/")
+            if "/" in first_path:
+                top_folder = first_path.split("/")[0]
+                bundle_name = f"{top_folder}.zip"
+            else:
+                bundle_name = f"FileGuard_Bundle_{len(valid_files)}_files.zip"
+        
+        clean_name, ext = sanitize_filename(bundle_name)
+        if not clean_name.endswith(".zip"):
+            clean_name += ".zip"
+        ext = "zip"
+        detected_mime = "application/zip"
+
+        try:
+            with zipfile.ZipFile(bundle_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+                for f in valid_files:
+                    f_clean_name, f_ext = sanitize_filename(f.filename)
+                    # Verify individual file extension
+                    if f_ext not in allowed_exts and f_ext != "":
+                        return jsonify({
+                            "error": f"File '{f.filename}' has disallowed type '.{f_ext}'. Allowed types: {', '.join(sorted(allowed_exts))}"
+                        }), 400
+
+                    file_data = f.read()
+                    total_bundle_size += len(file_data)
+                    if total_bundle_size > max_bytes:
+                        return jsonify({"error": f"Total bundle size exceeds {max_mb} MB limit."}), 413
+
+                    # Preserve relative path within ZIP if uploading a folder
+                    rel_arcname = f.filename.replace("\\", "/").lstrip("/")
+                    zf.writestr(rel_arcname, file_data)
+        except Exception as e:
+            return jsonify({"error": f"Failed to create folder bundle archive: {str(e)}"}), 500
+
+        bundle_buffer.seek(0)
+        bundle_size = len(bundle_buffer.getvalue())
+
+        # Pre-check IP Quota for the entire bundle
+        quota_ok, quota_err, _ = check_ip_upload_quota(client_ip, bundle_size)
+        if not quota_ok:
+            log_security_event(
+                event_type=EVENT_UPLOAD_REJECTED,
+                outcome="BLOCKED",
+                severity="LOW",
+                details=quota_err
+            )
+            return jsonify({"error": quota_err}), 429
+
+        try:
+            storage_id, byte_size, sha256_hash = save_upload_stream(bundle_buffer)
+        except StorageError as e:
+            return jsonify({"error": str(e)}), 413
+        except Exception as e:
+            return jsonify({"error": "Failed to process storage"}), 500
+
+        is_bundle = True
 
     if byte_size == 0:
         delete_stored_file(storage_id)
         return jsonify({"error": "Empty file uploads are not permitted"}), 400
+
+    # 4. Strict IP Quota Post-Check (Authoritative byte size comparison)
+    quota_ok, quota_err, _ = check_ip_upload_quota(client_ip, byte_size)
+    if not quota_ok:
+        delete_stored_file(storage_id)
+        log_security_event(
+            event_type=EVENT_UPLOAD_REJECTED,
+            outcome="BLOCKED",
+            severity="LOW",
+            details=quota_err
+        )
+        return jsonify({"error": quota_err}), 429
 
     # 5. Generate sharing token & calculate strict 12-hour expiration
     raw_token, token_hash = generate_share_token()
@@ -123,7 +245,9 @@ def upload_file():
             share_token_hash=token_hash,
             uploaded_at=upload_time,
             expires_at=expires_time,
-            status="active"
+            status="active",
+            uploader_ip=client_ip,
+            is_bundle=is_bundle
         )
         db.session.add(record)
         db.session.commit()

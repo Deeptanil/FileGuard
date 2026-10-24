@@ -44,6 +44,8 @@ class Config:
     
     # Security & retention policy
     EXPIRATION_HOURS = int(os.getenv("EXPIRATION_HOURS", "12"))
+    IP_QUOTA_HOURS = int(os.getenv("IP_QUOTA_HOURS", "12"))
+    IP_QUOTA_MB = int(os.getenv("IP_QUOTA_MB", "100"))
     
     # Session cookie hardening
     SESSION_COOKIE_HTTPONLY = True
