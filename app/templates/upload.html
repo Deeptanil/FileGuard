@@ -27,15 +27,15 @@
       </p>
 
       <!-- Selected File Preview -->
-      <div id="file-preview" style="display: none; background: rgba(30, 41, 59, 0.85); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem;">
+      <div id="file-preview" class="file-preview-card">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div style="text-align: left;">
-            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 600;">Selected File</div>
-            <strong id="file-name-display" style="color: var(--text-main); font-size: 1.1rem; word-break: break-all;">file.pdf</strong>
-            <div id="file-size-display" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">0 KB</div>
+            <div style="font-size: 0.72rem; text-transform: uppercase; color: #000000; font-family: var(--font-pixel); margin-bottom: 0.25rem;">⚡ FILE SELECTED</div>
+            <strong id="file-name-display" class="file-preview-name">file.pdf</strong>
+            <div id="file-size-display" class="file-preview-size">0 KB</div>
           </div>
-          <button type="button" id="upload-btn" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">
-            Upload File
+          <button type="button" id="upload-btn" class="btn btn-primary" style="background: var(--comic-pink); color: #FFFFFF; font-weight: 800; padding: 0.65rem 1.25rem; font-size: 0.85rem;">
+            UPLOAD NOW
           </button>
         </div>
       </div>

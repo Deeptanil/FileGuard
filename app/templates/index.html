@@ -47,14 +47,15 @@
         </p>
 
         <!-- Selected File Preview -->
-        <div id="file-preview" style="display: none; background: rgba(30, 41, 59, 0.7); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-top: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div id="file-preview" class="file-preview-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
             <div style="text-align: left;">
-              <strong id="file-name-display" style="color: var(--text-main);">filename.pdf</strong>
-              <div id="file-size-display" style="color: var(--text-muted); font-size: 0.85rem;">0 KB</div>
+              <div style="font-size: 0.72rem; text-transform: uppercase; color: #000000; font-family: var(--font-pixel); margin-bottom: 0.25rem;">⚡ FILE SELECTED</div>
+              <strong id="file-name-display" class="file-preview-name">filename.pdf</strong>
+              <div id="file-size-display" class="file-preview-size">0 KB</div>
             </div>
-            <button type="button" id="upload-btn" class="btn btn-primary btn-sm">
-              Start Secure Upload
+            <button type="button" id="upload-btn" class="btn btn-primary" style="background: var(--comic-pink); color: #FFFFFF; font-weight: 800; padding: 0.65rem 1.25rem; font-size: 0.85rem;">
+              UPLOAD NOW
             </button>
           </div>
         </div>

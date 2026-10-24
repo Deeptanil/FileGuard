@@ -370,6 +370,39 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* Comic 3D File Preview Card */
+.file-preview-card {
+  display: none;
+  background: var(--comic-yellow);
+  border: var(--border-heavy);
+  border-radius: var(--radius-comic);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 6px 6px 0px #000000;
+  text-align: left;
+}
+
+.file-preview-card.uploading {
+  background: var(--comic-cyan);
+}
+
+.file-preview-name {
+  color: #000000;
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.file-preview-size {
+  color: #1E293B;
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  margin-top: 0.25rem;
+}
+
 /* Feature Cards with Comic 3D Slant */
 .features-grid {
   display: grid;
