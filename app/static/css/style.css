@@ -38,7 +38,7 @@
   --shadow-3d-cyan: 6px 6px 0px var(--comic-cyan), 6px 6px 0px 3px #000000;
   --shadow-3d-pink: 6px 6px 0px var(--comic-pink), 6px 6px 0px 3px #000000;
   --shadow-3d-yellow: 6px 6px 0px var(--comic-yellow), 6px 6px 0px 3px #000000;
-  --radius-comic: 6px;
+  --radius-comic: 12px;
 }
 
 * {
@@ -148,12 +148,14 @@ body {
   font-weight: 800;
   padding: 0.45rem 0.85rem;
   border: 2px solid transparent;
+  border-radius: 10px;
   transition: all 0.15s ease;
 }
 
 .nav-link:hover {
   background: #FFFFFF;
   border: 2px solid #000000;
+  border-radius: 10px;
   box-shadow: 3px 3px 0px #000000;
   transform: translate(-1px, -1px);
 }
@@ -161,6 +163,7 @@ body {
 .nav-link.active {
   background: var(--comic-cyan);
   border: 2px solid #000000;
+  border-radius: 10px;
   box-shadow: 3px 3px 0px #000000;
 }
 
@@ -177,7 +180,7 @@ body {
   cursor: pointer;
   text-decoration: none;
   border: var(--border-heavy);
-  border-radius: var(--radius-comic);
+  border-radius: 12px;
   box-shadow: var(--shadow-3d);
   transition: transform 0.08s ease, box-shadow 0.08s ease;
   text-transform: uppercase;
@@ -230,6 +233,7 @@ body {
   padding: 0.45rem 0.85rem;
   font-size: 0.82rem;
   border-width: 3px;
+  border-radius: 10px;
   box-shadow: 3px 3px 0px #000000;
 }
 
