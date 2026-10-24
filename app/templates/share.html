@@ -8,7 +8,9 @@
   {% if just_uploaded %}
     <!-- Uploader Confirmation Banner -->
     <div class="alert alert-success" style="border: var(--border-heavy); box-shadow: var(--shadow-3d); margin-bottom: 1.5rem; transform: rotate(-0.5deg);">
-      <div style="font-size: 1.35rem;">⚡</div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #000000; color: var(--comic-yellow); flex-shrink: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.5rem;">
         <div>
           <strong style="font-family: var(--font-display); font-size: 1rem;">FILE UPLOADED & SECURED!</strong>
@@ -81,7 +83,10 @@
   <!-- Share & Distribute Section: Responsive Full-Width Sharing URL & QR Code -->
   <div class="card" style="margin-bottom: 1.5rem; background: var(--comic-yellow); border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: 1.5rem; color: #000000;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-      <span style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 900;">🔗 SHARE THIS LINK WITH OTHERS</span>
+      <span style="display: inline-flex; align-items: center; gap: 0.45rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: 900;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <span>SHARE THIS LINK WITH OTHERS</span>
+      </span>
       <span class="badge" style="background: var(--comic-pink); color: #FFF; font-size: 0.7rem;">SHARE TOKEN: {{ token }}</span>
     </div>
 
@@ -94,8 +99,9 @@
           <span>COPY LINK</span>
         </button>
       </div>
-      <div style="font-size: 0.78rem; font-weight: 700; color: #1E293B;">
-        💡 Fully accessible sharing URL. Anyone with this 8-digit link can download before the countdown reaches zero.
+      <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 700; color: #1E293B;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1E293B" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Fully accessible sharing URL. Anyone with this 8-digit link can download before the countdown reaches zero.</span>
       </div>
     </div>
 

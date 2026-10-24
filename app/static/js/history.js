@@ -124,6 +124,14 @@
       .replace(/'/g, "&#039;");
   }
 
+  const SVG_BOX = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--comic-cyan)" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+  const SVG_EYE = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const SVG_FILE = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+  const SVG_BUNDLE = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.3"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+  const SVG_DOWNLOAD = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  const SVG_TRASH = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+  const SVG_CLOCK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
   function renderUploads() {
     const container = document.getElementById("uploads-list-container");
     if (!container) return;
@@ -131,7 +139,7 @@
     if (!uploadItems || uploadItems.length === 0) {
       container.innerHTML = `
         <div class="card" style="padding: 3rem 1.5rem; text-align: center; background: #0B0E17; border: 2px dashed #334155;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📦</div>
+          <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">${SVG_BOX}</div>
           <h3 style="font-family: var(--font-display); font-size: 1.25rem; color: #FFFFFF; margin-bottom: 0.35rem;">NO UPLOADS RECORDED YET</h3>
           <p style="color: #94A3B8; font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">
             When you upload single files or full folder bundles from this browser, they will appear here with live countdowns and instant revocation buttons.
@@ -154,15 +162,15 @@
 
       let statusBadge = "";
       if (isDeleted) {
-        statusBadge = `<span class="badge" style="background: #EF4444; color: #FFFFFF; font-size: 0.7rem; font-weight: 800;">✕ REVOKED</span>`;
+        statusBadge = `<span class="badge" style="background: #EF4444; color: #FFFFFF; font-size: 0.7rem; font-weight: 800;">REVOKED</span>`;
       } else if (isExpired) {
-        statusBadge = `<span class="badge" style="background: #F59E0B; color: #000000; font-size: 0.7rem; font-weight: 800;">⏱️ EXPIRED</span>`;
+        statusBadge = `<span class="badge" style="background: #F59E0B; color: #000000; font-size: 0.7rem; font-weight: 800;">EXPIRED</span>`;
       } else {
-        statusBadge = `<span class="badge" style="background: var(--comic-lime); color: #000000; font-size: 0.7rem; font-weight: 800;">● ACTIVE</span>`;
+        statusBadge = `<span class="badge" style="background: var(--comic-lime); color: #000000; font-size: 0.7rem; font-weight: 800;">ACTIVE</span>`;
       }
 
       const timerDisplay = (!isDeleted && !isExpired && remaining > 0)
-        ? `<span id="timer-upload-${item.token}" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--comic-yellow); font-weight: 700;">⏱️ ${formatRemaining(remaining)} remaining</span>`
+        ? `<span id="timer-upload-${item.token}" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--comic-yellow); font-weight: 700;">${SVG_CLOCK}${formatRemaining(remaining)} remaining</span>`
         : `<span style="font-family: var(--font-mono); font-size: 0.8rem; color: #64748B;">Unavailable</span>`;
 
       html += `
@@ -170,7 +178,7 @@
           <!-- Left: Icon & File Meta -->
           <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 260px;">
             <div class="file-icon-box" style="background: ${isBundle ? 'var(--comic-purple)' : 'var(--comic-cyan)'}; color: #000000;">
-              ${isBundle ? '📦' : '📄'}
+              ${isBundle ? SVG_BUNDLE : SVG_FILE}
             </div>
             <div style="min-width: 0; flex: 1;">
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
@@ -202,8 +210,8 @@
                 REVOKE & PURGE
               </button>
             ` : ''}
-            <button type="button" onclick="removeUploadRecord('${item.token}')" title="Remove from this device's history" style="background: none; border: none; color: #64748B; cursor: pointer; padding: 0.35rem; font-size: 1.1rem; line-height: 1;">
-              🗑️
+            <button type="button" onclick="removeUploadRecord('${item.token}')" title="Remove from this device's history" style="background: none; border: none; color: #64748B; cursor: pointer; padding: 0.35rem; display: inline-flex; align-items: center;">
+              ${SVG_TRASH}
             </button>
           </div>
         </div>
@@ -220,7 +228,7 @@
     if (!viewItems || viewItems.length === 0) {
       container.innerHTML = `
         <div class="card" style="padding: 3rem 1.5rem; text-align: center; background: #0B0E17; border: 2px dashed #334155;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">👁️</div>
+          <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">${SVG_EYE}</div>
           <h3 style="font-family: var(--font-display); font-size: 1.25rem; color: #FFFFFF; margin-bottom: 0.35rem;">NO SHARED FILES OPENED YET</h3>
           <p style="color: #94A3B8; font-size: 0.9rem; max-width: 480px; margin: 0 auto;">
             Whenever someone shares a FileGuard link with you and you open it, it will be saved here so you can easily find and re-download it before it self-destructs.
@@ -240,15 +248,15 @@
 
       let statusBadge = "";
       if (isDeleted) {
-        statusBadge = `<span class="badge" style="background: #EF4444; color: #FFFFFF; font-size: 0.7rem; font-weight: 800;">✕ REVOKED</span>`;
+        statusBadge = `<span class="badge" style="background: #EF4444; color: #FFFFFF; font-size: 0.7rem; font-weight: 800;">REVOKED</span>`;
       } else if (isExpired) {
-        statusBadge = `<span class="badge" style="background: #F59E0B; color: #000000; font-size: 0.7rem; font-weight: 800;">⏱️ EXPIRED</span>`;
+        statusBadge = `<span class="badge" style="background: #F59E0B; color: #000000; font-size: 0.7rem; font-weight: 800;">EXPIRED</span>`;
       } else {
-        statusBadge = `<span class="badge" style="background: var(--comic-lime); color: #000000; font-size: 0.7rem; font-weight: 800;">● ACTIVE</span>`;
+        statusBadge = `<span class="badge" style="background: var(--comic-lime); color: #000000; font-size: 0.7rem; font-weight: 800;">ACTIVE</span>`;
       }
 
       const timerDisplay = (!isDeleted && !isExpired && remaining > 0)
-        ? `<span id="timer-view-${item.token}" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--comic-yellow); font-weight: 700;">⏱️ ${formatRemaining(remaining)} remaining</span>`
+        ? `<span id="timer-view-${item.token}" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--comic-yellow); font-weight: 700;">${SVG_CLOCK}${formatRemaining(remaining)} remaining</span>`
         : `<span style="font-family: var(--font-mono); font-size: 0.8rem; color: #64748B;">Unavailable</span>`;
 
       const shaDisplay = item.sha256 ? item.sha256.substring(0, 16) + "..." : "";
@@ -258,7 +266,7 @@
           <!-- Left: Icon & Meta -->
           <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 260px;">
             <div class="file-icon-box" style="background: var(--comic-yellow); color: #000000;">
-              ${isBundle ? '📦' : '📥'}
+              ${isBundle ? SVG_BUNDLE : SVG_DOWNLOAD}
             </div>
             <div style="min-width: 0; flex: 1;">
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
@@ -286,8 +294,8 @@
             ` : `
               <span class="badge" style="background: #1E293B; color: #64748B; font-size: 0.75rem;">Unavailable</span>
             `}
-            <button type="button" onclick="removeViewRecord('${item.token}')" title="Remove from viewed history" style="background: none; border: none; color: #64748B; cursor: pointer; padding: 0.35rem; font-size: 1.1rem; line-height: 1;">
-              🗑️
+            <button type="button" onclick="removeViewRecord('${item.token}')" title="Remove from viewed history" style="background: none; border: none; color: #64748B; cursor: pointer; padding: 0.35rem; display: inline-flex; align-items: center;">
+              ${SVG_TRASH}
             </button>
           </div>
         </div>
@@ -356,7 +364,7 @@
         }
         const el = document.getElementById(`timer-upload-${item.token}`);
         if (el) {
-          el.textContent = `⏱️ ${formatRemaining(item.remaining_seconds)} remaining`;
+          el.innerHTML = `${SVG_CLOCK}${formatRemaining(item.remaining_seconds)} remaining`;
         }
       }
     });
@@ -370,7 +378,7 @@
         }
         const el = document.getElementById(`timer-view-${item.token}`);
         if (el) {
-          el.textContent = `⏱️ ${formatRemaining(item.remaining_seconds)} remaining`;
+          el.innerHTML = `${SVG_CLOCK}${formatRemaining(item.remaining_seconds)} remaining`;
         }
       }
     });
@@ -386,7 +394,7 @@
         const btn = document.getElementById(btnId);
         if (btn) {
           const oldText = btn.textContent;
-          btn.textContent = "COPIED! ✓";
+          btn.textContent = "COPIED!";
           setTimeout(() => { btn.textContent = oldText; }, 1500);
         }
       });

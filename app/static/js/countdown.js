@@ -62,7 +62,7 @@ function copyToClipboard(text, triggerBtnId, feedbackText = "Copied!") {
     const btn = document.getElementById(triggerBtnId);
     if (btn) {
       const originalHtml = btn.innerHTML;
-      btn.innerHTML = `<span style="color:#10B981;">✓ ${feedbackText}</span>`;
+      btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:0.3rem;color:#10B981;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ${feedbackText}</span>`;
       setTimeout(() => {
         btn.innerHTML = originalHtml;
       }, 2000);
