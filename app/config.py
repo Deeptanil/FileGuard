@@ -71,6 +71,7 @@ class TestingConfig(Config):
     STORAGE_DIR = base_dir / "storage_test"
     RATELIMIT_ENABLED = False
     WTF_CSRF_ENABLED = False
+    STORAGE_BACKEND = "local"
 
 
 class ProductionConfig(Config):

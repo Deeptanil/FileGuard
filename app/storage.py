@@ -13,6 +13,8 @@ def get_s3_client():
     """Instantiate S3-compatible client for Backblaze B2, Cloudflare R2, or AWS S3."""
     import boto3
     endpoint = current_app.config.get("S3_ENDPOINT_URL")
+    if endpoint and not endpoint.startswith(("http://", "https://")):
+        endpoint = f"https://{endpoint}"
     return boto3.client(
         "s3",
         endpoint_url=endpoint if endpoint else None,
