@@ -29,39 +29,39 @@
 
   <!-- KPI Stat Cards -->
   <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-title">Total Uploads</div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-cyan);">
+      <div class="stat-title" style="color: var(--comic-cyan);">Total Uploads</div>
       <div class="stat-value">{{ total_uploads }}</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-title">Active Files</div>
-      <div class="stat-value" style="color: var(--accent-emerald);">{{ active_files }}</div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-lime);">
+      <div class="stat-title" style="color: var(--comic-lime);">Active Files</div>
+      <div class="stat-value" style="color: var(--comic-lime);">{{ active_files }}</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-title">Expired Files</div>
-      <div class="stat-value" style="color: var(--accent-amber);">{{ expired_files }}</div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-yellow);">
+      <div class="stat-title" style="color: var(--comic-yellow);">Expired Files</div>
+      <div class="stat-value" style="color: var(--comic-yellow);">{{ expired_files }}</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-title">Purged from Storage</div>
-      <div class="stat-value" style="color: var(--text-dim);">{{ deleted_files }}</div>
+    <div class="stat-card" style="border-top: 6px solid #64748B;">
+      <div class="stat-title" style="color: #94A3B8;">Purged from Storage</div>
+      <div class="stat-value" style="color: #CBD5E1;">{{ deleted_files }}</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-title">Tampered Files Detected</div>
-      <div class="stat-value" style="color: {% if tampered_files > 0 %}var(--accent-rose){% else %}var(--text-muted){% endif %};">
+    <div class="stat-card" style="border-top: 6px solid var(--comic-pink);">
+      <div class="stat-title" style="color: var(--comic-pink);">Tampered Detected</div>
+      <div class="stat-value" style="color: {% if tampered_files > 0 %}var(--comic-pink){% else %}#64748B{% endif %};">
         {{ tampered_files }}
       </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-title">Downloads Verified</div>
-      <div class="stat-value" style="color: var(--accent-cyan);">{{ total_downloads }}</div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-cyan);">
+      <div class="stat-title" style="color: var(--comic-cyan);">Downloads Verified</div>
+      <div class="stat-value" style="color: var(--comic-cyan);">{{ total_downloads }}</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-title">Expired Denials</div>
-      <div class="stat-value">{{ expired_denials }}</div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-yellow);">
+      <div class="stat-title" style="color: var(--comic-yellow);">Expired Denials</div>
+      <div class="stat-value" style="color: var(--comic-yellow);">{{ expired_denials }}</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-title">Integrity Violations</div>
-      <div class="stat-value" style="color: var(--accent-rose);">{{ integrity_failures }}</div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-pink);">
+      <div class="stat-title" style="color: var(--comic-pink);">Integrity Violations</div>
+      <div class="stat-value" style="color: {% if integrity_failures > 0 %}var(--comic-pink){% else %}#64748B{% endif %};">{{ integrity_failures }}</div>
     </div>
   </div>
 

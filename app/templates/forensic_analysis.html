@@ -22,10 +22,10 @@
           {% for f in files %}
             <a href="{{ url_for('forensics.forensics_index', file_id=f.id) }}" 
                class="btn btn-secondary btn-block" 
-               style="justify-content: space-between; text-align: left; padding: 0.75rem 1rem; {% if selected_file and selected_file.id == f.id %}border-color: var(--border-focus); background: var(--bg-card-hover);{% endif %}">
+               style="justify-content: space-between; text-align: left; padding: 0.75rem 1rem; {% if selected_file and selected_file.id == f.id %}background: var(--comic-yellow); color: #000; box-shadow: 4px 4px 0px #000; border: 3px solid #000;{% endif %}">
               <div>
-                <strong style="display: block; font-size: 0.85rem; color: var(--text-main); word-break: break-all;">{{ f.original_filename }}</strong>
-                <span style="font-size: 0.75rem; color: var(--text-dim);">#{{ f.id }} • {{ (f.file_size / 1024)|round(1) }} KB</span>
+                <strong style="display: block; font-size: 0.85rem; {% if selected_file and selected_file.id == f.id %}color: #000000;{% else %}color: var(--text-dark);{% endif %} word-break: break-all;">{{ f.original_filename }}</strong>
+                <span style="font-size: 0.75rem; color: #334155;">#{{ f.id }} • {{ (f.file_size / 1024)|round(1) }} KB</span>
               </div>
               <span class="badge {% if f.status == 'active' %}badge-active{% elif f.status == 'tampered' %}badge-tampered{% elif f.status == 'expired' %}badge-expired{% else %}badge-deleted{% endif %}" style="font-size: 0.65rem;">
                 {{ f.status }}

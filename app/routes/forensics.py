@@ -23,6 +23,11 @@ def forensics_index():
     """Main forensic investigation workspace."""
     files = FileRecord.query.order_by(FileRecord.uploaded_at.desc()).all()
     selected_id = request.args.get("file_id", type=int)
+    
+    # Auto-select the first file if none explicitly chosen
+    if not selected_id and files:
+        selected_id = files[0].id
+
     selected_file = None
     os_meta = None
     live_hash = None
