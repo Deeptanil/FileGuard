@@ -136,6 +136,12 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     initCountdown("{{ file.expires_at.isoformat() }}Z", "{{ token }}");
+
+    // Clean address bar so it exactly matches the clean sharing URL /share/<token> without query params
+    if (window.location.search.includes("just_uploaded")) {
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
   });
 </script>
 {% endblock %}
