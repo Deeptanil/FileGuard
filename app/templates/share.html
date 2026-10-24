@@ -12,7 +12,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.5rem;">
         <div>
           <strong style="font-family: var(--font-display); font-size: 1rem;">FILE UPLOADED & SECURED!</strong>
-          <span style="font-size: 0.9rem; margin-left: 0.5rem;">Share link and QR code are ready below.</span>
+          <span style="font-size: 0.9rem; margin-left: 0.5rem;">You can copy your link or scan the QR code below.</span>
         </div>
         <button type="button" class="btn btn-primary btn-sm" onclick="copyToClipboard('{{ share_url }}', 'copy-top-btn')" id="copy-top-btn" style="background: #000; color: #FFF; font-size: 0.75rem; padding: 0.4rem 0.8rem;">
           COPY LINK
@@ -21,117 +21,108 @@
     </div>
   {% endif %}
 
-  <!-- Compact Top Bar: File & Status -->
-  <div style="background: var(--bg-surface); border: var(--border-heavy); border-radius: var(--radius-comic); padding: 1.25rem 1.5rem; box-shadow: var(--shadow-3d); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-    <div style="flex: 1; min-width: 250px;">
-      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
-        <span class="badge" style="background: var(--comic-pink); color: #FFF; font-size: 0.7rem;">12-HR TEMPORARY SHARE</span>
-        <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.7rem;">{{ (file.file_size / 1024)|round(1) }} KB</span>
-        <span class="badge badge-active" style="font-size: 0.7rem;">#{{ token }}</span>
-      </div>
-      <h1 style="font-size: 1.4rem; font-family: var(--font-display); letter-spacing: 0.02em; word-break: break-all; text-transform: uppercase; margin: 0; color: #FFFFFF;">
-        {{ file.original_filename }}
-      </h1>
-    </div>
+  <!-- Hero Header Card: File Info, Countdown, and Primary Download Button Together -->
+  <div class="card" style="margin-bottom: 1.5rem; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: 1.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+      
+      <!-- Left: File Details & Badges -->
+      <div style="flex: 1; min-width: 280px;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+          <span class="badge" style="background: var(--comic-pink); color: #FFF; font-size: 0.72rem;">12-HR EPHEMERAL</span>
+          <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.72rem;">{{ (file.file_size / 1024)|round(1) }} KB</span>
+          <span class="badge badge-active" style="font-size: 0.72rem;">#{{ token }}</span>
+          <span class="badge badge-pass" style="font-size: 0.72rem;">SHA-256 CHECKED</span>
+        </div>
 
-    <!-- Compact Auto-Destruct Countdown -->
-    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-      <div style="font-size: 0.72rem; font-family: var(--font-pixel); color: var(--comic-pink); margin-bottom: 0.3rem;">
-        SELF-DESTRUCTS IN
-      </div>
-      <div id="countdown-wrapper" class="countdown-container" style="margin: 0; gap: 0.35rem;">
-        <div class="countdown-box" style="padding: 0.4rem 0.65rem; min-width: 58px; transform: none;">
-          <div id="countdown-hours" class="countdown-value" style="font-size: 1.35rem;">--</div>
-          <div class="countdown-label" style="font-size: 0.55rem; margin-top: 0.2rem;">HRS</div>
-        </div>
-        <div class="countdown-box" style="padding: 0.4rem 0.65rem; min-width: 58px; transform: none;">
-          <div id="countdown-mins" class="countdown-value" style="font-size: 1.35rem;">--</div>
-          <div class="countdown-label" style="font-size: 0.55rem; margin-top: 0.2rem;">MIN</div>
-        </div>
-        <div class="countdown-box" style="padding: 0.4rem 0.65rem; min-width: 58px; transform: none;">
-          <div id="countdown-secs" class="countdown-value" style="font-size: 1.35rem;">--</div>
-          <div class="countdown-label" style="font-size: 0.55rem; margin-top: 0.2rem;">SEC</div>
+        <!-- Filename limited to maximum 2 lines with proper wrapping -->
+        <h1 style="font-size: 1.6rem; font-family: var(--font-display); letter-spacing: 0.02em; text-transform: uppercase; margin: 0 0 0.5rem; color: #FFFFFF; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25;" title="{{ file.original_filename }}">
+          {{ file.original_filename }}
+        </h1>
+        <div style="font-size: 0.85rem; color: #94A3B8; font-weight: 600;">
+          Ready to save • Safe download with real-time cryptographic integrity check.
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Primary Interactive 2-Column Grid (Zero Scroll Required) -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-
-    <!-- Left Column: Big Instant Download Action -->
-    <div class="card" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: 1.5rem;">
-      <div>
-        <div style="font-size: 0.8rem; font-family: var(--font-pixel); color: var(--comic-yellow); margin-bottom: 0.5rem;">
-          ACTION: RECIPIENT DOWNLOAD
+      <!-- Right: Live Self-Destruct Timer -->
+      <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+        <div style="font-size: 0.72rem; font-family: var(--font-pixel); color: var(--comic-pink); margin-bottom: 0.35rem;">
+          SELF-DESTRUCTS IN
         </div>
-        <h2 style="font-size: 1.3rem; font-family: var(--font-display); color: #FFFFFF; line-height: 1.25; margin-bottom: 0.75rem;">
-          SAVE FILE DIRECTLY TO YOUR DEVICE
-        </h2>
-        <p style="font-size: 0.85rem; color: #94A3B8; font-weight: 600; line-height: 1.4; margin-bottom: 1.5rem;">
-          Integrity is verified in real-time with SHA-256 before the download stream begins.
-        </p>
-      </div>
-
-      <div>
-        <a href="{{ url_for('downloads.download_file', token=token) }}" id="download-btn" class="btn btn-primary btn-block" style="padding: 1.15rem; font-size: 1.25rem; background: var(--comic-yellow); color: #000000; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          <span>DOWNLOAD FILE</span>
-        </a>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; font-size: 0.75rem; color: #64748B; font-weight: 700;">
-          <span>✓ Antivirus & Tamper Checked</span>
-          <span>HTTP 409 Guard Active</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column: Sharing Link & QR Code Box -->
-    <div class="card" style="margin: 0; background: var(--comic-yellow); border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: 1.5rem; color: #000000; display: flex; flex-direction: column; justify-content: space-between;">
-      <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <span style="font-family: var(--font-display); font-size: 1rem; font-weight: 900;">SHARE WITH OTHERS</span>
-          <span class="badge" style="background: #000; color: #FFF; font-size: 0.65rem;">CODE: {{ token }}</span>
-        </div>
-
-        <!-- URL Copy Field -->
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-          <input type="text" id="share-link-input" class="form-control" style="font-family: var(--font-mono); font-weight: 700; font-size: 0.9rem; flex: 1; background: #FFFFFF; color: #000000; border: 2px solid #000; padding: 0.5rem 0.75rem;" value="{{ share_url }}" readonly>
-          <button type="button" id="copy-btn" class="btn btn-secondary" onclick="copyToClipboard('{{ share_url }}', 'copy-btn')" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #000; color: #FFF; border: 2px solid #000; box-shadow: 3px 3px 0px #FFF;">
-            <span>COPY</span>
-          </button>
-        </div>
-
-        <!-- QR Code and Fast Scan Info -->
-        <div style="display: flex; align-items: center; gap: 1rem; background: #FFF; border: 2px solid #000; border-radius: var(--radius-comic); padding: 0.75rem; box-shadow: 3px 3px 0px #000;">
-          <img src="{{ qr_code_base64 }}" alt="QR Code" style="width: 80px; height: 80px; display: block; border-radius: 4px; border: 1px solid #000;">
-          <div style="flex: 1;">
-            <div style="font-size: 0.8rem; font-weight: 900; font-family: var(--font-display);">SCAN WITH PHONE</div>
-            <div style="font-size: 0.72rem; color: #475569; font-weight: 700; line-height: 1.25; margin-top: 0.2rem;">
-              Point camera to open download page instantly on mobile.
-            </div>
-            <a href="{{ url_for('downloads.download_qr', token=token) }}" download="fileguard_qr_{{ token }}.png" class="btn btn-accent btn-sm" style="margin-top: 0.35rem; font-size: 0.65rem; padding: 0.25rem 0.6rem;">
-              SAVE QR IMAGE
-            </a>
+        <div id="countdown-wrapper" class="countdown-container" style="margin: 0; gap: 0.4rem;">
+          <div class="countdown-box" style="padding: 0.45rem 0.7rem; min-width: 60px; transform: none;">
+            <div id="countdown-hours" class="countdown-value" style="font-size: 1.4rem;">--</div>
+            <div class="countdown-label" style="font-size: 0.55rem; margin-top: 0.2rem;">HRS</div>
+          </div>
+          <div class="countdown-box" style="padding: 0.45rem 0.7rem; min-width: 60px; transform: none;">
+            <div id="countdown-mins" class="countdown-value" style="font-size: 1.4rem;">--</div>
+            <div class="countdown-label" style="font-size: 0.55rem; margin-top: 0.2rem;">MIN</div>
+          </div>
+          <div class="countdown-box" style="padding: 0.45rem 0.7rem; min-width: 60px; transform: none;">
+            <div id="countdown-secs" class="countdown-value" style="font-size: 1.4rem;">--</div>
+            <div class="countdown-label" style="font-size: 0.55rem; margin-top: 0.2rem;">SEC</div>
           </div>
         </div>
       </div>
 
-      <div style="font-size: 0.75rem; font-weight: 700; color: #334155; margin-top: 0.75rem;">
-        💡 Anyone with this 8-digit link can access the file before it expires.
+    </div>
+
+    <!-- Download Action Button Bar (Directly with file name) -->
+    <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 2px dashed #334155; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <a href="{{ url_for('downloads.download_file', token=token) }}" id="download-btn" class="btn btn-primary" style="flex: 1; min-width: 260px; padding: 1.15rem; font-size: 1.3rem; background: var(--comic-yellow); color: #000000; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" style="vertical-align: middle; margin-right: 0.5rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>DOWNLOAD THIS FILE NOW</span>
+      </a>
+      <div style="font-size: 0.8rem; color: #64748B; font-weight: 700; white-space: nowrap;">
+        HTTP 409 Anti-Tamper Protected
+      </div>
+    </div>
+  </div>
+
+  <!-- Share & Distribute Section: Responsive Full-Width Sharing URL & QR Code -->
+  <div class="card" style="margin-bottom: 1.5rem; background: var(--comic-yellow); border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: 1.5rem; color: #000000;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <span style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 900;">🔗 SHARE THIS LINK WITH OTHERS</span>
+      <span class="badge" style="background: #000; color: #FFF; font-size: 0.7rem;">SHARE TOKEN: {{ token }}</span>
+    </div>
+
+    <!-- Responsive Link Box: Full Visibility, Scrollable on Narrow Screens, High-Contrast Copy -->
+    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem;">
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <input type="text" id="share-link-input" class="form-control" style="font-family: var(--font-mono); font-weight: 700; font-size: 0.95rem; flex: 1; min-width: 250px; background: #FFFFFF; color: #000000; border: 3px solid #000; padding: 0.75rem 1rem; border-radius: 4px; box-shadow: 3px 3px 0px #000; overflow-x: auto;" value="{{ share_url }}" readonly onclick="this.select();">
+        <button type="button" id="copy-btn" class="btn btn-secondary" onclick="copyToClipboard('{{ share_url }}', 'copy-btn')" style="padding: 0.75rem 1.75rem; font-size: 0.95rem; font-weight: 800; background: #000000; color: #FFFFFF; border: 3px solid #000000; box-shadow: 4px 4px 0px #FFFFFF;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle; margin-right: 0.35rem;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span>COPY LINK</span>
+        </button>
+      </div>
+      <div style="font-size: 0.78rem; font-weight: 700; color: #1E293B;">
+        💡 Fully accessible sharing URL. Anyone with this 8-digit link can download before the countdown reaches zero.
       </div>
     </div>
 
+    <!-- QR Code & Mobile Scan Info -->
+    <div style="display: flex; align-items: center; gap: 1.25rem; background: #FFFFFF; border: 3px solid #000000; border-radius: var(--radius-comic); padding: 0.85rem 1.25rem; box-shadow: 4px 4px 0px #000000; flex-wrap: wrap;">
+      <img src="{{ qr_code_base64 }}" alt="QR Code" style="width: 88px; height: 88px; display: block; border-radius: 4px; border: 2px solid #000000;">
+      <div style="flex: 1; min-width: 200px;">
+        <div style="font-size: 0.9rem; font-weight: 900; font-family: var(--font-display);">QUICK SCAN WITH MOBILE PHONE</div>
+        <div style="font-size: 0.78rem; color: #475569; font-weight: 700; line-height: 1.35; margin-top: 0.25rem;">
+          Scan with your phone camera to download instantly on iOS or Android without typing.
+        </div>
+        <a href="{{ url_for('downloads.download_qr', token=token) }}" download="fileguard_qr_{{ token }}.png" class="btn btn-accent btn-sm" style="margin-top: 0.5rem; font-size: 0.7rem; padding: 0.35rem 0.75rem; background: var(--comic-cyan); color: #000; border: 2px solid #000; box-shadow: 2px 2px 0px #000;">
+          SAVE QR IMAGE (.PNG)
+        </a>
+      </div>
+    </div>
   </div>
 
-  <!-- Collapsible / Compact Security Audit Footer -->
-  <div style="background: rgba(15, 23, 42, 0.75); border: var(--border-heavy); border-radius: var(--radius-comic); padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; font-size: 0.8rem;">
+  <!-- Security Audit Footer Bar -->
+  <div style="background: rgba(15, 23, 42, 0.85); border: var(--border-heavy); border-radius: var(--radius-comic); padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; font-size: 0.82rem; box-shadow: var(--shadow-3d);">
     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-      <span style="color: var(--comic-cyan); font-family: var(--font-display); font-size: 0.75rem;">SHA-256 HASH:</span>
-      <code class="hash-pill" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ file.sha256_reference }}</code>
+      <span style="color: var(--comic-cyan); font-family: var(--font-display); font-size: 0.78rem;">SHA-256 HASH:</span>
+      <code class="hash-pill" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ file.sha256_reference }}</code>
     </div>
     <div style="display: flex; align-items: center; gap: 1rem;">
-      <span style="color: #94A3B8; font-size: 0.75rem;">Destructs: <strong style="color: var(--comic-yellow);">{{ file.expires_at.strftime('%H:%M:%S UTC') }}</strong></span>
-      <a href="{{ url_for('public.upload_page') }}" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.3rem 0.75rem;">
+      <span style="color: #94A3B8; font-size: 0.78rem;">Self-Destructs: <strong style="color: var(--comic-yellow);">{{ file.expires_at.strftime('%H:%M:%S UTC') }}</strong></span>
+      <a href="{{ url_for('public.upload_page') }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.4rem 0.85rem;">
         ← SHARE ANOTHER FILE
       </a>
     </div>
