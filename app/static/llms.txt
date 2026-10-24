@@ -23,3 +23,4 @@ FileGuard allows users to upload single files, multiple files, or entire folder 
 - `GET /api/files/<token>/status`: Inspect file availability, countdown, and expiration status.
 - `POST /api/files/<token>/revoke`: Immediate deletion and revocation by token bearer.
 - `POST /api/files/batch-status`: Batch query statuses for up to 50 share tokens.
+

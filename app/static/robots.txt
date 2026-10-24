@@ -8,3 +8,4 @@ Disallow: /admin/
 Disallow: /api/
 
 Sitemap: https://files.deeptanil.in/sitemap.xml
+
