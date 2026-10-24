@@ -27,7 +27,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Canonical sharing URL base
-    CANONICAL_URL = os.getenv("CANONICAL_URL", "http://localhost:5000").rstrip("/")
+    CANONICAL_URL = os.getenv("CANONICAL_URL", "https://files.deeptanil.in").rstrip("/")
     
     # File upload controls
     MAX_CONTENT_LENGTH_MB = int(os.getenv("MAX_CONTENT_LENGTH_MB", "100"))

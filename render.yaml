@@ -10,6 +10,8 @@ services:
         value: production
       - key: FLASK_DEBUG
         value: "False"
+      - key: CANONICAL_URL
+        value: "https://files.deeptanil.in"
       - key: SECRET_KEY
         generateValue: true
       - key: EXPIRATION_HOURS

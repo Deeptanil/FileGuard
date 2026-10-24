@@ -4,7 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token if csrf_token else '' }}">
-  <title>{% block title %}FileGuard — Secure Temporary File Sharing{% endblock %}</title>
+  
+  <title>{% block title %}FileGuard — Free Encrypted Temporary File Sharing | 12-Hour Self-Destruct{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Share files and whole folders anonymously with strict 12-hour self-destruct, SHA-256 pre-flight integrity verification, and zero account creation. Fast, private, and secure.{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}temporary file sharing, anonymous file upload, self destruct files, share folder online free, secure file transfer, encrypted file share, send big files no registration, privacy file transfer, ephemeral storage, zero knowledge file sharing{% endblock %}">
+  <meta name="author" content="FileGuard Security Framework">
+  <meta name="robots" content="{% block robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}">
+  <link rel="canonical" href="{% block canonical_url %}https://files.deeptanil.in{{ request.path }}{% endblock %}">
+  
+  <!-- OpenGraph Metadata (Facebook, LinkedIn, Discord, WhatsApp) -->
+  <meta property="og:site_name" content="FileGuard">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://files.deeptanil.in{{ request.path }}">
+  <meta property="og:title" content="{% block og_title %}FileGuard — Free Encrypted Temporary File Sharing | 12-Hour Self-Destruct{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Share files and whole folders anonymously with strict 12-hour self-destruct, pre-flight SHA-256 integrity verification, and zero accounts required.{% endblock %}">
+  <meta property="og:image" content="https://files.deeptanil.in/static/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}FileGuard — Secure Ephemeral File & Folder Sharing{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}Strict 12-hour self-destruct, pre-flight SHA-256 integrity verification, zero accounts required.{% endblock %}">
+  <meta name="twitter:image" content="https://files.deeptanil.in/static/og-preview.png">
+
+  <!-- LLM / AI Discoverability Manifest -->
+  <link rel="alternate" type="text/markdown" title="LLM Agent Documentation" href="/llms.txt">
   
   <!-- Neo-Brutalist Comic Favicons -->
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
@@ -18,6 +43,43 @@
   
   <!-- Stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- JSON-LD Structured Data Schema for Search Engines and AI Crawlers -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://files.deeptanil.in/#webapp",
+        "name": "FileGuard",
+        "url": "https://files.deeptanil.in",
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "All",
+        "description": "Secure, ephemeral temporary file and folder sharing platform with pre-flight SHA-256 cryptographic verification and strict 12-hour self-destruct.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Strict 12-hour self-destruct automated storage purge",
+          "Pre-flight SHA-256 cryptographic integrity verification",
+          "Direct multi-file and folder zip packaging in memory",
+          "Zero-knowledge privacy with no user accounts",
+          "Client-side ephemeral vault with live countdowns"
+        ]
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://files.deeptanil.in/#organization",
+        "name": "FileGuard",
+        "url": "https://files.deeptanil.in",
+        "logo": "https://files.deeptanil.in/static/favicon.svg"
+      }
+    ]
+  }
+  </script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>

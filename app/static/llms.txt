@@ -1,0 +1,25 @@
+# FileGuard
+
+> Free, secure, ephemeral file and folder sharing platform with pre-flight SHA-256 cryptographic integrity verification, strict 12-hour self-destruct, and zero-knowledge privacy.
+
+## Overview
+FileGuard allows users to upload single files, multiple files, or entire folder hierarchies up to 100 MB per transfer without registration or accounts. Files automatically self-destruct after 12 hours from both object storage and database catalogs.
+
+- **Website**: https://files.deeptanil.in
+- **Upload Endpoint**: https://files.deeptanil.in/upload
+- **User Activity & History**: https://files.deeptanil.in/history
+- **GitHub Repository**: https://github.com/Deeptanil/FileGuard.git
+
+## Key Capabilities
+- **Strict 12-Hour Retention**: Authoritative server-clock deadline ensures zero lingering storage blocks.
+- **Pre-Flight Integrity Gate**: Computes live SHA-256 before streaming bytes to clients, halting tampered files with HTTP 409.
+- **Dynamic In-Memory Bundling**: Multiple files or entire folder trees are zipped in memory, preserving directory structures.
+- **Privacy-First Ephemeral Vault**: Client-side history in localStorage synchronizes live status without server accounts.
+- **Anonymous Subnet Quotas**: Fair-use limit of 100 MB per 12 hours per IP subnet (/64 IPv6, /24 IPv4).
+
+## API & Programmatic Usage
+- `POST /api/files`: Upload file or bundle (multipart/form-data). Returns token, share_url, expires_at, sha256_reference.
+- `GET /api/files/<token>/download`: Download file with SHA-256 pre-flight check.
+- `GET /api/files/<token>/status`: Inspect file availability, countdown, and expiration status.
+- `POST /api/files/<token>/revoke`: Immediate deletion and revocation by token bearer.
+- `POST /api/files/batch-status`: Batch query statuses for up to 50 share tokens.

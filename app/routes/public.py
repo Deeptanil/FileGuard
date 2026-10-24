@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, jsonify
+import os
+from flask import Blueprint, render_template, jsonify, send_from_directory, current_app
 from app.security import generate_csrf_token
 from app.cleanup import run_expired_files_cleanup
 
@@ -42,4 +43,23 @@ def history_page():
 def get_csrf():
     """Retrieve session CSRF token for dynamic asynchronous requests."""
     return jsonify({"csrf_token": generate_csrf_token()})
+
+
+@public_bp.route("/robots.txt")
+def robots_txt():
+    """Serve robots.txt for search engine and AI web crawlers."""
+    return send_from_directory(os.path.join(current_app.root_path, "static"), "robots.txt", mimetype="text/plain")
+
+
+@public_bp.route("/sitemap.xml")
+def sitemap_xml():
+    """Serve sitemap.xml for Google, Bing, and indexers."""
+    return send_from_directory(os.path.join(current_app.root_path, "static"), "sitemap.xml", mimetype="application/xml")
+
+
+@public_bp.route("/llms.txt")
+def llms_txt():
+    """Serve llms.txt manifest for AI agents, Perplexity, ChatGPT, Claude, and Gemini."""
+    return send_from_directory(os.path.join(current_app.root_path, "static"), "llms.txt", mimetype="text/markdown")
+
 

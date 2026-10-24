@@ -142,3 +142,32 @@ def test_revoke_file_by_uploader(client, db_session):
     assert res_down.status_code in (404, 410)
 
 
+def test_seo_routes_and_metadata(client):
+    """Test SEO and AI discovery endpoints (robots.txt, sitemap.xml, llms.txt, JSON-LD)."""
+    # 1. robots.txt
+    res_robots = client.get("/robots.txt")
+    assert res_robots.status_code == 200
+    assert b"Sitemap: https://files.deeptanil.in/sitemap.xml" in res_robots.data
+
+    # 2. sitemap.xml
+    res_sitemap = client.get("/sitemap.xml")
+    assert res_sitemap.status_code == 200
+    assert b"<loc>https://files.deeptanil.in/</loc>" in res_sitemap.data
+
+    # 3. llms.txt
+    res_llms = client.get("/llms.txt")
+    assert res_llms.status_code == 200
+    assert b"# FileGuard" in res_llms.data
+
+    # 4. Homepage SEO metadata & structured data
+    res_home = client.get("/")
+    assert res_home.status_code == 200
+    home_html = res_home.get_data(as_text=True)
+    assert 'rel="canonical"' in home_html
+    assert 'og:image' in home_html
+    assert 'twitter:card' in home_html
+    assert '"@type": "WebApplication"' in home_html
+    assert '"@type": "FAQPage"' in home_html
+
+
+
