@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}429 Rate Limit Exceeded — FileGuard{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 600px; padding: 5rem 1.5rem; text-align: center;">
+  <h1 style="font-size: 4rem; font-weight: 800; color: var(--accent-amber); font-family: var(--font-mono);">429</h1>
+  <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">Too Many Requests</h2>
+  <p style="color: var(--text-muted); margin-bottom: 2rem;">You have exceeded the permitted request rate for this endpoint. Please wait a minute before attempting again.</p>
+  <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Homepage</a>
+</div>
+{% endblock %}
+

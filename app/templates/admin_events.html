@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Security Audit Logs — FileGuard Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 600; letter-spacing: 0.05em;">Compliance & Forensics</div>
+      <h1 style="font-size: 2rem; font-weight: 800;">Security Audit Log Records</h1>
+    </div>
+
+    <!-- Severity Filters -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.events_list') }}" class="btn btn-sm {% if current_severity == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">All Severities</a>
+      <a href="{{ url_for('admin.events_list', severity='CRITICAL') }}" class="btn btn-sm {% if current_severity == 'CRITICAL' %}btn-danger{% else %}btn-secondary{% endif %}">Critical</a>
+      <a href="{{ url_for('admin.events_list', severity='HIGH') }}" class="btn btn-sm {% if current_severity == 'HIGH' %}btn-danger{% else %}btn-secondary{% endif %}">High</a>
+      <a href="{{ url_for('admin.events_list', severity='MEDIUM') }}" class="btn btn-sm {% if current_severity == 'MEDIUM' %}btn-primary{% else %}btn-secondary{% endif %}">Medium</a>
+      <a href="{{ url_for('admin.events_list', severity='LOW') }}" class="btn btn-sm {% if current_severity == 'LOW' %}btn-primary{% else %}btn-secondary{% endif %}">Low</a>
+      <a href="{{ url_for('admin.events_list', severity='INFO') }}" class="btn btn-sm {% if current_severity == 'INFO' %}btn-primary{% else %}btn-secondary{% endif %}">Info</a>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Log ID</th>
+          <th>Timestamp (UTC)</th>
+          <th>Event Type</th>
+          <th>Severity</th>
+          <th>Outcome</th>
+          <th>File Ref</th>
+          <th>IP Address</th>
+          <th>Audit Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if events %}
+          {% for ev in events %}
+            <tr>
+              <td>#{{ ev.id }}</td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap;">
+                {{ ev.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+              </td>
+              <td><code>{{ ev.event_type }}</code></td>
+              <td>
+                {% if ev.severity == 'CRITICAL' or ev.severity == 'HIGH' %}
+                  <span class="badge badge-fail">{{ ev.severity }}</span>
+                {% elif ev.severity == 'MEDIUM' %}
+                  <span class="badge badge-warning">{{ ev.severity }}</span>
+                {% else %}
+                  <span class="badge badge-success">{{ ev.severity }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if ev.outcome == 'SUCCESS' %}
+                  <span class="badge badge-success">SUCCESS</span>
+                {% elif ev.outcome in ('BLOCKED', 'FAILURE') %}
+                  <span class="badge badge-fail">{{ ev.outcome }}</span>
+                {% else %}
+                  <span class="badge badge-warning">{{ ev.outcome }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if ev.file_record_id %}
+                  <a href="{{ url_for('forensics.forensics_index', file_id=ev.file_record_id) }}" style="color: var(--accent-cyan);">
+                    #{{ ev.file_record_id }}
+                  </a>
+                {% else %}
+                  <span style="color: var(--text-dim);">—</span>
+                {% endif %}
+              </td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem;">{{ ev.ip_address or '—' }}</td>
+              <td style="font-size: 0.85rem; color: var(--text-muted); word-break: break-all;">
+                {{ ev.sanitized_details }}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
+              No audit logs recorded for this severity level.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

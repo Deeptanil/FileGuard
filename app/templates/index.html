@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <div class="hero-pill">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>Strict 12-Hour Auto-Expiration • Zero Account Required</span>
+    </div>
+
+    <h1 class="hero-title">Share files. Stay in control.</h1>
+    <p class="hero-subtitle">
+      Secure temporary file sharing with cryptographically random tokens, instant QR codes, SHA-256 integrity monitoring, and automatic file destruction.
+    </p>
+
+    <div class="hero-actions">
+      <a href="{{ url_for('public.upload_page') }}" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Share a File Now</span>
+      </a>
+      <a href="#how-it-works" class="btn btn-secondary" style="padding: 0.85rem 1.75rem;">
+        <span>How It Works</span>
+      </a>
+    </div>
+
+    <!-- Quick Dropzone on Homepage -->
+    <div style="max-width: 680px; margin: 0 auto 3rem;">
+      <div id="dropzone" class="dropzone" data-max-mb="100" data-allowed-exts="pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip">
+        <input type="file" id="file-input" style="display: none;">
+        
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+          <path d="M12 12v9"></path>
+          <path d="m16 16-4-4-4 4"></path>
+        </svg>
+
+        <h3 class="dropzone-title">Click to select or drag and drop a file</h3>
+        <p class="dropzone-hint">
+          Supported: PDF, PNG, JPG, TXT, CSV, DOCX, XLSX, PPTX, ZIP • Max 100 MB
+        </p>
+
+        <!-- Selected File Preview -->
+        <div id="file-preview" style="display: none; background: rgba(30, 41, 59, 0.7); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="text-align: left;">
+              <strong id="file-name-display" style="color: var(--text-main);">filename.pdf</strong>
+              <div id="file-size-display" style="color: var(--text-muted); font-size: 0.85rem;">0 KB</div>
+            </div>
+            <button type="button" id="upload-btn" class="btn btn-primary btn-sm">
+              Start Secure Upload
+            </button>
+          </div>
+        </div>
+
+        <div id="progress-container" class="progress-container">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div id="progress-percent" style="font-size: 0.85rem; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 0.5rem;"></div>
+
+        <div id="upload-error" class="alert alert-danger" style="display: none; margin-top: 1rem; text-align: left;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3-Step Guide -->
+<section id="how-it-works" style="padding: 3rem 0; background: rgba(15, 23, 42, 0.4); border-top: 1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <h2 style="font-size: 2rem; font-weight: 700;">Simple, Controlled Temporary Sharing</h2>
+      <p style="color: var(--text-muted); margin-top: 0.5rem;">How FileGuard protects files during transit, rest, and destruction</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+      <div class="card">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-bottom: 0.5rem;">01</div>
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Upload & Hash</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          Your file is saved in isolated server-side storage with an unpredictable internal UUID. An authoritative SHA-256 reference hash is calculated immediately.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-bottom: 0.5rem;">02</div>
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Share Link & QR</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          Receive a cryptographically random 256-bit tokenized URL and QR code. The token itself is hashed at rest to guard against database leak disclosure.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-bottom: 0.5rem;">03</div>
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Verify & Destroy</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          Recipients download the file only after real-time SHA-256 integrity verification. After exactly 12 hours, the file is automatically purged from disk.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Security Engineering Highlights -->
+<section style="padding: 4.5rem 0;">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 3.5rem;">
+      <h2 style="font-size: 2rem; font-weight: 700;">Engineered for Information & Network Security</h2>
+      <p style="color: var(--text-muted); margin-top: 0.5rem;">Defensive design principles implemented across all layers of the stack</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <h3 class="feature-title">SHA-256 Integrity Verification</h3>
+        <p class="feature-desc">
+          Files are re-hashed on download and against administrative audit requests. If any byte is altered in storage, downloads are immediately blocked.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <h3 class="feature-title">Strict 12-Hour Expiration</h3>
+        <p class="feature-desc">
+          Enforced authoritatively by server clocks. Expired links are rejected instantly, and background workers securely unlink and erase storage copies.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h3 class="feature-title">Cryptographic Share Tokens</h3>
+        <p class="feature-desc">
+          Generated via Python's <code>secrets</code> CSPRNG. Stored hashed at rest using SHA-256 so compromise of metadata never reveals active download links.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </div>
+        <h3 class="feature-title">Digital Forensics Module</h3>
+        <p class="feature-desc">
+          Administrative dashboard compares application database records against OS filesystem metadata (stat ctime, mtime, atime) with live tamper simulations.
+        </p>
+      </div>
+    </div>
+
+    <!-- Security & Privacy Disclaimer -->
+    <div class="card" style="border-left: 4px solid var(--accent-cyan); background: rgba(15, 23, 42, 0.7);">
+      <div style="display: flex; gap: 1rem; align-items: flex-start;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" style="flex-shrink: 0; margin-top: 0.2rem;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div>
+          <strong style="color: var(--text-main); font-size: 1rem;">Security & Academic Transparency Notice</strong>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.35rem;">
+            FileGuard implements cryptographic integrity verification via SHA-256. A matching hash verifies that the served bytes match the exact upload snapshot; it does not constitute malware scanning or zero-knowledge end-to-end encryption. Files are stored unencrypted at rest within a restricted filesystem directory and automatically deleted after 12 hours.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}
+

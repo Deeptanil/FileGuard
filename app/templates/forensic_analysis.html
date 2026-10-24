@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Digital Forensics & File-System Analysis — FileGuard Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem;">
+  <!-- Section Title -->
+  <div style="margin-bottom: 2rem;">
+    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 600; letter-spacing: 0.05em;">Digital Forensics & Incident Response</div>
+    <h1 style="font-size: 2.25rem; font-weight: 800;">Cryptographic Integrity & File-System Forensics</h1>
+    <p style="color: var(--text-muted); margin-top: 0.25rem;">
+      Inspect low-level OS metadata, verify cryptographic hashes, and demonstrate file tampering detection.
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 320px 1fr; gap: 2rem; align-items: start;">
+    <!-- Left: Files Selection Panel -->
+    <div class="card" style="padding: 1.25rem;">
+      <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">Managed Files</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 600px; overflow-y: auto;">
+        {% if files %}
+          {% for f in files %}
+            <a href="{{ url_for('forensics.forensics_index', file_id=f.id) }}" 
+               class="btn btn-secondary btn-block" 
+               style="justify-content: space-between; text-align: left; padding: 0.75rem 1rem; {% if selected_file and selected_file.id == f.id %}border-color: var(--border-focus); background: var(--bg-card-hover);{% endif %}">
+              <div>
+                <strong style="display: block; font-size: 0.85rem; color: var(--text-main); word-break: break-all;">{{ f.original_filename }}</strong>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">#{{ f.id }} • {{ (f.file_size / 1024)|round(1) }} KB</span>
+              </div>
+              <span class="badge {% if f.status == 'active' %}badge-active{% elif f.status == 'tampered' %}badge-tampered{% elif f.status == 'expired' %}badge-expired{% else %}badge-deleted{% endif %}" style="font-size: 0.65rem;">
+                {{ f.status }}
+              </span>
+            </a>
+          {% endfor %}
+        {% else %}
+          <div style="color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 1.5rem;">
+            No files currently in storage.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: Forensic Metadata Inspector -->
+    <div>
+      {% if selected_file %}
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 700;">Target File #{{ selected_file.id }}</span>
+              <h2 class="card-title" style="word-break: break-all;">{{ selected_file.original_filename }}</h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" id="verify-btn" class="btn btn-primary btn-sm" onclick="runIntegrityVerification({{ selected_file.id }})">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                <span>Verify Integrity</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="verify-alert" style="display: none; margin-bottom: 1.5rem;"></div>
+
+          <!-- Cryptographic Hash Comparison Grid -->
+          <div style="background: rgba(11, 17, 32, 0.8); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.75rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 1rem;">
+              Cryptographic Hash Validation
+            </div>
+
+            <div style="display: grid; gap: 1rem;">
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">1. Authoritative Reference Hash (Stored at Upload)</div>
+                <div class="hash-pill" style="margin-top: 0.25rem; color: var(--accent-emerald);">
+                  {{ selected_file.sha256_reference }}
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">2. Live Observed Storage Hash (Recalculated Now)</div>
+                <div class="hash-pill" id="live-hash-display" style="margin-top: 0.25rem; color: {% if live_hash == selected_file.sha256_reference %}var(--accent-emerald){% else %}var(--accent-rose){% endif %};">
+                  {{ live_hash }}
+                </div>
+              </div>
+
+              <div style="padding-top: 0.5rem; border-top: 1px solid var(--border-subtle);">
+                {% if live_hash == selected_file.sha256_reference %}
+                  <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-emerald); font-weight: 600; font-size: 0.95rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Integrity verified: the file matches its recorded reference hash.</span>
+                  </div>
+                {% elif live_hash == "FILE_MISSING_ON_DISK" %}
+                  <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-amber); font-weight: 600; font-size: 0.95rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span>Missing file: The physical file is absent from designated storage.</span>
+                  </div>
+                {% else %}
+                  <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-rose); font-weight: 600; font-size: 0.95rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>Integrity warning: the file differs from its recorded reference hash!</span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Forensic Metadata: Application vs OS File-System -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem;">Metadata Discrepancy & Correlation Analysis</h3>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Application Layer Record</th>
+                  <th>Operating System File-System Stat</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Physical Existence</strong></td>
+                  <td>Record Status: <code>{{ selected_file.status }}</code></td>
+                  <td>
+                    {% if os_meta and os_meta.exists %}
+                      <span class="badge badge-active">Present on Disk</span>
+                    {% else %}
+                      <span class="badge badge-fail">Missing on Disk</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>File Size</strong></td>
+                  <td>{{ selected_file.file_size }} bytes</td>
+                  <td>{{ os_meta.disk_size if os_meta else '—' }} bytes</td>
+                </tr>
+                <tr>
+                  <td><strong>Storage Identifier</strong></td>
+                  <td><code>{{ selected_file.storage_id }}</code></td>
+                  <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); word-break: break-all;">
+                    {{ os_meta.absolute_path if os_meta else '—' }}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Upload / Creation Time</strong></td>
+                  <td>{{ selected_file.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
+                  <td style="font-family: var(--font-mono); font-size: 0.8rem;">
+                    {% if os_meta and os_meta.os_ctime %}
+                      Epoch: {{ os_meta.os_ctime }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Modification Time (mtime)</strong></td>
+                  <td>{{ selected_file.updated_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
+                  <td style="font-family: var(--font-mono); font-size: 0.8rem;">
+                    {% if os_meta and os_meta.os_mtime %}
+                      Epoch: {{ os_meta.os_mtime }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Academic INS Controlled Demonstration Suite -->
+          <div style="background: rgba(30, 41, 59, 0.4); border: 1px dashed var(--accent-cyan); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <h3 style="font-size: 1rem; font-weight: 700; color: var(--accent-cyan);">INS Mini-Project Live Demonstration Controls</h3>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+              These controlled simulator actions enable examiners and students to observe cryptographic mismatch detection and 12-hour expiration without manual hex manipulation or waiting 12 real hours.
+            </p>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-danger btn-sm" onclick="demoTamperFile({{ selected_file.id }})">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Demo: Corrupt Storage Bytes (Tamper)</span>
+              </button>
+
+              <button type="button" class="btn btn-secondary btn-sm" onclick="demoExpireFile({{ selected_file.id }})">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>Demo: Fast-Forward Expiration</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Integrity Check Log History for Target File -->
+          <div>
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem;">Cryptographic Audit History for File #{{ selected_file.id }}</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Checked At (UTC)</th>
+                    <th>Result</th>
+                    <th>Initiator</th>
+                    <th>Expected SHA-256</th>
+                    <th>Observed SHA-256</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if history %}
+                    {% for h in history %}
+                      <tr>
+                        <td style="font-family: var(--font-mono); font-size: 0.8rem;">{{ h.checked_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                          {% if h.result == 'PASS' %}
+                            <span class="badge badge-pass">PASS</span>
+                          {% elif h.result == 'FAIL' %}
+                            <span class="badge badge-fail">FAIL</span>
+                          {% else %}
+                            <span class="badge badge-warning">{{ h.result }}</span>
+                          {% endif %}
+                        </td>
+                        <td><code>{{ h.initiated_by }}</code></td>
+                        <td><span class="hash-pill">{{ h.expected_sha256[:16] }}...</span></td>
+                        <td><span class="hash-pill">{% if h.observed_sha256 %}{{ h.observed_sha256[:16] }}...{% else %}None{% endif %}</span></td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
+                        No integrity checks executed for this file yet.
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="card" style="text-align: center; padding: 4rem 2rem;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="1.5" style="margin-bottom: 1rem;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Select a Managed File for Forensic Investigation</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto;">
+            Choose a file from the list on the left to inspect low-level filesystem stat properties, verify SHA-256 signatures, or simulate tampering scenarios.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function runIntegrityVerification(fileId) {
+    const btn = document.getElementById("verify-btn");
+    const alertBox = document.getElementById("verify-alert");
+    btn.setAttribute("disabled", "true");
+
+    fetch(`/admin/forensics/verify/${fileId}`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.removeAttribute("disabled");
+      alertBox.className = data.valid ? "alert alert-success" : "alert alert-danger";
+      alertBox.innerHTML = `<strong>Verification Result: ${data.result}</strong> — ${data.message}`;
+      alertBox.style.display = "block";
+      setTimeout(() => { window.location.reload(); }, 2000);
+    })
+    .catch(err => {
+      btn.removeAttribute("disabled");
+      alertBox.className = "alert alert-danger";
+      alertBox.textContent = "Error executing integrity verification.";
+      alertBox.style.display = "block";
+    });
+  }
+
+  function demoTamperFile(fileId) {
+    if (!confirm("Demonstration Action: This will inject simulated corruption bytes into the stored file to trigger a cryptographic mismatch. Continue?")) return;
+
+    fetch(`/admin/forensics/demo/tamper/${fileId}`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      alert(data.message);
+      window.location.reload();
+    })
+    .catch(err => {
+      alert("Error injecting tamper payload.");
+    });
+  }
+
+  function demoExpireFile(fileId) {
+    if (!confirm("Demonstration Action: Fast-forward this file's expiration timestamp to the past?")) return;
+
+    fetch(`/admin/forensics/demo/expire/${fileId}`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      alert(data.message);
+      window.location.reload();
+    })
+    .catch(err => {
+      alert("Error expiring file.");
+    });
+  }
+</script>
+{% endblock %}
+

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Login — FileGuard{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 480px; padding: 5rem 1.5rem;">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: var(--radius-full); background: var(--primary-glow); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--accent-cyan); margin-bottom: 1rem;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    </div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Security Portal</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+      Authorized administrative and forensic access only.
+    </p>
+  </div>
+
+  <div class="card" style="padding: 2.25rem;">
+    <form action="{{ url_for('admin.login', next=request.args.get('next')) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div class="form-group">
+        <label for="username" class="form-label">Administrator Username</label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="admin" required autocomplete="username" autofocus>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.75rem;">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+        <span>Authenticate Session</span>
+      </button>
+    </form>
+  </div>
+
+  <div style="text-align: center; margin-top: 1.75rem; color: var(--text-dim); font-size: 0.8rem;">
+    Sessions are rate-limited and logged with cryptographic audit records.
+  </div>
+</div>
+{% endblock %}
+

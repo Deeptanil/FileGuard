@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}500 Internal Error — FileGuard{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 600px; padding: 5rem 1.5rem; text-align: center;">
+  <h1 style="font-size: 4rem; font-weight: 800; color: var(--accent-rose); font-family: var(--font-mono);">500</h1>
+  <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">Internal Server Error</h2>
+  <p style="color: var(--text-muted); margin-bottom: 2rem;">An unexpected server error occurred. Internal debugging details have been safely omitted for security.</p>
+  <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Homepage</a>
+</div>
+{% endblock %}
+

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: fileguard-app
+    env: python
+    buildCommand: "pip install -r requirements.txt && python scripts/init_db.py"
+    startCommand: "gunicorn wsgi:app"
+    plan: free
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: EXPIRATION_HOURS
+        value: "12"
+      - key: MAX_CONTENT_LENGTH_MB
+        value: "50"
+      - key: ALLOWED_EXTENSIONS
+        value: "pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip"
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: FileGuard@Sec2026!
+

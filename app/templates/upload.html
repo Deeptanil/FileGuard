@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Upload & Share File — FileGuard{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 760px; padding: 3.5rem 1.5rem;">
+  <div style="text-align: center; margin-bottom: 2.5rem;">
+    <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em;">Upload a Temporary File</h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 1.05rem;">
+      Files are automatically protected with SHA-256 integrity verification and deleted after 12 hours.
+    </p>
+  </div>
+
+  <div class="card" style="padding: 2.5rem;">
+    <div id="dropzone" class="dropzone" data-max-mb="100" data-allowed-exts="pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip">
+      <input type="file" id="file-input" style="display: none;">
+      
+      <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+        <path d="M12 12v9"></path>
+        <path d="m16 16-4-4-4 4"></path>
+      </svg>
+
+      <h3 class="dropzone-title">Click to select or drag and drop your file</h3>
+      <p class="dropzone-hint">
+        Allowed formats: PDF, PNG, JPG, TXT, CSV, DOCX, XLSX, PPTX, ZIP • Max 100 MB
+      </p>
+
+      <!-- Selected File Preview -->
+      <div id="file-preview" style="display: none; background: rgba(30, 41, 59, 0.85); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="text-align: left;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 600;">Selected File</div>
+            <strong id="file-name-display" style="color: var(--text-main); font-size: 1.1rem; word-break: break-all;">file.pdf</strong>
+            <div id="file-size-display" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">0 KB</div>
+          </div>
+          <button type="button" id="upload-btn" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">
+            Upload File
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload Progress Container -->
+      <div id="progress-container" class="progress-container" style="margin-top: 1.75rem;">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <div id="progress-percent" style="font-size: 0.85rem; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 0.5rem;"></div>
+
+      <div id="upload-error" class="alert alert-danger" style="display: none; margin-top: 1.5rem; text-align: left;"></div>
+    </div>
+
+    <!-- Security Information Box -->
+    <div style="margin-top: 2rem; padding: 1rem 1.25rem; background: rgba(11, 17, 32, 0.6); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+      <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-cyan); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Automatic Retention Policy</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">
+        Every upload remains available for exactly 12 hours from the recorded server upload timestamp. Upon expiration, file access is terminated immediately and storage blocks are safely scheduled for purge.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}
+

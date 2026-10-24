@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}File Expired — FileGuard{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 620px; padding: 5rem 1.5rem; text-align: center;">
+  <div style="display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: var(--radius-full); background: var(--accent-amber-bg); border: 2px solid rgba(245, 158, 11, 0.4); color: var(--accent-amber); margin-bottom: 1.5rem;">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+  </div>
+
+  <h1 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 0.75rem;">This File Has Expired</h1>
+  <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem;">
+    Every file shared through FileGuard has a strict 12-hour availability lifecycle. The requested file has exceeded this window and can no longer be accessed or retrieved.
+  </p>
+
+  <div class="card" style="background: rgba(15, 23, 42, 0.6); text-align: left; margin-bottom: 2.5rem;">
+    <div style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Security Enforcement Notice</div>
+    <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.6;">
+      The application backend rejects all download attempts after the 12-hour mark regardless of client clock tampering. The storage blocks for this file are systematically purged by the automated cleanup process.
+    </p>
+  </div>
+
+  <a href="{{ url_for('public.index') }}" class="btn btn-primary">
+    <span>Return to FileGuard Homepage</span>
+  </a>
+</div>
+{% endblock %}
+

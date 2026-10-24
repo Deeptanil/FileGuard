@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Files Inventory — FileGuard Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 600; letter-spacing: 0.05em;">Storage Governance</div>
+      <h1 style="font-size: 2rem; font-weight: 800;">Managed Files Inventory</h1>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.files_list') }}" class="btn btn-sm {% if current_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+      <a href="{{ url_for('admin.files_list', status='active') }}" class="btn btn-sm {% if current_filter == 'active' %}btn-primary{% else %}btn-secondary{% endif %}">Active</a>
+      <a href="{{ url_for('admin.files_list', status='expired') }}" class="btn btn-sm {% if current_filter == 'expired' %}btn-primary{% else %}btn-secondary{% endif %}">Expired</a>
+      <a href="{{ url_for('admin.files_list', status='tampered') }}" class="btn btn-sm {% if current_filter == 'tampered' %}btn-danger{% else %}btn-secondary{% endif %}">Tampered</a>
+      <a href="{{ url_for('admin.files_list', status='deleted') }}" class="btn btn-sm {% if current_filter == 'deleted' %}btn-primary{% else %}btn-secondary{% endif %}">Deleted/Purged</a>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Original Filename</th>
+          <th>Size</th>
+          <th>Storage ID</th>
+          <th>Status</th>
+          <th>Uploaded (UTC)</th>
+          <th>Expires (UTC)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if files %}
+          {% for f in files %}
+            <tr>
+              <td><strong>#{{ f.id }}</strong></td>
+              <td style="font-weight: 600; word-break: break-all;">{{ f.original_filename }}</td>
+              <td>{{ (f.file_size / 1024)|round(1) }} KB</td>
+              <td><span class="hash-pill">{{ f.storage_id }}</span></td>
+              <td>
+                {% if f.status == 'active' %}
+                  <span class="badge badge-active">Active</span>
+                {% elif f.status == 'expired' %}
+                  <span class="badge badge-expired">Expired</span>
+                {% elif f.status == 'tampered' %}
+                  <span class="badge badge-tampered">Tampered</span>
+                {% elif f.status == 'deleted' %}
+                  <span class="badge badge-deleted">Deleted</span>
+                {% else %}
+                  <span class="badge">{{ f.status }}</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.8rem; font-family: var(--font-mono);">{{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td style="font-size: 0.8rem; font-family: var(--font-mono);">{{ f.expires_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>
+                <a href="{{ url_for('forensics.forensics_index', file_id=f.id) }}" class="btn btn-secondary btn-sm">
+                  Forensic Inspect
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
+              No file records found matching the current filter.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

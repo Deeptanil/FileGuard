@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Storage Error — File Missing — FileGuard{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 600px; padding: 5rem 1.5rem; text-align: center;">
+  <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--accent-amber-bg); border: 2px solid rgba(245, 158, 11, 0.4); color: var(--accent-amber); margin-bottom: 1.5rem;">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+  </div>
+  <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">File Missing from Storage</h1>
+  <p style="color: var(--text-muted); margin-bottom: 2rem;">A database record exists for this file, but the physical file payload is absent from server storage. A security incident record has been logged.</p>
+  <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Homepage</a>
+</div>
+{% endblock %}
+
