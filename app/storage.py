@@ -9,17 +9,45 @@ class StorageError(Exception):
     pass
 
 
+def get_s3_client():
+    """Instantiate S3-compatible client for Backblaze B2, Cloudflare R2, or AWS S3."""
+    import boto3
+    endpoint = current_app.config.get("S3_ENDPOINT_URL")
+    return boto3.client(
+        "s3",
+        endpoint_url=endpoint if endpoint else None,
+        aws_access_key_id=current_app.config.get("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=current_app.config.get("AWS_SECRET_ACCESS_KEY"),
+        region_name=current_app.config.get("AWS_DEFAULT_REGION", "us-east-1")
+    )
+
+
 def get_storage_path(storage_id: str) -> Path:
     """
     Resolve safe filesystem path for an internal storage identifier.
     Guarantees path traversal cannot escape the configured storage directory.
+    If storage backend is S3 and file is not yet cached locally, fetches from S3 on demand.
     """
     storage_dir = Path(current_app.config["STORAGE_DIR"]).resolve()
+    storage_dir.mkdir(parents=True, exist_ok=True)
+
     # Sanitize storage_id to prevent any slash or traversal pattern
     safe_id = "".join(c for c in storage_id if c.isalnum() or c in ("-", "_"))
     target = (storage_dir / safe_id).resolve()
     if not str(target).startswith(str(storage_dir)):
         raise StorageError("Path traversal attempt detected in storage path resolution")
+
+    # If backend is S3 and local cache doesn't exist, download from bucket
+    if not target.exists() and current_app.config.get("STORAGE_BACKEND") == "s3":
+        bucket = current_app.config.get("S3_BUCKET_NAME")
+        if bucket:
+            try:
+                s3 = get_s3_client()
+                s3.download_file(bucket, safe_id, str(target))
+            except Exception:
+                # File not found in S3
+                pass
+
     return target
 
 
@@ -27,13 +55,14 @@ def save_upload_stream(file_storage) -> tuple[str, int, str]:
     """
     Save incoming FileStorage to storage under a generated storage ID.
     Calculates SHA-256 and byte length during write.
+    If STORAGE_BACKEND is 's3', also pushes the file to Backblaze B2 / S3 bucket.
     Returns: (storage_id, byte_size, sha256_hash)
     """
     storage_dir = Path(current_app.config["STORAGE_DIR"]).resolve()
     storage_dir.mkdir(parents=True, exist_ok=True)
 
     storage_id = f"fg_{uuid.uuid4().hex}"
-    target_path = get_storage_path(storage_id)
+    target_path = (storage_dir / storage_id).resolve()
 
     hasher = hashlib.sha256()
     bytes_written = 0
@@ -47,6 +76,14 @@ def save_upload_stream(file_storage) -> tuple[str, int, str]:
                     raise StorageError(f"File exceeded maximum permitted size ({current_app.config['MAX_CONTENT_LENGTH_MB']} MB)")
                 hasher.update(chunk)
                 f.write(chunk)
+
+        # Upload to S3/Backblaze B2 if S3 backend is enabled
+        if current_app.config.get("STORAGE_BACKEND") == "s3":
+            bucket = current_app.config.get("S3_BUCKET_NAME")
+            if bucket:
+                s3 = get_s3_client()
+                s3.upload_file(str(target_path), bucket, storage_id)
+
     except Exception as e:
         # Cleanup incomplete or oversized file
         if target_path.exists():
@@ -57,15 +94,32 @@ def save_upload_stream(file_storage) -> tuple[str, int, str]:
 
 
 def delete_stored_file(storage_id: str) -> bool:
-    """Safely delete a file from server storage."""
+    """Safely delete a file from server storage and S3 bucket if configured."""
+    safe_id = "".join(c for c in storage_id if c.isalnum() or c in ("-", "_"))
+    deleted_any = False
+
+    # 1. Delete from local cache
     try:
-        path = get_storage_path(storage_id)
+        storage_dir = Path(current_app.config["STORAGE_DIR"]).resolve()
+        path = (storage_dir / safe_id).resolve()
         if path.exists():
             path.unlink()
-            return True
-        return False
+            deleted_any = True
     except Exception:
-        return False
+        pass
+
+    # 2. Delete from S3/Backblaze B2
+    if current_app.config.get("STORAGE_BACKEND") == "s3":
+        bucket = current_app.config.get("S3_BUCKET_NAME")
+        if bucket:
+            try:
+                s3 = get_s3_client()
+                s3.delete_object(Bucket=bucket, Key=safe_id)
+                deleted_any = True
+            except Exception:
+                pass
+
+    return deleted_any
 
 
 def get_stored_file_metadata(storage_id: str) -> dict:
@@ -103,4 +157,3 @@ def get_stored_file_metadata(storage_id: str) -> dict:
             "os_atime": None,
             "absolute_path": None
         }
-
