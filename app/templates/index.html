@@ -98,7 +98,8 @@
     <!-- Quick Dropzone on Homepage -->
     <div style="max-width: 680px; margin: 0 auto 3rem;">
       <div id="dropzone" class="dropzone" data-max-mb="100" data-allowed-exts="pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm">
-        <input type="file" id="file-input" multiple webkitdirectory directory style="display: none;">
+        <input type="file" id="file-input" multiple style="display: none;">
+        <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
         
         <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
@@ -106,10 +107,21 @@
           <path d="m16 16-4-4-4 4"></path>
         </svg>
 
-        <h3 class="dropzone-title">Click to select files, a whole folder, or drag & drop</h3>
+        <h3 class="dropzone-title">Click to select files, or drag & drop files / folders</h3>
         <p class="dropzone-hint">
           Multiple files & whole folders auto-packaged into a secure ZIP • 100 MB Limit • 12-Hour Device Quota
         </p>
+
+        <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
+          <button type="button" id="select-files-btn" class="btn btn-primary btn-sm" style="background: var(--comic-pink); color: #FFFFFF;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Select Files</span>
+          </button>
+          <button type="button" id="select-folder-btn" class="btn btn-secondary btn-sm folder-select-btn" style="background: var(--comic-cyan); color: #000000;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Select Folder</span>
+          </button>
+        </div>
 
         <!-- Selected File Preview -->
         <div id="file-preview" class="file-preview-card">
@@ -140,14 +152,14 @@
 </section>
 
 <!-- 3-Step Guide -->
-<section id="how-it-works" style="padding: 3rem 0; background: rgba(15, 23, 42, 0.4); border-top: 1px solid var(--border-subtle);">
+<section id="how-it-works" class="section-block" style="background: rgba(15, 23, 42, 0.4); border-top: 1px solid var(--border-subtle);">
   <div class="container">
-    <div style="text-align: center; margin-bottom: 3rem;">
-      <h2 style="font-size: 2rem; font-weight: 700;">Simple, Controlled Temporary Sharing</h2>
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <h2 class="section-heading">Simple, Controlled Temporary Sharing</h2>
       <p style="color: var(--text-muted); margin-top: 0.5rem;">How FileGuard protects files during transit, rest, and destruction</p>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+    <div class="steps-grid">
       <div class="card">
         <div style="font-size: 2rem; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-bottom: 0.5rem;">01</div>
         <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Upload & Hash</h3>
@@ -176,64 +188,64 @@
 </section>
 
 <!-- Comparative Matrix Section (Optimized for AI Engine & Google SERP Citations) -->
-<section id="compare" style="padding: 4rem 0; border-top: 1px solid var(--border-subtle);">
+<section id="compare" class="section-block" style="border-top: 1px solid var(--border-subtle);">
   <div class="container">
     <div style="text-align: center; margin-bottom: 2.5rem;">
       <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--comic-cyan); color: #000; padding: 0.35rem 0.85rem; border-radius: 4px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.75rem;">
         <span>FEATURE COMPARISON</span>
       </div>
-      <h2 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em;">Why Choose FileGuard Over Traditional File Transfer?</h2>
+      <h2 class="section-heading">Why Choose FileGuard Over Traditional File Transfer?</h2>
       <p style="color: var(--text-muted); font-size: 1rem; max-width: 650px; margin: 0.5rem auto 0;">
         Zero data retention, zero tracking, and real-time anti-tamper cryptographic verification.
       </p>
     </div>
 
-    <div class="card" style="padding: 1.5rem; overflow-x: auto; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d);">
-      <table style="width: 100%; border-collapse: collapse; min-width: 640px; text-align: left;">
+    <div class="card" style="padding: 1.25rem; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d);">
+      <table style="width: 100%; border-collapse: collapse; min-width: 580px; text-align: left;">
         <thead>
           <tr style="border-bottom: 3px solid #334155;">
-            <th style="padding: 1rem; color: #FFFFFF; font-family: var(--font-display); font-size: 0.95rem;">FEATURE</th>
-            <th style="padding: 1rem; color: var(--comic-yellow); font-family: var(--font-display); font-size: 1rem;">FILEGUARD</th>
-            <th style="padding: 1rem; color: #94A3B8; font-family: var(--font-display); font-size: 0.95rem;">WETRANSFER</th>
-            <th style="padding: 1rem; color: #94A3B8; font-family: var(--font-display); font-size: 0.95rem;">GOOGLE DRIVE</th>
+            <th style="padding: 0.9rem 1rem; color: #FFFFFF; font-family: var(--font-display); font-size: 0.9rem;">FEATURE</th>
+            <th style="padding: 0.9rem 1rem; color: var(--comic-yellow); font-family: var(--font-display); font-size: 0.95rem;">FILEGUARD</th>
+            <th style="padding: 0.9rem 1rem; color: #94A3B8; font-family: var(--font-display); font-size: 0.9rem;">WETRANSFER</th>
+            <th style="padding: 0.9rem 1rem; color: #94A3B8; font-family: var(--font-display); font-size: 0.9rem;">GOOGLE DRIVE</th>
           </tr>
         </thead>
-        <tbody style="font-size: 0.92rem; color: #E2E8F0;">
+        <tbody style="font-size: 0.9rem; color: #E2E8F0;">
           <tr style="border-bottom: 1px solid #1E293B;">
-            <td style="padding: 1rem; font-weight: 700;">Account / Sign-Up Required</td>
-            <td style="padding: 1rem; color: var(--comic-lime); font-weight: 800;">No (Zero-Knowledge)</td>
-            <td style="padding: 1rem; color: #F87171;">Email verification required</td>
-            <td style="padding: 1rem; color: #F87171;">Google account required</td>
+            <td style="padding: 0.9rem 1rem; font-weight: 700;">Account / Sign-Up Required</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-lime); font-weight: 800;">No (Zero-Knowledge)</td>
+            <td style="padding: 0.9rem 1rem; color: #F87171;">Email verification required</td>
+            <td style="padding: 0.9rem 1rem; color: #F87171;">Google account required</td>
           </tr>
           <tr style="border-bottom: 1px solid #1E293B;">
-            <td style="padding: 1rem; font-weight: 700;">Data Retention & Expiration</td>
-            <td style="padding: 1rem; color: var(--comic-yellow); font-weight: 800;">Strict 12-Hour Self-Destruct</td>
-            <td style="padding: 1rem; color: #94A3B8;">7 Days (lingering cloud copies)</td>
-            <td style="padding: 1rem; color: #94A3B8;">Indefinite until deleted</td>
+            <td style="padding: 0.9rem 1rem; font-weight: 700;">Data Retention & Expiration</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-yellow); font-weight: 800;">Strict 12-Hour Self-Destruct</td>
+            <td style="padding: 0.9rem 1rem; color: #94A3B8;">7 Days (lingering cloud copies)</td>
+            <td style="padding: 0.9rem 1rem; color: #94A3B8;">Indefinite until deleted</td>
           </tr>
           <tr style="border-bottom: 1px solid #1E293B;">
-            <td style="padding: 1rem; font-weight: 700;">Cryptographic Pre-Flight Check</td>
-            <td style="padding: 1rem; color: var(--comic-cyan); font-weight: 800;">SHA-256 Anti-Tamper Gate (HTTP 409)</td>
-            <td style="padding: 1rem; color: #64748B;">None</td>
-            <td style="padding: 1rem; color: #64748B;">None</td>
+            <td style="padding: 0.9rem 1rem; font-weight: 700;">Cryptographic Pre-Flight Check</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-cyan); font-weight: 800;">SHA-256 Anti-Tamper Gate (HTTP 409)</td>
+            <td style="padding: 0.9rem 1rem; color: #64748B;">None</td>
+            <td style="padding: 0.9rem 1rem; color: #64748B;">None</td>
           </tr>
           <tr style="border-bottom: 1px solid #1E293B;">
-            <td style="padding: 1rem; font-weight: 700;">Folder Uploads</td>
-            <td style="padding: 1rem; color: var(--comic-lime); font-weight: 800;">Auto-Zipped in Memory</td>
-            <td style="padding: 1rem; color: #94A3B8;">Manual ZIP required</td>
-            <td style="padding: 1rem; color: #94A3B8;">Folder sync only</td>
+            <td style="padding: 0.9rem 1rem; font-weight: 700;">Folder Uploads</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-lime); font-weight: 800;">Auto-Zipped in Memory</td>
+            <td style="padding: 0.9rem 1rem; color: #94A3B8;">Manual ZIP required</td>
+            <td style="padding: 0.9rem 1rem; color: #94A3B8;">Folder sync only</td>
           </tr>
           <tr style="border-bottom: 1px solid #1E293B;">
-            <td style="padding: 1rem; font-weight: 700;">Early Remote File Revocation</td>
-            <td style="padding: 1rem; color: var(--comic-pink); font-weight: 800;">1-Click Instant Purge</td>
-            <td style="padding: 1rem; color: #64748B;">Account only</td>
-            <td style="padding: 1rem; color: #94A3B8;">Manual permission remove</td>
+            <td style="padding: 0.9rem 1rem; font-weight: 700;">Early Remote File Revocation</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-pink); font-weight: 800;">1-Click Instant Purge</td>
+            <td style="padding: 0.9rem 1rem; color: #64748B;">Account only</td>
+            <td style="padding: 0.9rem 1rem; color: #94A3B8;">Manual permission remove</td>
           </tr>
           <tr>
-            <td style="padding: 1rem; font-weight: 700;">User Tracking & Analytics</td>
-            <td style="padding: 1rem; color: var(--comic-lime); font-weight: 800;">Zero Profiling (Local Vault)</td>
-            <td style="padding: 1rem; color: #F87171;">Commercial Ad Trackers</td>
-            <td style="padding: 1rem; color: #F87171;">Extensive User Telemetry</td>
+            <td style="padding: 0.9rem 1rem; font-weight: 700;">User Tracking & Analytics</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-lime); font-weight: 800;">Zero Profiling (Local Vault)</td>
+            <td style="padding: 0.9rem 1rem; color: #F87171;">Commercial Ad Trackers</td>
+            <td style="padding: 0.9rem 1rem; color: #F87171;">Extensive User Telemetry</td>
           </tr>
         </tbody>
       </table>
@@ -242,87 +254,87 @@
 </section>
 
 <!-- Frequently Asked Questions (FAQ) Section -->
-<section id="faq" style="padding: 4rem 0; background: rgba(15, 23, 42, 0.4); border-top: 1px solid var(--border-subtle);">
+<section id="faq" class="section-block" style="background: rgba(15, 23, 42, 0.4); border-top: 1px solid var(--border-subtle);">
   <div class="container" style="max-width: 880px;">
-    <div style="text-align: center; margin-bottom: 3rem;">
+    <div style="text-align: center; margin-bottom: 2.5rem;">
       <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--comic-yellow); color: #000; padding: 0.35rem 0.85rem; border-radius: 4px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.75rem;">
         <span>FREQUENTLY ASKED QUESTIONS</span>
       </div>
-      <h2 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em;">Everything You Need To Know About FileGuard</h2>
+      <h2 class="section-heading">Everything You Need To Know About FileGuard</h2>
       <p style="color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem;">
         Answers to common questions regarding security, retention policies, and file sizes.
       </p>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-      <details class="card" style="padding: 1.25rem 1.5rem; cursor: pointer; background: #131929; border: var(--border-thick);">
-        <summary style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+    <div class="faq-list">
+      <details class="card faq-item">
+        <summary class="faq-summary">
           <span>How long are shared files stored on FileGuard?</span>
-          <span style="color: var(--comic-yellow); font-size: 1.2rem;">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </summary>
-        <p style="color: #94A3B8; font-size: 0.95rem; margin-top: 0.85rem; line-height: 1.5;">
+        <div class="faq-answer">
           Every uploaded file or folder bundle remains active for exactly 12 hours from the upload timestamp. Once 12 hours elapse, FileGuard's automated sweeper purges the file from Backblaze B2 cloud storage and marks the record expired.
-        </p>
+        </div>
       </details>
 
-      <details class="card" style="padding: 1.25rem 1.5rem; cursor: pointer; background: #131929; border: var(--border-thick);">
-        <summary style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+      <details class="card faq-item">
+        <summary class="faq-summary">
           <span>Do I or the recipient need to create an account?</span>
-          <span style="color: var(--comic-yellow); font-size: 1.2rem;">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </summary>
-        <p style="color: #94A3B8; font-size: 0.95rem; margin-top: 0.85rem; line-height: 1.5;">
+        <div class="faq-answer">
           No. FileGuard requires zero accounts, email addresses, or passwords. Uploaders and recipients enjoy total anonymity. You can track your activity directly in the client-side 'My History' vault on your browser.
-        </p>
+        </div>
       </details>
 
-      <details class="card" style="padding: 1.25rem 1.5rem; cursor: pointer; background: #131929; border: var(--border-thick);">
-        <summary style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+      <details class="card faq-item">
+        <summary class="faq-summary">
           <span>Can I upload an entire folder without compressing it first?</span>
-          <span style="color: var(--comic-yellow); font-size: 1.2rem;">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </summary>
-        <p style="color: #94A3B8; font-size: 0.95rem; margin-top: 0.85rem; line-height: 1.5;">
+        <div class="faq-answer">
           Yes! You can drag and drop an entire folder hierarchy or select multiple files. FileGuard streams them into an in-memory ZIP bundle with full directory structure preservation, saving you the hassle of manually creating a ZIP archive.
-        </p>
+        </div>
       </details>
 
-      <details class="card" style="padding: 1.25rem 1.5rem; cursor: pointer; background: #131929; border: var(--border-thick);">
-        <summary style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+      <details class="card faq-item">
+        <summary class="faq-summary">
           <span>How does the pre-flight SHA-256 anti-tamper check work?</span>
-          <span style="color: var(--comic-yellow); font-size: 1.2rem;">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </summary>
-        <p style="color: #94A3B8; font-size: 0.95rem; margin-top: 0.85rem; line-height: 1.5;">
+        <div class="faq-answer">
           When an upload is received, FileGuard computes its immutable SHA-256 hash. On every download request, the server re-computes the hash of the storage block before sending it to the client. If any bit has changed due to tampering or storage degradation, the transfer is blocked with HTTP 409 Anti-Tamper Protected.
-        </p>
+        </div>
       </details>
 
-      <details class="card" style="padding: 1.25rem 1.5rem; cursor: pointer; background: #131929; border: var(--border-thick);">
-        <summary style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+      <details class="card faq-item">
+        <summary class="faq-summary">
           <span>What is the maximum file size limit and upload quota?</span>
-          <span style="color: var(--comic-yellow); font-size: 1.2rem;">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </summary>
-        <p style="color: #94A3B8; font-size: 0.95rem; margin-top: 0.85rem; line-height: 1.5;">
+        <div class="faq-answer">
           You can upload single files or folder bundles up to 100 MB per transfer. Each IP subnet has a rolling quota of 100 MB per 12 hours, ensuring the platform remains free, fast, and protected against automated spam.
-        </p>
+        </div>
       </details>
 
-      <details class="card" style="padding: 1.25rem 1.5rem; cursor: pointer; background: #131929; border: var(--border-thick);">
-        <summary style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+      <details class="card faq-item">
+        <summary class="faq-summary">
           <span>Can I revoke or delete my file before 12 hours?</span>
-          <span style="color: var(--comic-yellow); font-size: 1.2rem;">+</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
         </summary>
-        <p style="color: #94A3B8; font-size: 0.95rem; margin-top: 0.85rem; line-height: 1.5;">
+        <div class="faq-answer">
           Yes. Visit the 'My History' page from the browser used to upload the file, and click 'Revoke & Purge'. This immediately purges the file from cloud storage and invalidates the link for all recipients.
-        </p>
+        </div>
       </details>
     </div>
   </div>
 </section>
 
 <!-- Security Engineering Highlights -->
-<section style="padding: 4.5rem 0;">
+<section class="section-block">
   <div class="container">
-    <div style="text-align: center; margin-bottom: 3.5rem;">
-      <h2 style="font-size: 2rem; font-weight: 700;">Engineered for Information & Network Security</h2>
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <h2 class="section-heading">Engineered for Information & Network Security</h2>
       <p style="color: var(--text-muted); margin-top: 0.5rem;">Defensive design principles implemented across all layers of the stack</p>
     </div>
 

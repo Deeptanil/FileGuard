@@ -94,11 +94,9 @@
           </svg>
         </div>
         <span>FILEGUARD</span>
-        <span class="brand-badge">INS::2026</span>
       </a>
 
       <ul class="nav-links">
-        <li><a href="{{ url_for('public.index') }}" class="nav-link">Home</a></li>
         <li><a href="{{ url_for('public.upload_page') }}" class="nav-link">Share File</a></li>
         <li><a href="{{ url_for('public.history_page') }}" class="nav-link">My History</a></li>
         {% if session.get('admin_logged_in') %}
@@ -138,8 +136,8 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="container footer-content">
-      <div style="flex: 1; min-width: 260px;">
-        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
+      <div style="flex: 1; min-width: min(100%, 260px);">
+        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
           <strong style="color: #FFFFFF; font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.03em;">FILEGUARD</strong>
           <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.65rem;">INS :: 2026</span>
         </div>
@@ -148,13 +146,13 @@
         </p>
       </div>
 
-      <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; font-size: 0.82rem; color: #94A3B8; min-width: 220px;">
+      <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; font-size: 0.82rem; color: #94A3B8; min-width: min(100%, 220px);">
         <div style="display: flex; align-items: center; gap: 0.4rem;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--comic-cyan)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--comic-cyan)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span><strong>Zero Knowledge</strong> • 256-Bit Cryptographic Tokens</span>
         </div>
         <div style="display: flex; align-items: center; gap: 0.4rem;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--comic-pink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--comic-pink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <span><strong>Automated Purge</strong> • 12-Hour Self-Destruct</span>
         </div>
         <div style="color: #64748B; font-size: 0.75rem; margin-top: 0.25rem;">

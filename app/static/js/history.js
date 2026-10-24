@@ -176,7 +176,7 @@
       html += `
         <div class="history-item-card" id="upload-card-${item.token}">
           <!-- Left: Icon & File Meta -->
-          <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 260px;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: min(100%, 240px);">
             <div class="file-icon-box" style="background: ${isBundle ? 'var(--comic-purple)' : 'var(--comic-cyan)'}; color: #000000;">
               ${isBundle ? SVG_BUNDLE : SVG_FILE}
             </div>
@@ -264,7 +264,7 @@
       html += `
         <div class="history-item-card" id="view-card-${item.token}">
           <!-- Left: Icon & Meta -->
-          <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 260px;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: min(100%, 240px);">
             <div class="file-icon-box" style="background: var(--comic-yellow); color: #000000;">
               ${isBundle ? SVG_BUNDLE : SVG_DOWNLOAD}
             </div>

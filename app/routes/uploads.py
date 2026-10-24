@@ -107,7 +107,8 @@ def upload_file():
     allowed_exts = current_app.config["ALLOWED_EXTENSIONS"]
 
     # 3. Handle Single File vs Multiple Files / Folder Bundle
-    if len(valid_files) == 1:
+    is_folder_request = request.form.get("is_folder") == "true"
+    if len(valid_files) == 1 and not is_folder_request:
         file = valid_files[0]
         clean_name, ext = sanitize_filename(file.filename)
         is_allowed, ext, detected_mime = inspect_file_type(file.stream, file.filename)

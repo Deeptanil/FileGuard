@@ -7,13 +7,13 @@
   <!-- Section Title -->
   <div style="margin-bottom: 2rem;">
     <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 600; letter-spacing: 0.05em;">Digital Forensics & Incident Response</div>
-    <h1 style="font-size: 2.25rem; font-weight: 800;">Cryptographic Integrity & File-System Forensics</h1>
+    <h1 class="section-heading">Cryptographic Integrity & File-System Forensics</h1>
     <p style="color: var(--text-muted); margin-top: 0.25rem;">
       Inspect low-level OS metadata, verify cryptographic hashes, and demonstrate file tampering detection.
     </p>
   </div>
 
-  <div style="display: grid; grid-template-columns: 320px 1fr; gap: 2rem; align-items: start;">
+  <div class="forensics-grid">
     <!-- Left: Files Selection Panel -->
     <div class="card" style="padding: 1.25rem;">
       <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">Managed Files</h3>
@@ -104,62 +104,64 @@
           <!-- Forensic Metadata: Application vs OS File-System -->
           <div style="margin-bottom: 2rem;">
             <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem;">Metadata Discrepancy & Correlation Analysis</h3>
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Attribute</th>
-                  <th>Application Layer Record</th>
-                  <th>Operating System File-System Stat</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Physical Existence</strong></td>
-                  <td>Record Status: <code>{{ selected_file.status }}</code></td>
-                  <td>
-                    {% if os_meta and os_meta.exists %}
-                      <span class="badge badge-active">Present on Disk</span>
-                    {% else %}
-                      <span class="badge badge-fail">Missing on Disk</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>File Size</strong></td>
-                  <td>{{ selected_file.file_size }} bytes</td>
-                  <td>{{ os_meta.disk_size if os_meta else '—' }} bytes</td>
-                </tr>
-                <tr>
-                  <td><strong>Storage Identifier</strong></td>
-                  <td><code>{{ selected_file.storage_id }}</code></td>
-                  <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); word-break: break-all;">
-                    {{ os_meta.absolute_path if os_meta else '—' }}
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Upload / Creation Time</strong></td>
-                  <td>{{ selected_file.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
-                  <td style="font-family: var(--font-mono); font-size: 0.8rem;">
-                    {% if os_meta and os_meta.os_ctime %}
-                      Epoch: {{ os_meta.os_ctime }}
-                    {% else %}
-                      —
-                    {% endif %}
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Modification Time (mtime)</strong></td>
-                  <td>{{ selected_file.updated_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
-                  <td style="font-family: var(--font-mono); font-size: 0.8rem;">
-                    {% if os_meta and os_meta.os_mtime %}
-                      Epoch: {{ os_meta.os_mtime }}
-                    {% else %}
-                      —
-                    {% endif %}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Attribute</th>
+                    <th>Application Layer Record</th>
+                    <th>Operating System File-System Stat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Physical Existence</strong></td>
+                    <td>Record Status: <code>{{ selected_file.status }}</code></td>
+                    <td>
+                      {% if os_meta and os_meta.exists %}
+                        <span class="badge badge-active">Present on Disk</span>
+                      {% else %}
+                        <span class="badge badge-fail">Missing on Disk</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>File Size</strong></td>
+                    <td>{{ selected_file.file_size }} bytes</td>
+                    <td>{{ os_meta.disk_size if os_meta else '—' }} bytes</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Storage Identifier</strong></td>
+                    <td><code>{{ selected_file.storage_id }}</code></td>
+                    <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); word-break: break-all;">
+                      {{ os_meta.absolute_path if os_meta else '—' }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Upload / Creation Time</strong></td>
+                    <td>{{ selected_file.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
+                    <td style="font-family: var(--font-mono); font-size: 0.8rem;">
+                      {% if os_meta and os_meta.os_ctime %}
+                        Epoch: {{ os_meta.os_ctime }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Modification Time (mtime)</strong></td>
+                    <td>{{ selected_file.updated_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
+                    <td style="font-family: var(--font-mono); font-size: 0.8rem;">
+                      {% if os_meta and os_meta.os_mtime %}
+                        Epoch: {{ os_meta.os_mtime }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <!-- Academic INS Controlled Demonstration Suite -->

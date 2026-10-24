@@ -4,6 +4,9 @@
 document.addEventListener("DOMContentLoaded", () => {
   const dropzone = document.getElementById("dropzone");
   const fileInput = document.getElementById("file-input");
+  const folderInput = document.getElementById("folder-input");
+  const selectFilesBtn = document.getElementById("select-files-btn");
+  const selectFolderBtn = document.getElementById("select-folder-btn");
   const uploadForm = document.getElementById("upload-form");
   const filePreview = document.getElementById("file-preview");
   const fileNameDisplay = document.getElementById("file-name-display");
@@ -23,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .map(e => e.trim().toLowerCase());
 
   let selectedFiles = [];
+  let selectedIsFolder = false;
 
   function showError(msg) {
     if (errorContainer) {
@@ -46,17 +50,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
-  function handleFilesSelect(fileList) {
+  function handleFilesSelect(fileList, isFolderSelection = false) {
     clearError();
     if (!fileList || fileList.length === 0) return;
 
     const filesArray = Array.from(fileList);
     let totalBytes = 0;
 
+    const hasRelativePaths = filesArray.some(
+      f => (f.webkitRelativePath && f.webkitRelativePath.includes("/")) || (f.relativePath && f.relativePath.includes("/"))
+    );
+    selectedIsFolder = Boolean(isFolderSelection || hasRelativePaths);
+
     for (const file of filesArray) {
       totalBytes += file.size;
 
-      // Check extension unless it's a folder or bundle entry
+      // Check extension unless it's a hidden metadata entry
       const nameParts = file.name.split(".");
       const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "";
       if (ext && !ALLOWED_EXTS.includes(ext)) {
@@ -73,25 +82,30 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedFiles = filesArray;
 
     if (fileNameDisplay) {
-      if (filesArray.length === 1) {
+      if (selectedIsFolder) {
+        const firstPath = filesArray[0].webkitRelativePath || filesArray[0].relativePath || filesArray[0].name;
+        const folderName = firstPath.includes("/") ? firstPath.split("/")[0] : firstPath;
+        fileNameDisplay.textContent = `Folder: ${folderName} (${filesArray.length} file${filesArray.length === 1 ? "" : "s"})`;
+      } else if (filesArray.length === 1) {
         fileNameDisplay.textContent = filesArray[0].name;
       } else {
-        fileNameDisplay.textContent = `Bundle: ${filesArray.length} items (${filesArray[0].name} + ${filesArray.length - 1} more)`;
+        fileNameDisplay.textContent = `Bundle: ${filesArray.length} files (${filesArray[0].name} + ${filesArray.length - 1} more)`;
       }
     }
     if (fileSizeDisplay) fileSizeDisplay.textContent = formatBytes(totalBytes);
     if (filePreview) filePreview.style.display = "block";
 
     // Auto-upload immediately upon valid file selection
-    startUpload(filesArray);
+    startUpload(filesArray, selectedIsFolder);
   }
 
-  function startUpload(files) {
+  function startUpload(files, isFolder = false) {
     if (!files || files.length === 0) return;
     clearError();
+    const isBundle = isFolder || files.length > 1;
     if (uploadBtn) {
       uploadBtn.setAttribute("disabled", "true");
-      uploadBtn.textContent = files.length > 1 ? "Bundling & Uploading..." : "Uploading & Hashing...";
+      uploadBtn.textContent = isBundle ? "Bundling & Uploading..." : "Uploading & Hashing...";
     }
     if (progressContainer) progressContainer.style.display = "block";
     if (progressBar) progressBar.style.width = "0%";
@@ -99,7 +113,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const formData = new FormData();
     for (const file of files) {
-      formData.append("file", file);
+      const relPath = file.webkitRelativePath || file.relativePath || file.name;
+      formData.append("file", file, relPath);
+    }
+    if (isFolder) {
+      formData.append("is_folder", "true");
     }
 
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
@@ -119,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const percent = Math.round((evt.loaded / evt.total) * 100);
         if (progressBar) progressBar.style.width = `${percent}%`;
         if (progressPercent) {
-          progressPercent.textContent = `${percent}% (${files.length > 1 ? 'Bundling folder & transferring' : 'Transferring to encrypted vault'})`;
+          progressPercent.textContent = `${percent}% (${isBundle ? 'Bundling & transferring' : 'Transferring to encrypted vault'})`;
         }
       }
     });
@@ -141,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 sha256: data.sha256_reference,
                 uploaded_at: data.uploaded_at,
                 expires_at: data.expires_at,
-                is_bundle: Boolean(files && files.length > 1)
+                is_bundle: Boolean(isBundle)
               });
               if (uploads.length > 100) uploads.length = 100;
               localStorage.setItem("fileguard_user_uploads", JSON.stringify(uploads));
@@ -182,12 +200,71 @@ document.addEventListener("DOMContentLoaded", () => {
     if (progressContainer) progressContainer.style.display = "none";
   }
 
-  // File input change
+  // Recursive helper to read files from dropped folders (FileSystemEntry API)
+  function readEntryFiles(entry, pathPrefix = "") {
+    return new Promise((resolve) => {
+      if (entry.isFile) {
+        entry.file((file) => {
+          file.relativePath = pathPrefix ? `${pathPrefix}/${file.name}` : file.name;
+          resolve([file]);
+        }, () => resolve([]));
+      } else if (entry.isDirectory) {
+        const dirReader = entry.createReader();
+        const allEntries = [];
+        const readBatch = () => {
+          dirReader.readEntries(async (entries) => {
+            if (!entries.length) {
+              const nestedPrefix = pathPrefix ? `${pathPrefix}/${entry.name}` : entry.name;
+              const nestedResults = await Promise.all(
+                allEntries.map(child => readEntryFiles(child, nestedPrefix))
+              );
+              resolve(nestedResults.flat());
+            } else {
+              allEntries.push(...entries);
+              readBatch();
+            }
+          }, () => resolve([]));
+        };
+        readBatch();
+      } else {
+        resolve([]);
+      }
+    });
+  }
+
+  // Standard File input change (single or multiple files)
   fileInput.addEventListener("change", (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      handleFilesSelect(e.target.files);
+      handleFilesSelect(e.target.files, false);
+      fileInput.value = "";
     }
   });
+
+  // Folder input change (entire directory)
+  if (folderInput) {
+    folderInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFilesSelect(e.target.files, true);
+        folderInput.value = "";
+      }
+    });
+  }
+
+  if (selectFilesBtn) {
+    selectFilesBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      fileInput.click();
+    });
+  }
+
+  if (selectFolderBtn && folderInput) {
+    selectFolderBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      folderInput.click();
+    });
+  }
 
   // Drag and drop events
   ["dragenter", "dragover"].forEach(evt => {
@@ -206,16 +283,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  dropzone.addEventListener("drop", (e) => {
+  dropzone.addEventListener("drop", async (e) => {
     e.preventDefault();
     e.stopPropagation();
     dropzone.classList.remove("dragover");
+
+    const items = e.dataTransfer && e.dataTransfer.items ? Array.from(e.dataTransfer.items) : [];
+    const entries = items
+      .filter(item => item.kind === "file" && typeof item.webkitGetAsEntry === "function")
+      .map(item => item.webkitGetAsEntry())
+      .filter(Boolean);
+
+    if (entries.length > 0 && entries.some(en => en.isDirectory)) {
+      const results = await Promise.all(entries.map(en => readEntryFiles(en)));
+      const extractedFiles = results.flat();
+      if (extractedFiles.length > 0) {
+        handleFilesSelect(extractedFiles, true);
+      }
+      return;
+    }
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFilesSelect(e.dataTransfer.files);
+      handleFilesSelect(e.dataTransfer.files, false);
     }
   });
 
-  // Trigger file selection on dropzone click (prevent re-triggering if user clicks inside preview/btn)
+  // Trigger file selection on dropzone click (defaults to file picker so users can select files)
   dropzone.addEventListener("click", (e) => {
     if (e.target.closest("#file-preview") || e.target.closest("button") || e.target.closest("a") || e.target.closest(".folder-select-btn")) {
       return;
@@ -228,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       e.stopPropagation();
       if (selectedFiles.length > 0) {
-        startUpload(selectedFiles);
+        startUpload(selectedFiles, selectedIsFolder);
       } else {
         fileInput.click();
       }
