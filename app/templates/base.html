@@ -6,6 +6,11 @@
   <meta name="csrf-token" content="{{ csrf_token if csrf_token else '' }}">
   <title>{% block title %}FileGuard — Secure Temporary File Sharing{% endblock %}</title>
   
+  <!-- Neo-Brutalist Comic Favicons -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  
   <!-- Comic 3D & Pixel Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
