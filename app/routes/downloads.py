@@ -53,7 +53,9 @@ def view_shared_file(token: str):
         return render_template("expired.html", file=record), 410
 
     from app.routes.uploads import generate_qr_base64
-    canonical_base = current_app.config["CANONICAL_URL"]
+    canonical_base = current_app.config.get("CANONICAL_URL")
+    if not canonical_base or "localhost" in canonical_base:
+        canonical_base = request.host_url.rstrip("/")
     share_url = f"{canonical_base}/share/{token}"
     qr_data = generate_qr_base64(share_url)
 

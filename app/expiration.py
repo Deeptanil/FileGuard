@@ -12,6 +12,11 @@ def is_file_expired(file_record: FileRecord) -> bool:
     if utc_now() >= file_record.expires_at:
         if file_record.status == "active":
             file_record.status = "expired"
+            from app.storage import delete_stored_file
+            try:
+                delete_stored_file(file_record.storage_id)
+            except Exception:
+                pass
             db.session.commit()
         return True
 

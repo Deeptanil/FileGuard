@@ -133,7 +133,10 @@ def upload_file():
         return jsonify({"error": "Failed to record file metadata"}), 500
 
     # 7. Construct canonical URLs and QR Code
-    canonical_base = current_app.config["CANONICAL_URL"]
+    canonical_base = current_app.config.get("CANONICAL_URL")
+    if not canonical_base or "localhost" in canonical_base:
+        # Use request's actual host URL if available (e.g. https://fileguard.onrender.com)
+        canonical_base = request.host_url.rstrip("/")
     share_url = f"{canonical_base}/share/{raw_token}"
     qr_data = generate_qr_base64(share_url)
 

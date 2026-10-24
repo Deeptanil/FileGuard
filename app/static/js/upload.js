@@ -69,7 +69,81 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fileNameDisplay) fileNameDisplay.textContent = file.name;
     if (fileSizeDisplay) fileSizeDisplay.textContent = formatBytes(file.size);
     if (filePreview) filePreview.style.display = "block";
-    if (uploadBtn) uploadBtn.removeAttribute("disabled");
+
+    // Auto-upload immediately upon valid file selection
+    startUpload(file);
+  }
+
+  function startUpload(file) {
+    if (!file) return;
+    clearError();
+    if (uploadBtn) {
+      uploadBtn.setAttribute("disabled", "true");
+      uploadBtn.textContent = "Uploading & Hashing...";
+    }
+    if (progressContainer) progressContainer.style.display = "block";
+    if (progressBar) progressBar.style.width = "0%";
+    if (progressPercent) progressPercent.textContent = "0%";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.content : "";
+    if (csrfToken) {
+      formData.append("csrf_token", csrfToken);
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/files", true);
+    if (csrfToken) {
+      xhr.setRequestHeader("X-CSRFToken", csrfToken);
+    }
+
+    xhr.upload.addEventListener("progress", (evt) => {
+      if (evt.lengthComputable) {
+        const percent = Math.round((evt.loaded / evt.total) * 100);
+        if (progressBar) progressBar.style.width = `${percent}%`;
+        if (progressPercent) progressPercent.textContent = `${percent}% (Transferring to encrypted vault)`;
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status === 201) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (progressPercent) progressPercent.textContent = "100% (Verifying SHA-256...)";
+          // Redirect directly to the 8-digit sharing page
+          window.location.href = `/share/${data.token}?just_uploaded=true`;
+        } catch (e) {
+          showError("Unexpected response format from server.");
+          resetUploadBtn();
+        }
+      } else {
+        try {
+          const errData = JSON.parse(xhr.responseText);
+          showError(errData.error || "Upload failed. Please check file and try again.");
+        } catch (e) {
+          showError(`Upload error (HTTP ${xhr.status})`);
+        }
+        resetUploadBtn();
+      }
+    });
+
+    xhr.addEventListener("error", () => {
+      showError("Network connection error during file upload.");
+      resetUploadBtn();
+    });
+
+    xhr.send(formData);
+  }
+
+  function resetUploadBtn() {
+    if (uploadBtn) {
+      uploadBtn.removeAttribute("disabled");
+      uploadBtn.textContent = "Try Uploading Again";
+    }
+    if (progressContainer) progressContainer.style.display = "none";
   }
 
   // File input change
@@ -97,80 +171,30 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelect(e.dataTransfer.files[0]);
     }
   });
 
-  dropzone.addEventListener("click", () => {
+  // Trigger file selection on dropzone click (prevent re-triggering if user clicks inside preview/btn)
+  dropzone.addEventListener("click", (e) => {
+    if (e.target.closest("#file-preview") || e.target.closest("button") || e.target.closest("a")) {
+      return;
+    }
     fileInput.click();
   });
 
-  // Perform upload
   if (uploadBtn) {
     uploadBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      if (!selectedFile) {
-        showError("Please select a file to upload.");
-        return;
+      e.stopPropagation();
+      if (selectedFile) {
+        startUpload(selectedFile);
+      } else {
+        fileInput.click();
       }
-
-      clearError();
-      uploadBtn.setAttribute("disabled", "true");
-      if (progressContainer) progressContainer.style.display = "block";
-
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-      const csrfToken = csrfMeta ? csrfMeta.content : "";
-      if (csrfToken) {
-        formData.append("csrf_token", csrfToken);
-      }
-
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/api/files", true);
-      if (csrfToken) {
-        xhr.setRequestHeader("X-CSRFToken", csrfToken);
-      }
-
-      xhr.upload.addEventListener("progress", (evt) => {
-        if (evt.lengthComputable) {
-          const percent = Math.round((evt.loaded / evt.total) * 100);
-          if (progressBar) progressBar.style.width = `${percent}%`;
-          if (progressPercent) progressPercent.textContent = `${percent}%`;
-        }
-      });
-
-      xhr.addEventListener("load", () => {
-        if (xhr.status === 201) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            // Redirect directly to the 8-digit sharing page
-            window.location.href = `/share/${data.token}?just_uploaded=true`;
-          } catch (e) {
-            showError("Unexpected response format from server.");
-            uploadBtn.removeAttribute("disabled");
-          }
-        } else {
-          try {
-            const errData = JSON.parse(xhr.responseText);
-            showError(errData.error || "Upload failed. Please check file and try again.");
-          } catch (e) {
-            showError(`Upload error (HTTP ${xhr.status})`);
-          }
-          uploadBtn.removeAttribute("disabled");
-          if (progressContainer) progressContainer.style.display = "none";
-        }
-      });
-
-      xhr.addEventListener("error", () => {
-        showError("Network connection error during file upload.");
-        uploadBtn.removeAttribute("disabled");
-        if (progressContainer) progressContainer.style.display = "none";
-      });
-
-      xhr.send(formData);
     });
   }
 });
