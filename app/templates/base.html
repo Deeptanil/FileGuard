@@ -38,6 +38,7 @@
       <ul class="nav-links">
         <li><a href="{{ url_for('public.index') }}" class="nav-link">Home</a></li>
         <li><a href="{{ url_for('public.upload_page') }}" class="nav-link">Share File</a></li>
+        <li><a href="{{ url_for('public.history_page') }}" class="nav-link">My History</a></li>
         {% if session.get('admin_logged_in') %}
           <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link active">Admin Dashboard</a></li>
           <li><a href="{{ url_for('forensics.forensics_index') }}" class="nav-link">Forensics</a></li>

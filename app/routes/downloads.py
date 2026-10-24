@@ -11,7 +11,7 @@ from flask import (
 )
 from app.extensions import db, limiter
 from app.models import FileRecord
-from app.storage import get_storage_path
+from app.storage import get_storage_path, delete_stored_file
 from app.security import hash_token, compute_sha256
 from app.expiration import is_file_expired
 from app.integrity import verify_file_integrity
@@ -218,4 +218,82 @@ def download_file(token: str):
     response.headers["Content-Security-Policy"] = "default-src 'none'"
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
+
+
+@downloads_bp.route("/api/files/batch-status", methods=["POST"])
+@limiter.limit("60 per minute")
+def batch_file_status():
+    """Check live status and remaining seconds for multiple share tokens."""
+    data = request.get_json(silent=True) or {}
+    tokens = data.get("tokens", [])
+    if not isinstance(tokens, list):
+        return jsonify({"error": "Invalid tokens array"}), 400
+
+    tokens = [t for t in tokens if isinstance(t, str) and t.strip()][:50]
+    results = {}
+
+    for token in tokens:
+        token_h = hash_token(token)
+        record = FileRecord.query.filter_by(share_token_hash=token_h).first()
+        if not record:
+            results[token] = {
+                "status": "not_found",
+                "is_expired": True,
+                "remaining_seconds": 0
+            }
+        else:
+            if record.status in ("deleted", "tampered"):
+                effective_status = record.status
+                expired = is_file_expired(record)
+            else:
+                expired = is_file_expired(record)
+                effective_status = "expired" if expired else record.status
+
+            results[token] = {
+                "status": effective_status,
+                "is_expired": expired,
+                "remaining_seconds": record.remaining_seconds if (not expired and record.status == "active") else 0,
+                "filename": record.original_filename,
+                "file_size": record.file_size,
+                "is_bundle": getattr(record, "is_bundle", False),
+                "expires_at": record.expires_at.isoformat() + "Z"
+            }
+
+    return jsonify({"statuses": results}), 200
+
+
+@downloads_bp.route("/api/files/<token>/revoke", methods=["POST"])
+@limiter.limit("20 per minute")
+def revoke_file(token: str):
+    """Allow immediate deletion and revocation of a file by token bearer."""
+    token_h = hash_token(token)
+    record = FileRecord.query.filter_by(share_token_hash=token_h).first()
+    if not record:
+        return jsonify({"error": "File not found or invalid token"}), 404
+
+    if record.status == "deleted":
+        return jsonify({"message": "File is already revoked", "status": "deleted"}), 200
+
+    try:
+        delete_stored_file(record.storage_id)
+    except Exception as e:
+        current_app.logger.warning(f"Error purging storage during revocation: {e}")
+
+    record.status = "deleted"
+    db.session.commit()
+
+    log_security_event(
+        event_type="FILE_REVOKED_BY_USER",
+        outcome="SUCCESS",
+        severity="INFO",
+        file_record_id=record.id,
+        details=f"File '{record.original_filename}' immediately revoked and deleted by token bearer."
+    )
+
+    return jsonify({
+        "success": True,
+        "message": f"File '{record.original_filename}' has been revoked and purged immediately.",
+        "status": "deleted"
+    }), 200
+
 

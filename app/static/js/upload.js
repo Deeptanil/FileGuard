@@ -129,6 +129,27 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const data = JSON.parse(xhr.responseText);
           if (progressPercent) progressPercent.textContent = "100% (Verifying SHA-256...)";
+
+          try {
+            const uploads = JSON.parse(localStorage.getItem("fileguard_user_uploads") || "[]");
+            if (!uploads.some(u => u.token === data.token)) {
+              uploads.unshift({
+                token: data.token,
+                filename: data.filename,
+                file_size: data.file_size,
+                share_url: data.share_url,
+                sha256: data.sha256_reference,
+                uploaded_at: data.uploaded_at,
+                expires_at: data.expires_at,
+                is_bundle: Boolean(files && files.length > 1)
+              });
+              if (uploads.length > 100) uploads.length = 100;
+              localStorage.setItem("fileguard_user_uploads", JSON.stringify(uploads));
+            }
+          } catch (storageErr) {
+            console.warn("Could not write upload to localStorage:", storageErr);
+          }
+
           window.location.href = `/share/${data.token}?just_uploaded=true`;
         } catch (e) {
           showError("Unexpected response format from server.");

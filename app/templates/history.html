@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}My Activity & History — FileGuard{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1080px; padding: 2.5rem 1.25rem;">
+
+  <!-- Header Banner -->
+  <div class="card" style="margin-bottom: 2rem; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: 1.75rem 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
+          <span class="badge" style="background: var(--comic-cyan); color: #000000; font-family: var(--font-pixel); font-size: 0.7rem;">VAULT :: ACTIVITY</span>
+          <span class="badge" style="background: var(--comic-lime); color: #000000; font-size: 0.72rem; font-weight: 800;">🔒 ZERO SERVER PROFILING</span>
+        </div>
+        <h1 style="font-size: 2.1rem; font-family: var(--font-display); letter-spacing: 0.02em; margin: 0 0 0.35rem; color: #FFFFFF;">
+          ACTIVITY & TRANSFER HISTORY
+        </h1>
+        <p style="color: #94A3B8; font-size: 0.95rem; margin: 0; max-width: 650px;">
+          Manage your uploaded temporary files, revoke active links ahead of the 12-hour limit, and track links shared with you.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('public.upload_page') }}" class="btn btn-primary" style="background: var(--comic-yellow); color: #000000; font-weight: 900; font-size: 0.9rem; padding: 0.75rem 1.25rem; border: 3px solid #000000; box-shadow: 4px 4px 0px #000000;">
+          + SHARE NEW FILE
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Buttons -->
+  <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; border-bottom: 3px solid #1E293B; padding-bottom: 0.5rem; flex-wrap: wrap;">
+    <button type="button" id="tab-btn-uploads" class="tab-btn active-tab" onclick="switchHistoryTab('uploads')">
+      <span>📤 UPLOADED BY ME</span>
+      <span id="uploads-count-badge" class="badge" style="background: var(--comic-pink); color: #FFFFFF; font-size: 0.75rem; margin-left: 0.4rem;">0</span>
+    </button>
+    <button type="button" id="tab-btn-views" class="tab-btn" onclick="switchHistoryTab('views')">
+      <span>👁️ SHARED WITH ME (VIEWED)</span>
+      <span id="views-count-badge" class="badge" style="background: var(--comic-cyan); color: #000000; font-size: 0.75rem; margin-left: 0.4rem;">0</span>
+    </button>
+  </div>
+
+  <!-- SECTION 1: UPLOADED BY ME -->
+  <div id="section-uploads" class="history-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+      <div style="font-size: 0.9rem; color: #94A3B8; font-weight: 600;">
+        Files uploaded from this device. You can copy links or immediately revoke and purge files from Backblaze B2.
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="clearUploadHistory()" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 2px solid #EF4444; font-size: 0.75rem; padding: 0.4rem 0.85rem;">
+        Clear Upload History
+      </button>
+    </div>
+
+    <!-- Uploads List Container -->
+    <div id="uploads-list-container">
+      <!-- Populated via history.js -->
+    </div>
+  </div>
+
+  <!-- SECTION 2: SHARED WITH ME (VIEWED) -->
+  <div id="section-views" class="history-section" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+      <div style="font-size: 0.9rem; color: #94A3B8; font-weight: 600;">
+        Files you have opened or downloaded from other users. Access them quickly while still active.
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="clearViewHistory()" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 2px solid #EF4444; font-size: 0.75rem; padding: 0.4rem 0.85rem;">
+        Clear Viewed History
+      </button>
+    </div>
+
+    <!-- Views List Container -->
+    <div id="views-list-container">
+      <!-- Populated via history.js -->
+    </div>
+  </div>
+
+</div>
+
+<!-- Neo-Brutalist Confirmation Modal for Immediate File Revocation -->
+<div id="revoke-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;">
+  <div class="card" style="background: #0F172A; border: 4px solid #FF2E93; box-shadow: 8px 8px 0px #000000; max-width: 500px; width: 100%; padding: 2rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+      <div style="font-size: 2rem;">⚠️</div>
+      <h3 style="font-family: var(--font-display); font-size: 1.35rem; color: #FF2E93; margin: 0;">REVOKE & PURGE FILE?</h3>
+    </div>
+    <p style="color: #E2E8F0; font-size: 0.95rem; line-height: 1.5; margin-bottom: 0.5rem;">
+      Are you sure you want to revoke <strong id="modal-filename" style="color: var(--comic-yellow); word-break: break-all;">filename</strong>?
+    </p>
+    <p style="color: #94A3B8; font-size: 0.85rem; margin-bottom: 1.75rem; line-height: 1.4;">
+      This action will <strong>immediately purge</strong> the file from Backblaze B2 storage and invalidate the share link. Anyone trying to access it will receive an expired/revoked error.
+    </p>
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+      <button type="button" class="btn btn-secondary" onclick="closeRevokeModal()" style="font-weight: 700;">
+        Cancel
+      </button>
+      <button type="button" id="confirm-revoke-btn" class="btn btn-primary" style="background: #FF2E93; color: #FFFFFF; font-weight: 900; border: 3px solid #000000; box-shadow: 4px 4px 0px #000000;">
+        YES, PURGE NOW
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    padding: 0.6rem 1.25rem;
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+  }
+  .tab-btn:hover {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .tab-btn.active-tab {
+    color: #000000;
+    background: var(--comic-yellow);
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .history-item-card {
+    background: #131929;
+    border: var(--border-thick);
+    box-shadow: var(--shadow-3d);
+    border-radius: var(--radius-comic);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    transition: transform 0.1s ease;
+  }
+  .history-item-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .file-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    flex-shrink: 0;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+{% endblock %}

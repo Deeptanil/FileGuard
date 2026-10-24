@@ -137,10 +137,50 @@
   document.addEventListener("DOMContentLoaded", () => {
     initCountdown("{{ file.expires_at.isoformat() }}Z", "{{ token }}");
 
-    // Clean address bar so it exactly matches the clean sharing URL /share/<token> without query params
-    if (window.location.search.includes("just_uploaded")) {
+    const isJustUploaded = window.location.search.includes("just_uploaded") || {{ 'true' if just_uploaded else 'false' }};
+    if (isJustUploaded) {
+      try {
+        const uploads = JSON.parse(localStorage.getItem("fileguard_user_uploads") || "[]");
+        if (!uploads.some(u => u.token === "{{ token }}")) {
+          uploads.unshift({
+            token: "{{ token }}",
+            filename: {{ file.original_filename|tojson }},
+            file_size: {{ file.file_size }},
+            share_url: {{ share_url|tojson }},
+            sha256: "{{ file.sha256_reference }}",
+            uploaded_at: "{{ file.uploaded_at.isoformat() }}Z",
+            expires_at: "{{ file.expires_at.isoformat() }}Z",
+            is_bundle: {{ 'true' if file.is_bundle else 'false' }}
+          });
+          if (uploads.length > 100) uploads.length = 100;
+          localStorage.setItem("fileguard_user_uploads", JSON.stringify(uploads));
+        }
+      } catch (e) {}
+
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
+    } else {
+      try {
+        const views = JSON.parse(localStorage.getItem("fileguard_user_views") || "[]");
+        const existingIdx = views.findIndex(v => v.token === "{{ token }}");
+        const viewEntry = {
+          token: "{{ token }}",
+          filename: {{ file.original_filename|tojson }},
+          file_size: {{ file.file_size }},
+          share_url: {{ share_url|tojson }},
+          sha256: "{{ file.sha256_reference }}",
+          expires_at: "{{ file.expires_at.isoformat() }}Z",
+          viewed_at: new Date().toISOString(),
+          is_bundle: {{ 'true' if file.is_bundle else 'false' }}
+        };
+        if (existingIdx >= 0) {
+          views[existingIdx] = viewEntry;
+        } else {
+          views.unshift(viewEntry);
+        }
+        if (views.length > 100) views.length = 100;
+        localStorage.setItem("fileguard_user_views", JSON.stringify(views));
+      } catch (e) {}
     }
   });
 </script>

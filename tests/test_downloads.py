@@ -93,3 +93,52 @@ def test_13_expiration_enforced_without_cleanup_worker(client, db_session):
     res = client.get(f"/api/files/{token}/download")
     assert res.status_code == 410
 
+
+def test_history_page_loads(client):
+    """Test that the user activity & history page loads successfully."""
+    res = client.get("/history")
+    assert res.status_code == 200
+    assert b"ACTIVITY &amp; TRANSFER HISTORY" in res.data or b"ACTIVITY & TRANSFER HISTORY" in res.data
+    assert b"UPLOADED BY ME" in res.data
+    assert b"SHARED WITH ME (VIEWED)" in res.data
+
+
+def test_batch_file_status(client, db_session):
+    """Test batch querying file statuses."""
+    token, _, _ = upload_sample_file(client, "batch_test.txt", b"Batch status test payload")
+
+    res = client.post(
+        "/api/files/batch-status",
+        json={"tokens": [token, "nonexistent-999"]},
+        content_type="application/json"
+    )
+    assert res.status_code == 200
+    data = res.get_json()
+    assert "statuses" in data
+    assert token in data["statuses"]
+    assert data["statuses"][token]["status"] == "active"
+    assert data["statuses"][token]["filename"] == "batch_test.txt"
+    assert "nonexistent-999" in data["statuses"]
+    assert data["statuses"]["nonexistent-999"]["status"] == "not_found"
+
+
+def test_revoke_file_by_uploader(client, db_session):
+    """Test immediate revocation and deletion of a file by token bearer."""
+    token, _, _ = upload_sample_file(client, "revoke_me.txt", b"Sensitive file to delete early")
+
+    # Revoke file
+    res = client.post(f"/api/files/{token}/revoke")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert data["status"] == "deleted"
+
+    # Status check should now report deleted
+    res_status = client.post("/api/files/batch-status", json={"tokens": [token]})
+    assert res_status.get_json()["statuses"][token]["status"] == "deleted"
+
+    # File should no longer be downloadable
+    res_down = client.get(f"/api/files/{token}/download")
+    assert res_down.status_code in (404, 410)
+
+
