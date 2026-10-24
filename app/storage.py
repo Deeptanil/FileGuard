@@ -10,17 +10,23 @@ class StorageError(Exception):
 
 
 def get_s3_client():
-    """Instantiate S3-compatible client for Backblaze B2, Cloudflare R2, or AWS S3."""
+    """Instantiate S3-compatible client for Backblaze B2, Cloudflare R2, or AWS S3 with connection pooling."""
     import boto3
+    from botocore.config import Config as BotoConfig
     endpoint = current_app.config.get("S3_ENDPOINT_URL")
     if endpoint and not endpoint.startswith(("http://", "https://")):
         endpoint = f"https://{endpoint}"
+    boto_cfg = BotoConfig(
+        max_pool_connections=25,
+        retries={"max_attempts": 3, "mode": "standard"}
+    )
     return boto3.client(
         "s3",
         endpoint_url=endpoint if endpoint else None,
         aws_access_key_id=current_app.config.get("AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=current_app.config.get("AWS_SECRET_ACCESS_KEY"),
-        region_name=current_app.config.get("AWS_DEFAULT_REGION", "us-east-1")
+        region_name=current_app.config.get("AWS_DEFAULT_REGION", "us-east-1"),
+        config=boto_cfg
     )
 
 
@@ -39,13 +45,20 @@ def get_storage_path(storage_id: str) -> Path:
     if not str(target).startswith(str(storage_dir)):
         raise StorageError("Path traversal attempt detected in storage path resolution")
 
-    # If backend is S3 and local cache doesn't exist, download from bucket
+    # If backend is S3 and local cache doesn't exist, download from bucket using threaded transfer
     if not target.exists() and current_app.config.get("STORAGE_BACKEND") == "s3":
         bucket = current_app.config.get("S3_BUCKET_NAME")
         if bucket:
             try:
+                from boto3.s3.transfer import TransferConfig
+                t_cfg = TransferConfig(
+                    multipart_threshold=8 * 1024 * 1024,
+                    max_concurrency=10,
+                    multipart_chunksize=8 * 1024 * 1024,
+                    use_threads=True
+                )
                 s3 = get_s3_client()
-                s3.download_file(bucket, safe_id, str(target))
+                s3.download_file(bucket, safe_id, str(target), Config=t_cfg)
             except Exception:
                 # File not found in S3
                 pass
@@ -72,19 +85,26 @@ def save_upload_stream(file_storage) -> tuple[str, int, str]:
 
     try:
         with open(target_path, "wb") as f:
-            while chunk := file_storage.read(65536):
+            while chunk := file_storage.read(262144):  # 256 KB high-throughput streaming buffer
                 bytes_written += len(chunk)
                 if bytes_written > max_bytes:
                     raise StorageError(f"File exceeded maximum permitted size ({current_app.config['MAX_CONTENT_LENGTH_MB']} MB)")
                 hasher.update(chunk)
                 f.write(chunk)
 
-        # Upload to S3/Backblaze B2 if S3 backend is enabled
+        # Upload to S3/Backblaze B2 if S3 backend is enabled with TransferConfig for multi-threaded upload
         if current_app.config.get("STORAGE_BACKEND") == "s3":
             bucket = current_app.config.get("S3_BUCKET_NAME")
             if bucket:
+                from boto3.s3.transfer import TransferConfig
+                t_cfg = TransferConfig(
+                    multipart_threshold=8 * 1024 * 1024,  # 8 MB
+                    max_concurrency=10,
+                    multipart_chunksize=8 * 1024 * 1024,
+                    use_threads=True
+                )
                 s3 = get_s3_client()
-                s3.upload_file(str(target_path), bucket, storage_id)
+                s3.upload_file(str(target_path), bucket, storage_id, Config=t_cfg)
 
     except Exception as e:
         # Cleanup incomplete or oversized file
