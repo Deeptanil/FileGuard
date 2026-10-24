@@ -15,11 +15,12 @@ class Config:
     STORAGE_DIR = Path(os.getenv("STORAGE_DIR", str(base_dir / "storage"))).resolve()
     INSTANCE_DIR = (base_dir / "instance").resolve()
     
-    # SQLite Database URI
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URI",
-        f"sqlite:///{INSTANCE_DIR / 'fileguard.db'}"
-    )
+    # Database URI (Auto-normalizes postgres:// to postgresql:// for SQLAlchemy)
+    _raw_db_uri = os.getenv("DATABASE_URI", f"sqlite:///{INSTANCE_DIR / 'fileguard.db'}")
+    if _raw_db_uri and _raw_db_uri.startswith("postgres://"):
+        _raw_db_uri = _raw_db_uri.replace("postgres://", "postgresql://", 1)
+    
+    SQLALCHEMY_DATABASE_URI = _raw_db_uri
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Canonical sharing URL base
