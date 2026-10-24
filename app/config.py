@@ -33,7 +33,7 @@ class Config:
         ext.strip().lower().lstrip(".")
         for ext in os.getenv(
             "ALLOWED_EXTENSIONS",
-            "pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip"
+            "pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm"
         ).split(",")
         if ext.strip()
     )

@@ -20,6 +20,11 @@ KNOWN_MIME_TYPES = {
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "zip": "application/zip",
+    "mp4": "video/mp4",
+    "mov": "video/quicktime",
+    "webm": "video/webm",
+    "mp3": "audio/mpeg",
+    "m4a": "audio/mp4",
 }
 
 # Magic bytes for binary file header sniffing (first 4-8 bytes)
@@ -32,6 +37,9 @@ MAGIC_SIGNATURES = {
     "docx": [b"PK\x03\x04"],
     "xlsx": [b"PK\x03\x04"],
     "pptx": [b"PK\x03\x04"],
+    "mp4": [b"ftyp", b"\x00\x00\x00"],
+    "webm": [b"\x1a\x45\xdf\xa3"],
+    "mp3": [b"ID3", b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"],
 }
 
 

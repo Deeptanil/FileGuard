@@ -27,6 +27,49 @@
 
   <div id="cleanup-alert" class="alert alert-success" style="display: none;"></div>
 
+  <!-- Storage Capacity & Quota Telemetry Widget -->
+  <div class="card" style="margin-bottom: 2rem; background: var(--bg-surface); border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: 1.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.15rem; font-family: var(--font-display); color: #FFFFFF;">BACKBLAZE B2 / S3 STORAGE CAPACITY POOL</span>
+          {% if storage_used_pct >= 90 %}
+            <span class="badge" style="background: var(--comic-pink); color: #FFF; font-size: 0.7rem; animation: pulse 1.5s infinite;">CRITICAL: 90%+ QUOTA REACHED</span>
+          {% elif storage_used_pct >= 75 %}
+            <span class="badge" style="background: var(--comic-yellow); color: #000; font-size: 0.7rem;">WARNING: HIGH USAGE</span>
+          {% else %}
+            <span class="badge badge-active" style="font-size: 0.7rem;">OPTIMAL CAPACITY</span>
+          {% endif %}
+        </div>
+        <p style="color: #94A3B8; font-size: 0.85rem; margin-top: 0.25rem;">
+          Free tier quota threshold: <strong>10.0 GB</strong>. Exceeding 90% signals time to configure bucket pool failover.
+        </p>
+      </div>
+
+      <div style="text-align: right;">
+        <span style="font-family: var(--font-pixel); font-size: 1.3rem; color: {% if storage_used_pct >= 90 %}var(--comic-pink){% elif storage_used_pct >= 75 %}var(--comic-yellow){% else %}var(--comic-lime){% endif %};">
+          {{ storage_used_mb }} MB
+        </span>
+        <span style="font-size: 0.85rem; color: #64748B; font-weight: 700;"> / {{ storage_quota_gb }} GB ({{ storage_used_pct }}%)</span>
+      </div>
+    </div>
+
+    <!-- 3D Comic Progress Bar -->
+    <div style="width: 100%; height: 22px; background: #000000; border: 3px solid #000000; border-radius: 8px; overflow: hidden; box-shadow: 3px 3px 0px #000000; margin-bottom: 1.5rem;">
+      <div style="height: 100%; width: {{ [storage_used_pct, 1]|max }}%; background: {% if storage_used_pct >= 90 %}var(--comic-pink){% elif storage_used_pct >= 75 %}var(--comic-yellow){% else %}var(--comic-lime){% endif %}; transition: width 0.3s ease;"></div>
+    </div>
+
+    <!-- 7-Day Storage & Traffic Trajectory Graph -->
+    <div style="border-top: 2px dashed #334155; padding-top: 1.25rem;">
+      <div style="font-family: var(--font-display); font-size: 0.95rem; color: var(--comic-cyan); margin-bottom: 0.75rem;">
+        7-DAY UPLOAD VOLUME & STORAGE TRAJECTORY (MB)
+      </div>
+      <div style="position: relative; height: 180px; width: 100%;">
+        <canvas id="storageChart"></canvas>
+      </div>
+    </div>
+  </div>
+
   <!-- KPI Stat Cards -->
   <div class="stats-grid">
     <div class="stat-card" style="border-top: 6px solid var(--comic-cyan);">
@@ -140,7 +183,83 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('storageChart');
+    if (ctx) {
+      const labels = {{ storage_history_labels | tojson }};
+      const dataMb = {{ storage_history_mb | tojson }};
+      const uploadsCount = {{ storage_history_uploads | tojson }};
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Daily Storage Ingested (MB)',
+              data: dataMb,
+              borderColor: '#00F0FF',
+              backgroundColor: 'rgba(0, 240, 255, 0.15)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.25,
+              pointBackgroundColor: '#FFE600',
+              pointBorderColor: '#000000',
+              pointBorderWidth: 2,
+              pointRadius: 5
+            },
+            {
+              label: 'Files Uploaded',
+              data: uploadsCount,
+              borderColor: '#FF2E93',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointBackgroundColor: '#FF2E93',
+              pointRadius: 4,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#CBD5E1',
+                font: {
+                  family: "'Space Grotesk', sans-serif",
+                  size: 11,
+                  weight: '700'
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#94A3B8', font: { family: "'JetBrains Mono', monospace", size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#00F0FF', font: { family: "'JetBrains Mono', monospace", size: 10 } },
+              title: { display: true, text: 'MB', color: '#00F0FF', font: { size: 10, weight: '700' } }
+            },
+            y1: {
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#FF2E93', stepSize: 1, font: { family: "'JetBrains Mono', monospace", size: 10 } },
+              title: { display: true, text: 'Files', color: '#FF2E93', font: { size: 10, weight: '700' } }
+            }
+          }
+        }
+      });
+    }
+  });
+
   function triggerCleanup() {
     const btn = document.getElementById("cleanup-btn");
     const alertBox = document.getElementById("cleanup-alert");

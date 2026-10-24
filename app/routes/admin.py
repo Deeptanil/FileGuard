@@ -91,7 +91,10 @@ def logout():
 @admin_bp.route("/dashboard")
 @admin_required
 def dashboard():
-    """Comprehensive security monitoring dashboard."""
+    """Comprehensive security monitoring dashboard with storage analytics and telemetry."""
+    from datetime import timedelta
+    from sqlalchemy import func
+
     total_uploads = FileRecord.query.count()
     active_files = FileRecord.query.filter_by(status="active").count()
     expired_files = FileRecord.query.filter(
@@ -103,6 +106,42 @@ def dashboard():
     total_downloads = SecurityEvent.query.filter_by(event_type="FILE_DOWNLOAD_SUCCESS").count()
     expired_denials = SecurityEvent.query.filter_by(event_type="DOWNLOAD_BLOCKED_EXPIRED").count()
     integrity_failures = SecurityEvent.query.filter_by(event_type="INTEGRITY_CHECK_FAIL").count()
+
+    # Storage Usage Calculation (Active bytes stored in S3/disk)
+    active_bytes_query = db.session.query(func.sum(FileRecord.file_size)).filter_by(status="active").scalar() or 0
+    total_bytes_stored_ever = db.session.query(func.sum(FileRecord.file_size)).scalar() or 0
+    
+    # 10 GB Free Tier Limit
+    STORAGE_QUOTA_BYTES = 10 * 1024 * 1024 * 1024
+    storage_used_pct = round((active_bytes_query / STORAGE_QUOTA_BYTES) * 100, 2)
+    storage_used_mb = round(active_bytes_query / (1024 * 1024), 2)
+    storage_used_gb = round(active_bytes_query / (1024 * 1024 * 1024), 3)
+    storage_quota_gb = 10.0
+
+    # 7-day Historical Storage / Upload Trajectory for Graph
+    now = utc_now()
+    history_labels = []
+    history_uploads_data = []
+    history_storage_mb_data = []
+    
+    for i in range(6, -1, -1):
+        day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        day_label = day_start.strftime("%b %d")
+        
+        day_uploads = FileRecord.query.filter(
+            FileRecord.uploaded_at >= day_start,
+            FileRecord.uploaded_at < day_end
+        ).count()
+        
+        day_bytes = db.session.query(func.sum(FileRecord.file_size)).filter(
+            FileRecord.uploaded_at >= day_start,
+            FileRecord.uploaded_at < day_end
+        ).scalar() or 0
+        
+        history_labels.append(day_label)
+        history_uploads_data.append(day_uploads)
+        history_storage_mb_data.append(round(day_bytes / (1024 * 1024), 2))
 
     recent_events = SecurityEvent.query.order_by(SecurityEvent.timestamp.desc()).limit(25).all()
 
@@ -116,6 +155,14 @@ def dashboard():
         total_downloads=total_downloads,
         expired_denials=expired_denials,
         integrity_failures=integrity_failures,
+        active_bytes=active_bytes_query,
+        storage_used_mb=storage_used_mb,
+        storage_used_gb=storage_used_gb,
+        storage_quota_gb=storage_quota_gb,
+        storage_used_pct=storage_used_pct,
+        storage_history_labels=history_labels,
+        storage_history_uploads=history_uploads_data,
+        storage_history_mb=history_storage_mb_data,
         recent_events=recent_events,
         csrf_token=generate_csrf_token()
     )
