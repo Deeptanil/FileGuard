@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}DMCA & Abuse Policy — FileGuard{% endblock %}
+{% block meta_description %}DMCA Takedown and Content Abuse Policy for FileGuard ephemeral end-to-end encrypted file sharing platform.{% endblock %}
+
+{% block content %}
+<div class="container section-block" style="max-width: 860px; padding: 2.5rem 1.25rem;">
+  <div style="margin-bottom: 2rem;">
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--comic-cyan); color: #000; font-family: var(--font-pixel); font-size: 0.72rem; padding: 0.25rem 0.65rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000; text-transform: uppercase; margin-bottom: 0.75rem;">
+      <span>COPYRIGHT &amp; ABUSE MITIGATION</span>
+    </div>
+    <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.4rem); color: #FFFFFF; margin: 0 0 0.5rem; letter-spacing: 0.02em;">
+      DMCA &amp; ABUSE POLICY
+    </h1>
+    <p style="color: #94A3B8; font-size: 0.95rem; margin: 0;">
+      Digital Millennium Copyright Act Notice &amp; Content Takedown Guidelines
+    </p>
+  </div>
+
+  <div class="card" style="background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: clamp(1.5rem, 3.5vw, 2.5rem); color: #CBD5E1; line-height: 1.7; font-size: 0.95rem;">
+
+    <section style="margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        1. STATEMENT OF COMPLIANCE
+      </h2>
+      <p>
+        FileGuard respects intellectual property rights and adheres strictly to the provisions of the Digital Millennium Copyright Act (17 U.S.C. § 512). As an automated, ephemeral transmission conduit, FileGuard provides immediate mechanisms to investigate and purge infringing or abusive materials.
+      </p>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        2. AUTOMATIC 12-HOUR EXPIRATION CONTEXT
+      </h2>
+      <p>
+        Please note that <strong>all files on FileGuard automatically self-destruct within 12 hours of upload</strong>. Once 12 hours have elapsed from the upload timestamp, the storage block is permanently and irrevocably deleted from both Backblaze B2 and the PostgreSQL database.
+      </p>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        3. SUBMITTING A TAKEDOWN NOTICE
+      </h2>
+      <p>
+        If you believe that copyrighted material has been uploaded without authorization, please submit a notice including:
+      </p>
+      <ul style="padding-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>Identification of the copyrighted work claimed to have been infringed.</li>
+        <li>The full FileGuard URL or 8-digit sharing token (e.g., <code>https://files.deeptanil.in/share/XXXX-XXXX</code>).</li>
+        <li>Your contact information (name, organization, email address, physical address).</li>
+        <li>A statement that you have a good-faith belief that use of the material is not authorized by the copyright owner, its agent, or the law.</li>
+        <li>A statement under penalty of perjury that the information in the notification is accurate.</li>
+      </ul>
+    </section>
+
+    <section style="border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        4. EXPEDIENT PURGING &amp; REPEAT INFRINGERS
+      </h2>
+      <p>
+        Upon receipt of a valid notice, FileGuard administrators will immediately revoke and permanently purge the target storage block from Backblaze B2. FileGuard reserves the right to terminate access and enforce IP-level blocks against repeat infringers.
+      </p>
+      <p style="margin-top: 0.75rem;">
+        Submit abuse or copyright reports directly via <a href="https://github.com/Deeptanil/FileGuard/issues" target="_blank" rel="noopener noreferrer" style="color: var(--comic-yellow); text-decoration: underline;">GitHub Issues</a> or to the administrative team.
+      </p>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+

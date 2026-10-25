@@ -190,3 +190,24 @@ def test_multi_file_bundle_upload_with_name_and_pin(client, db_session):
     assert resp_json["has_password"] is True
     assert resp_json["filename"].endswith(".zip")
 
+
+def test_legal_pages_and_e2ee_transparency(client):
+    """Verify terms, privacy, cookies, and dmca legal pages load successfully with E2EE notices."""
+    for path, expected_text in [
+        ("/terms", "TERMS OF SERVICE"),
+        ("/privacy", "PRIVACY POLICY"),
+        ("/cookies", "COOKIE &amp; STORAGE POLICY"),
+        ("/dmca", "DMCA &amp; ABUSE POLICY")
+    ]:
+        res = client.get(path)
+        assert res.status_code == 200
+        assert expected_text.encode("utf-8") in res.data
+        assert b"End-to-End Encrypted" in res.data or b"end-to-end encryption" in res.data or b"END-TO-END" in res.data
+
+    # Verify home page renders E2EE and cookie banner markup
+    home_res = client.get("/")
+    assert home_res.status_code == 200
+    assert b"End-to-End Encrypted" in home_res.data
+    assert b"cookie-banner" in home_res.data
+
+

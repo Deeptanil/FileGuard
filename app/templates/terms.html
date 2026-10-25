@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service — FileGuard{% endblock %}
+{% block meta_description %}Terms of Service and Conditions of Use for FileGuard ephemeral end-to-end encrypted file sharing platform.{% endblock %}
+
+{% block content %}
+<div class="container section-block" style="max-width: 860px; padding: 2.5rem 1.25rem;">
+  <div style="margin-bottom: 2rem;">
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--comic-yellow); color: #000; font-family: var(--font-pixel); font-size: 0.72rem; padding: 0.25rem 0.65rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000; text-transform: uppercase; margin-bottom: 0.75rem;">
+      <span>LEGAL DOCUMENTATION</span>
+    </div>
+    <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.4rem); color: #FFFFFF; margin: 0 0 0.5rem; letter-spacing: 0.02em;">
+      TERMS OF SERVICE
+    </h1>
+    <p style="color: #94A3B8; font-size: 0.95rem; margin: 0;">
+      Last Updated: October 2026 • Effective Immediately
+    </p>
+  </div>
+
+  <div class="card" style="background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: clamp(1.5rem, 3.5vw, 2.5rem); color: #CBD5E1; line-height: 1.7; font-size: 0.95rem;">
+
+    <section style="margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        1. ACCEPTANCE OF TERMS
+      </h2>
+      <p>
+        By accessing or using <strong>FileGuard</strong> (files.deeptanil.in, the "Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, you must not use or access the Service. FileGuard is an ephemeral, end-to-end encrypted temporary file-sharing utility designed for privacy, security research, and short-lived data transmission.
+      </p>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        2. SERVICE LIFECYCLE &amp; EPHEMERAL ARCHITECTURE
+      </h2>
+      <p>
+        FileGuard is strictly an <strong>ephemeral data transit system</strong>, not a permanent backup or archiving utility:
+      </p>
+      <ul style="padding-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li><strong>Strict 12-Hour Expiration:</strong> All uploaded files and folder archives are automatically purged from cloud object storage and database catalogs after exactly 12 hours from the upload timestamp.</li>
+        <li><strong>Irrevocable Purging:</strong> Once expired or manually revoked by the uploader, files cannot be recovered, restored, or reconstructed by any party, including FileGuard administrators.</li>
+        <li><strong>No Account Profiling:</strong> The service does not require user accounts, passwords, or emails. File ownership is tracked solely through cryptographically random sharing tokens and client-side browser localStorage.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        3. END-TO-END ENCRYPTION &amp; DATA SECURITY
+      </h2>
+      <p>
+        Files transmitted through FileGuard are protected via:
+      </p>
+      <ul style="padding-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li><strong>End-to-End Encryption in Transit:</strong> All HTTP data streams are secured using TLS 1.3 cryptographic transport, preventing interception or man-in-the-middle manipulation.</li>
+        <li><strong>Encryption at Rest:</strong> Objects stored in Backblaze B2 cloud storage are transparently encrypted with AES-256-GCM.</li>
+        <li><strong>Cryptographic Pre-Flight Integrity:</strong> SHA-256 checksums are calculated upon upload and verified prior to download. Any tampered or corrupted block triggers an immediate HTTP 409 delivery block.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        4. ACCEPTABLE USE &amp; PROHIBITED CONTENT
+      </h2>
+      <p>
+        You agree that you will NOT use FileGuard to upload, share, or transmit:
+      </p>
+      <ul style="padding-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>Child Sexual Abuse Material (CSAM) or any exploitative content (which will be reported to appropriate law enforcement authorities immediately).</li>
+        <li>Malware, viruses, ransomware, trojans, rootkits, or malicious payload droppers.</li>
+        <li>Material that infringes upon third-party copyrights, patents, trademarks, or proprietary trade secrets.</li>
+        <li>Content intended to harass, defame, threaten, or violate the personal privacy of others.</li>
+        <li>Automated Denial-of-Service (DoS) abuse, quota evasion scripts, or vulnerability probing against FileGuard infrastructure.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        5. FAIR USAGE QUOTAS
+      </h2>
+      <p>
+        To ensure platform availability, each transfer is capped at <strong>100 MB</strong>, and upload volume is rate-limited to 100 MB per rolling 12-hour window per client IP address. Attempts to bypass quotas using rotating proxy farms will result in IP-level blocks (HTTP 429).
+      </p>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        6. DISCLAIMER OF WARRANTIES &amp; LIMITATION OF LIABILITY
+      </h2>
+      <p>
+        FILEGUARD IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED. THE PLATFORM DISCLAIMS ALL WARRANTIES, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL FILEGUARD OR ITS OPERATORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF LOST DATA, CORRUPTED FILES, OR SERVICE DISRUPTIONS.
+      </p>
+    </section>
+
+    <section style="border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-cyan); margin: 0 0 0.75rem;">
+        7. CONTACT &amp; INQUIRIES
+      </h2>
+      <p>
+        For inquiries regarding these terms, please contact the administrative team or open an issue on our official repository at <a href="https://github.com/Deeptanil/FileGuard" target="_blank" rel="noopener noreferrer" style="color: var(--comic-yellow); text-decoration: underline;">GitHub</a>.
+      </p>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+

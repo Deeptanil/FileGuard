@@ -33,6 +33,34 @@ def history_page():
     return render_template("history.html", csrf_token=csrf_token)
 
 
+@public_bp.route("/terms")
+def terms():
+    """Terms of Service legal documentation."""
+    csrf_token = generate_csrf_token()
+    return render_template("terms.html", csrf_token=csrf_token)
+
+
+@public_bp.route("/privacy")
+def privacy():
+    """Data Privacy Policy documentation."""
+    csrf_token = generate_csrf_token()
+    return render_template("privacy.html", csrf_token=csrf_token)
+
+
+@public_bp.route("/cookies")
+def cookie_policy():
+    """Cookie & Local Storage Policy."""
+    csrf_token = generate_csrf_token()
+    return render_template("cookie_policy.html", csrf_token=csrf_token)
+
+
+@public_bp.route("/dmca")
+def dmca():
+    """DMCA & Content Abuse Policy."""
+    csrf_token = generate_csrf_token()
+    return render_template("dmca.html", csrf_token=csrf_token)
+
+
 
 @public_bp.route("/api/csrf-token")
 def get_csrf():

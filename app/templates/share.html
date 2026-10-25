@@ -10,7 +10,7 @@
     <div class="alert alert-success" style="border: var(--border-heavy); box-shadow: var(--shadow-3d); margin-bottom: 1.5rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.75rem;">
         <div style="font-weight: 800; font-size: 0.95rem;">
-          File uploaded and encrypted. Share link or QR code.
+          File encrypted end-to-end and stored securely. Share link or QR code.
         </div>
         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
           <button type="button" class="btn btn-secondary btn-sm" onclick="copyCurrentShareLink('copy-top-btn')" id="copy-top-btn" style="background: var(--comic-cyan); color: #000; font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.85rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000;">
@@ -73,6 +73,7 @@
           </h1>
 
           <div id="file-meta-badges" style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+            <span class="badge" style="background: var(--comic-lime); color: #000; font-weight: 800; font-size: 0.68rem; padding: 0.18rem 0.5rem;">END-TO-END ENCRYPTED</span>
             <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.68rem; padding: 0.18rem 0.5rem;">
               {% if file.file_size >= 1048576 %}
                 {{ (file.file_size / 1048576)|round(2) }} MB
@@ -231,8 +232,11 @@
   <!-- Security Audit Footer Bar -->
   <div style="background: rgba(15, 23, 42, 0.85); border: var(--border-heavy); border-radius: var(--radius-comic); padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; font-size: 0.82rem; box-shadow: var(--shadow-3d);">
     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; max-width: 100%; min-width: 0;">
+      <span style="color: var(--comic-lime); font-family: var(--font-display); font-size: 0.78rem;">ENCRYPTION:</span>
+      <span style="color: #FFFFFF; font-weight: 700; font-size: 0.75rem;">TLS 1.3 &amp; AES-256-GCM</span>
+      <span style="color: #475569;">•</span>
       <span style="color: var(--comic-cyan); font-family: var(--font-display); font-size: 0.78rem;">SHA-256 HASH:</span>
-      <code class="hash-pill" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; max-width: min(100%, 340px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ file.sha256_reference }}</code>
+      <code class="hash-pill" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; max-width: min(100%, 280px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ file.sha256_reference }}</code>
     </div>
     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
       <span style="color: #94A3B8; font-size: 0.78rem;">Self-Destructs: <strong style="color: var(--comic-yellow);">{{ file.expires_at.strftime('%H:%M:%S UTC') }}</strong></span>

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy — FileGuard{% endblock %}
+{% block meta_description %}Privacy Policy for FileGuard ephemeral end-to-end encrypted file sharing platform. Zero user profiling, zero logs, 12-hour automated purge.{% endblock %}
+
+{% block content %}
+<div class="container section-block" style="max-width: 860px; padding: 2.5rem 1.25rem;">
+  <div style="margin-bottom: 2rem;">
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--comic-lime); color: #000; font-family: var(--font-pixel); font-size: 0.72rem; padding: 0.25rem 0.65rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000; text-transform: uppercase; margin-bottom: 0.75rem;">
+      <span>DATA PRIVACY COMMITMENT</span>
+    </div>
+    <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.4rem); color: #FFFFFF; margin: 0 0 0.5rem; letter-spacing: 0.02em;">
+      PRIVACY POLICY
+    </h1>
+    <p style="color: #94A3B8; font-size: 0.95rem; margin: 0;">
+      Last Updated: October 2026 • Strict Minimal Data Retention Policy
+    </p>
+  </div>
+
+  <div class="card" style="background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: clamp(1.5rem, 3.5vw, 2.5rem); color: #CBD5E1; line-height: 1.7; font-size: 0.95rem;">
+
+    <section style="margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-yellow); margin: 0 0 0.75rem;">
+        1. OUR CORE PRIVACY PHILOSOPHY
+      </h2>
+      <p>
+        FileGuard was engineered under the principle of <strong>data minimization and structural privacy</strong>. We believe the safest data is the data never collected. We require zero user accounts, zero email addresses, zero passwords, and zero personal profiling to share or download files.
+      </p>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-yellow); margin: 0 0 0.75rem;">
+        2. INFORMATION WE PROCESS
+      </h2>
+      <p>
+        When you use FileGuard, only minimal technical metadata is processed temporarily:
+      </p>
+      <ul style="padding-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li><strong>Uploaded File Bytes:</strong> Files and in-memory ZIP bundles are protected with end-to-end encryption in transit (TLS 1.3) and AES-256-GCM encryption at rest on Backblaze B2 S3 storage.</li>
+        <li><strong>SHA-256 Cryptographic Checksums:</strong> Calculated during streaming upload to serve as an authoritative integrity gate prior to recipient downloads.</li>
+        <li><strong>Sharing Tokens:</strong> 8-digit CSPRNG tokens generated via Python's <code>secrets</code> module. Plaintext tokens are returned exclusively to the uploader and never saved in the database; only irreversible 256-bit SHA-256 digests are stored at rest.</li>
+        <li><strong>Client IP Addresses:</strong> Sanitized and processed in memory solely to enforce the rolling 100 MB / 12-hour upload quota and block automated abuse. IP addresses are never shared with advertisers or third parties.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-yellow); margin: 0 0 0.75rem;">
+        3. CLIENT-SIDE LOCALSTORAGE VAULT
+      </h2>
+      <p>
+        Your transfer history (links uploaded or viewed) is stored <strong>locally in your browser's localStorage</strong> (<code>fileguard_user_uploads</code> and <code>fileguard_user_views</code>). This data lives solely on your device. FileGuard servers have no access to your history vault, and you can wipe your entire local record at any time with one click from the <a href="/history" style="color: var(--comic-cyan); text-decoration: underline;">My History</a> page.
+      </p>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-yellow); margin: 0 0 0.75rem;">
+        4. AUTOMATIC PURGING &amp; USER REVOCATION RIGHTS
+      </h2>
+      <p>
+        Every uploaded file is governed by an authoritative <strong>12-hour self-destruct countdown</strong>:
+      </p>
+      <ul style="padding-left: 1.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <li>At the 12-hour mark, our automated sweeper permanently erases the storage block from Backblaze B2 and deletes the relational record.</li>
+        <li>Uploaders can execute <strong>Early Remote Revocation</strong> at any time before 12 hours from their history vault, which immediately executes an irreversible cloud purge and invalidates the share link for all recipients.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-yellow); margin: 0 0 0.75rem;">
+        5. THIRD-PARTY DISCLOSURE
+      </h2>
+      <p>
+        FileGuard does NOT sell, rent, monetize, or exchange user metadata or file contents with third-party advertisers, data brokers, or marketing networks. Infrastructure dependencies (Neon Serverless PostgreSQL and Backblaze B2 S3 storage) operate under strict enterprise confidentiality agreements.
+      </p>
+    </section>
+
+    <section style="border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-yellow); margin: 0 0 0.75rem;">
+        6. SECURITY QUESTIONS &amp; CONTACT
+      </h2>
+      <p>
+        For security questions, vulnerability disclosures, or privacy questions, please review our source repository at <a href="https://github.com/Deeptanil/FileGuard" target="_blank" rel="noopener noreferrer" style="color: var(--comic-cyan); text-decoration: underline;">GitHub</a>.
+      </p>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+

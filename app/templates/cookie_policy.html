@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Cookie Policy — FileGuard{% endblock %}
+{% block meta_description %}Cookie Policy for FileGuard. We use strictly essential session security cookies and local browser storage. Zero advertising cookies, zero analytics trackers.{% endblock %}
+
+{% block content %}
+<div class="container section-block" style="max-width: 860px; padding: 2.5rem 1.25rem;">
+  <div style="margin-bottom: 2rem;">
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--comic-pink); color: #FFF; font-family: var(--font-pixel); font-size: 0.72rem; padding: 0.25rem 0.65rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000; text-transform: uppercase; margin-bottom: 0.75rem;">
+      <span>COOKIE TRANSPARENCY</span>
+    </div>
+    <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.4rem); color: #FFFFFF; margin: 0 0 0.5rem; letter-spacing: 0.02em;">
+      COOKIE &amp; STORAGE POLICY
+    </h1>
+    <p style="color: #94A3B8; font-size: 0.95rem; margin: 0;">
+      Last Updated: October 2026 • Strictly Essential Cookies Only
+    </p>
+  </div>
+
+  <div class="card" style="background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: clamp(1.5rem, 3.5vw, 2.5rem); color: #CBD5E1; line-height: 1.7; font-size: 0.95rem;">
+
+    <section style="margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-pink); margin: 0 0 0.75rem;">
+        1. DO WE USE COOKIES?
+      </h2>
+      <p>
+        <strong>Yes, but exclusively strictly necessary, functional security cookies.</strong> FileGuard does NOT use advertising cookies, marketing pixels, social media trackers, or third-party behavioral profiling scripts.
+      </p>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-pink); margin: 0 0 0.75rem;">
+        2. COOKIES &amp; STORAGE MECHANISMS EMPLOYED
+      </h2>
+      <div style="overflow-x: auto; margin-top: 1rem;">
+        <table style="width: 100%; border-collapse: collapse; min-width: 580px; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid #334155; text-align: left;">
+              <th style="padding: 0.6rem 0.75rem; color: #FFFFFF;">NAME / KEY</th>
+              <th style="padding: 0.6rem 0.75rem; color: #FFFFFF;">TYPE</th>
+              <th style="padding: 0.6rem 0.75rem; color: #FFFFFF;">PURPOSE</th>
+              <th style="padding: 0.6rem 0.75rem; color: #FFFFFF;">LIFESPAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid #1E293B;">
+              <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--comic-cyan);">session</td>
+              <td style="padding: 0.75rem;">HTTP Cookie</td>
+              <td style="padding: 0.75rem;">Stores cryptographic CSRF session tokens to prevent Cross-Site Request Forgery attacks.</td>
+              <td style="padding: 0.75rem;">Session (browser close)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1E293B;">
+              <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--comic-cyan);">fileguard_user_uploads</td>
+              <td style="padding: 0.75rem;">localStorage</td>
+              <td style="padding: 0.75rem;">Maintains the client's private upload history vault and token list locally on the browser.</td>
+              <td style="padding: 0.75rem;">Persistent (user clears)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1E293B;">
+              <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--comic-cyan);">fileguard_user_views</td>
+              <td style="padding: 0.75rem;">localStorage</td>
+              <td style="padding: 0.75rem;">Stores links received and opened from other users in your local activity vault.</td>
+              <td style="padding: 0.75rem;">Persistent (user clears)</td>
+            </tr>
+            <tr>
+              <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--comic-cyan);">fileguard_cookie_consent</td>
+              <td style="padding: 0.75rem;">localStorage</td>
+              <td style="padding: 0.75rem;">Remembers your acknowledgment of this notice so the banner is not displayed again.</td>
+              <td style="padding: 0.75rem;">Persistent (1 year)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section style="margin-bottom: 2rem; border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-pink); margin: 0 0 0.75rem;">
+        3. ZERO THIRD-PARTY TRACKING
+      </h2>
+      <p>
+        Because FileGuard does not utilize tracking, Google Analytics, Meta pixels, or advertising networks, our service operates in full compliance with the EU ePrivacy Directive and GDPR standards for strictly essential functional cookies.
+      </p>
+    </section>
+
+    <section style="border-top: 1px solid #1E293B; padding-top: 1.5rem;">
+      <h2 style="font-family: var(--font-display); font-size: 1.25rem; color: var(--comic-pink); margin: 0 0 0.75rem;">
+        4. CONTROLLING YOUR STORAGE
+      </h2>
+      <p>
+        You have complete control over local storage data. You can clear your entire transfer history at any time by navigating to <a href="/history" style="color: var(--comic-cyan); text-decoration: underline;">My History</a> and clicking "Clear Upload History", or via standard browser developer tools / cache settings.
+      </p>
+    </section>
+
+  </div>
+</div>
+{% endblock %}
+
