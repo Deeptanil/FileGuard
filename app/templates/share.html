@@ -117,7 +117,9 @@
         {% if is_malicious or file.malware_status == 'malicious' %}
         <!-- Red Critical Malware Threat Alert -->
         <div style="background: rgba(239, 68, 68, 0.18); border: 3px solid var(--comic-pink); border-left: 8px solid var(--comic-pink); padding: 1.25rem 1rem; border-radius: 6px; text-align: center; margin-bottom: 1rem;">
-          <div style="font-size: 2.2rem; margin-bottom: 0.35rem;">🛑</div>
+          <div style="margin-bottom: 0.4rem; display: flex; justify-content: center;">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--comic-pink)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
           <strong style="color: var(--comic-pink); font-family: var(--font-pixel); font-size: 0.85rem; display: block; margin-bottom: 0.4rem; letter-spacing: 0.02em;">
             MALWARE DETECTED — DOWNLOAD BLOCKED
           </strong>
@@ -132,7 +134,7 @@
 
         {% if file.malware_status in ['pending', 'scanning'] %}
         <div style="background: rgba(245, 158, 11, 0.12); border: 2px solid var(--comic-yellow); border-left: 6px solid var(--comic-yellow); padding: 0.65rem 0.85rem; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem;">
-          <span style="font-size: 1.2rem; line-height: 1;">⏳</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <div style="flex: 1;">
             <strong style="color: var(--comic-yellow); display: block; font-size: 0.72rem; font-family: var(--font-pixel); margin-bottom: 0.15rem;">
               ANTIVIRUS ANALYSIS IN PROGRESS
@@ -144,7 +146,7 @@
         </div>
         {% elif file.malware_status == 'suspicious' %}
         <div style="background: rgba(245, 158, 11, 0.15); border: 2px solid var(--comic-yellow); border-left: 6px solid var(--comic-yellow); padding: 0.75rem 0.9rem; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.65rem;">
-          <span style="font-size: 1.2rem; line-height: 1;">⚠️</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <div style="flex: 1;">
             <strong style="color: var(--comic-yellow); font-family: var(--font-pixel); font-size: 0.72rem; display: block; margin-bottom: 0.2rem; letter-spacing: 0.02em;">
               POTENTIAL HEURISTIC WARNING (LOW CONFIDENCE)
@@ -158,7 +160,7 @@
 
         {% if file.file_extension|lower in ['exe', 'msi', 'bat', 'cmd', 'ps1', 'vbs', 'scr', 'iso', 'jar', 'apk', 'com', 'pif', 'hta', 'cpl'] %}
         <div style="background: rgba(239, 68, 68, 0.12); border: 2px solid var(--comic-pink); border-left: 6px solid var(--comic-pink); padding: 0.75rem 0.9rem; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.65rem;">
-          <span style="font-size: 1.2rem; line-height: 1;">⚠️</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--comic-pink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <div style="flex: 1;">
             <strong style="color: var(--comic-pink); font-family: var(--font-pixel); font-size: 0.7rem; display: block; margin-bottom: 0.2rem; letter-spacing: 0.02em;">
               EXECUTABLE APPLICATION / SCRIPT
@@ -185,13 +187,25 @@
           <span>Pre-Flight SHA-256 Validated</span>
           <span style="color: #475569;">•</span>
           {% if file.malware_status == 'clean' %}
-          <span style="color: var(--comic-lime); font-weight: 700;">🛡️ Antivirus: Clean</span>
+          <span style="color: var(--comic-lime); font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            Antivirus: Clean
+          </span>
           {% elif file.malware_status in ['pending', 'scanning'] %}
-          <span style="color: var(--comic-yellow); font-weight: 700;">⏳ Antivirus: Scanning</span>
+          <span style="color: var(--comic-yellow); font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Antivirus: Scanning
+          </span>
           {% elif file.malware_status == 'suspicious' %}
-          <span style="color: var(--comic-yellow); font-weight: 700;">⚠️ Antivirus: Low Confidence</span>
+          <span style="color: var(--comic-yellow); font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Antivirus: Low Confidence
+          </span>
           {% elif file.malware_status == 'malicious' %}
-          <span style="color: var(--comic-pink); font-weight: 700;">🛑 Antivirus: Flagged</span>
+          <span style="color: var(--comic-pink); font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            Antivirus: Flagged
+          </span>
           {% else %}
           <span>Heuristic Validated</span>
           {% endif %}
