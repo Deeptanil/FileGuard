@@ -79,7 +79,7 @@
     </p>
 
     <div class="hero-actions">
-      <a href="{{ url_for('public.upload_page') }}" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+      <a href="#upload-section" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
@@ -96,7 +96,7 @@
     </div>
 
     <!-- Quick Dropzone on Homepage -->
-    <div style="max-width: 680px; margin: 0 auto 3rem;">
+    <div id="upload-section" style="max-width: 680px; margin: 0 auto 3rem; scroll-margin-top: 5rem;">
       <!-- 1. Dropzone Box (Turns Yellow & Shows File/Bundle Info in-place when files are selected) -->
       <div id="dropzone" class="dropzone" data-max-mb="100" data-allowed-exts="pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm">
         <input type="file" id="file-input" multiple style="display: none;">

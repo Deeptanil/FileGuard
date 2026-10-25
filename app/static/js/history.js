@@ -149,7 +149,7 @@
           <p style="color: #94A3B8; font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">
             When you upload single files or full folder bundles from this browser, they will appear here with live countdowns and instant revocation buttons.
           </p>
-          <a href="/upload" class="btn btn-primary" style="background: var(--comic-cyan); color: #000; font-weight: 800; border: 2px solid #000; box-shadow: 3px 3px 0px #000;">
+          <a href="/#upload-section" class="btn btn-primary" style="background: var(--comic-cyan); color: #000; font-weight: 800; border: 2px solid #000; box-shadow: 3px 3px 0px #000;">
             Upload Your First File
           </a>
         </div>

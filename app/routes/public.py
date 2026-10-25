@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, jsonify, send_from_directory, current_app
+from flask import Blueprint, render_template, jsonify, send_from_directory, current_app, redirect, url_for
 from app.security import generate_csrf_token
 from app.cleanup import run_expired_files_cleanup
 
@@ -18,13 +18,8 @@ def index():
 
 @public_bp.route("/upload")
 def upload_page():
-    """Direct file upload interface."""
-    try:
-        run_expired_files_cleanup()
-    except Exception:
-        pass
-    csrf_token = generate_csrf_token()
-    return render_template("upload.html", csrf_token=csrf_token)
+    """Redirect to the home page upload section."""
+    return redirect(url_for("public.index", _anchor="upload-section"))
 
 
 @public_bp.route("/history")

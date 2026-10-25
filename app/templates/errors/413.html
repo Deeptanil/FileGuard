@@ -5,7 +5,7 @@
   <h1 style="font-size: 4rem; font-weight: 800; color: var(--accent-amber); font-family: var(--font-mono);">413</h1>
   <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">File Exceeds Size Limit</h2>
   <p style="color: var(--text-muted); margin-bottom: 2rem;">The uploaded file exceeds the configured server maximum limit of {{ max_mb }} MB.</p>
-  <a href="{{ url_for('public.upload_page') }}" class="btn btn-primary">Try Another File</a>
+  <a href="{{ url_for('public.index') }}#upload-section" class="btn btn-primary">Try Another File</a>
 </div>
 {% endblock %}
 
