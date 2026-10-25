@@ -142,16 +142,22 @@
     </div>
   </div>
 
-  <!-- Operational Focus: Active Blocked IPs & Pending Abuse Reports -->
+  <!-- Operational Focus: Active Blocked IPs & Recent Abuse Reports -->
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
     <!-- Active Blocked IPs Panel -->
     <div class="card">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <h2 class="card-title">Active Blocked IPs ({{ total_blocked_ips }})</h2>
-          <p class="card-subtitle">Restricted clients blocked from uploading files</p>
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 0;">
+          <h2 class="card-title" style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.25rem); word-break: normal;">
+            Active Blocked IPs ({{ total_blocked_ips }})
+          </h2>
+          <p class="card-subtitle" style="margin: 0.25rem 0 0;">
+            Restricted clients blocked from uploading files
+          </p>
         </div>
-        <a href="{{ url_for('admin.blocked_ips_list') }}" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;">Manage All</a>
+        <a href="{{ url_for('admin.blocked_ips_list') }}" class="btn btn-secondary btn-sm" style="white-space: nowrap; flex-shrink: 0; font-size: 0.78rem; font-weight: 800; padding: 0.45rem 0.85rem; background: var(--comic-cyan); color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 #000;">
+          Manage All
+        </a>
       </div>
       <div class="table-container">
         <table class="data-table">
@@ -203,12 +209,18 @@
 
     <!-- Recent Abuse Reports Panel -->
     <div class="card">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <h2 class="card-title">Recent Abuse Reports ({{ pending_abuse_reports }} Pending)</h2>
-          <p class="card-subtitle">Community notices requiring investigation</p>
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 0;">
+          <h2 class="card-title" style="margin: 0; font-size: clamp(1rem, 2.5vw, 1.25rem); word-break: normal;">
+            Recent Abuse Reports ({{ pending_abuse_reports }})
+          </h2>
+          <p class="card-subtitle" style="margin: 0.25rem 0 0;">
+            Community notices requiring investigation
+          </p>
         </div>
-        <a href="{{ url_for('admin.abuse_reports_list') }}" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;">Review All</a>
+        <a href="{{ url_for('admin.abuse_reports_list') }}" class="btn btn-secondary btn-sm" style="white-space: nowrap; flex-shrink: 0; font-size: 0.78rem; font-weight: 800; padding: 0.45rem 0.85rem; background: var(--comic-cyan); color: #000; border: 2px solid #000; box-shadow: 2px 2px 0 #000;">
+          Review All
+        </a>
       </div>
       <div class="table-container">
         <table class="data-table">
