@@ -229,7 +229,7 @@
         <div style="font-size: 2rem; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-bottom: 0.5rem;">02</div>
         <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Share Link & QR</h3>
         <p style="color: var(--text-muted); font-size: 0.95rem;">
-          Receive a cryptographically random 256-bit tokenized URL and QR code. The token itself is hashed at rest to guard against database leak disclosure.
+          Receive an 8-digit CSPRNG tokenized URL and instant QR code. The token itself is hashed with SHA-256 at rest to guard against database leak disclosure.
         </p>
       </div>
 
