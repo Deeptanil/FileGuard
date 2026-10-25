@@ -708,9 +708,27 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   box-shadow: 2px 2px 0px #000000;
+  background: #1E293B;
+  color: #FFFFFF;
+  text-decoration: none;
 }
 
-.badge-active, .badge-pass, .badge-success {
+a.badge,
+a.badge:link,
+a.badge:visited {
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+a.badge:hover {
+  background: #334155;
+  color: #FFFFFF;
+}
+
+.badge-active, .badge-pass, .badge-success,
+a.badge.badge-active,
+a.badge.badge-active:link,
+a.badge.badge-active:visited {
   background: var(--comic-lime);
   color: #000000;
 }

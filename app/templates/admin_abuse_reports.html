@@ -52,10 +52,10 @@
     </div>
 
     <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='all') }}" class="badge {% if current_category == 'all' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">All Categories</a>
-      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='malware') }}" class="badge {% if current_category == 'malware' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">Malware</a>
-      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='csam') }}" class="badge {% if current_category == 'csam' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">CSAM</a>
-      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='copyright') }}" class="badge {% if current_category == 'copyright' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">Copyright</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='all') }}" class="badge {% if current_category == 'all' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.4rem 0.75rem; font-size: 0.68rem; {% if current_category == 'all' %}background: var(--comic-lime); color: #000000; font-weight: 800;{% else %}background: #1E293B; color: #FFFFFF; font-weight: 700;{% endif %}">All Categories</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='malware') }}" class="badge {% if current_category == 'malware' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.4rem 0.75rem; font-size: 0.68rem; {% if current_category == 'malware' %}background: var(--comic-lime); color: #000000; font-weight: 800;{% else %}background: #1E293B; color: #FFFFFF; font-weight: 700;{% endif %}">Malware</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='csam') }}" class="badge {% if current_category == 'csam' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.4rem 0.75rem; font-size: 0.68rem; {% if current_category == 'csam' %}background: var(--comic-lime); color: #000000; font-weight: 800;{% else %}background: #1E293B; color: #FFFFFF; font-weight: 700;{% endif %}">CSAM</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='copyright') }}" class="badge {% if current_category == 'copyright' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.4rem 0.75rem; font-size: 0.68rem; {% if current_category == 'copyright' %}background: var(--comic-lime); color: #000000; font-weight: 800;{% else %}background: #1E293B; color: #FFFFFF; font-weight: 700;{% endif %}">Copyright</a>
     </div>
   </div>
 
