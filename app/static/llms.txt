@@ -1,6 +1,6 @@
 # FileGuard
 
-> Free, secure, ephemeral file and folder sharing platform with pre-flight SHA-256 cryptographic integrity verification, strict 12-hour self-destruct, and zero-knowledge privacy.
+> Free, secure, ephemeral file and folder sharing platform with pre-flight SHA-256 cryptographic integrity verification, strict 12-hour self-destruct, and privacy-focused anonymous transfers.
 
 ## Overview
 FileGuard allows users to upload single files, multiple files, or entire folder hierarchies up to 100 MB per transfer without registration or accounts. Files automatically self-destruct after 12 hours from both object storage and database catalogs.
@@ -15,7 +15,7 @@ FileGuard allows users to upload single files, multiple files, or entire folder 
 - **Pre-Flight Integrity Gate**: Computes live SHA-256 before streaming bytes to clients, halting tampered files with HTTP 409.
 - **Dynamic In-Memory Bundling**: Multiple files or entire folder trees are zipped in memory, preserving directory structures.
 - **Privacy-First Ephemeral Vault**: Client-side history in localStorage synchronizes live status without server accounts.
-- **Anonymous Subnet Quotas**: Fair-use limit of 100 MB per 12 hours per IP subnet (/64 IPv6, /24 IPv4).
+- **Client-IP Quota Controls**: Fair-use limit of 100 MB per rolling 12 hours per client IP address.
 
 ## API & Programmatic Usage
 - `POST /api/files`: Upload file or bundle (multipart/form-data). Returns token, share_url, expires_at, sha256_reference.

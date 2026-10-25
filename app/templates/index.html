@@ -22,7 +22,7 @@
       "name": "Do I or the recipient need an account or registration?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. FileGuard operates on strict zero-knowledge principles. There are no user accounts, passwords, or email sign-ups required. Your activity history is maintained privately on your own device using client-side localStorage."
+        "text": "No. FileGuard operates on strict privacy-first principles. There are no user accounts, passwords, or email sign-ups required. Your activity history is maintained privately on your own device using client-side localStorage."
       }
     },
     {
@@ -46,7 +46,7 @@
       "name": "What is the file size limit and upload quota?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Single files or folder bundles up to 100 MB can be uploaded. To ensure fair infrastructure usage and prevent spam, each IP subnet has a rolling 100 MB quota per 12 hours."
+        "text": "Single files or folder bundles up to 100 MB can be uploaded. To ensure fair infrastructure usage and prevent abuse, each client IP has a rolling 100 MB quota per 12 hours."
       }
     },
     {
@@ -319,10 +319,17 @@
           </tr>
           <tr style="border-bottom: 1px solid #1E293B;">
             <td style="padding: 0.9rem 1rem; font-weight: 700;">Storage Encryption &amp; Security</td>
-            <td style="padding: 0.9rem 1rem; color: var(--comic-lime); font-weight: 800;">AES-256-GCM At Rest + Optional Zero-Knowledge E2EE</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-lime); font-weight: 800;">Transparent AES-256-GCM At Rest (Backblaze B2)</td>
             <td style="padding: 0.9rem 1rem; color: #CBD5E1;">Google-managed server encryption</td>
             <td style="padding: 0.9rem 1rem; color: #CBD5E1;">Standard TLS + server-side (no E2EE on free tier)</td>
             <td style="padding: 0.9rem 1rem; color: #CBD5E1;">TLS in transit (no client E2EE on web)</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1E293B;">
+            <td style="padding: 0.9rem 1rem; font-weight: 700;">Folder &amp; Multi-File Bundling</td>
+            <td style="padding: 0.9rem 1rem; color: var(--comic-cyan); font-weight: 800;">In-Memory Streaming ZIP (Preserves directory tree, 0 disk staging)</td>
+            <td style="padding: 0.9rem 1rem; color: #CBD5E1;">Server-side zipping with latency</td>
+            <td style="padding: 0.9rem 1rem; color: #CBD5E1;">Server-side archive creation</td>
+            <td style="padding: 0.9rem 1rem; color: #CBD5E1;">Multi-file selection (no folder tree)</td>
           </tr>
           <tr style="border-bottom: 1px solid #1E293B;">
             <td style="padding: 0.9rem 1rem; font-weight: 700;">Password / PIN Protection</td>
@@ -404,7 +411,7 @@
           <span class="faq-icon" aria-hidden="true">+</span>
         </summary>
         <div class="faq-answer">
-          You can upload single files or folder bundles up to 100 MB per transfer. Each IP subnet has a rolling quota of 100 MB per 12 hours, ensuring the platform remains free, fast, and protected against automated spam.
+          You can upload single files or folder bundles up to 100 MB per transfer. Each client IP has a rolling quota of 100 MB per 12 hours, ensuring the platform remains free, fast, and protected against automated spam and resource exhaustion.
         </div>
       </details>
 
@@ -476,9 +483,9 @@
       <div style="display: flex; gap: 1rem; align-items: flex-start;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" style="flex-shrink: 0; margin-top: 0.2rem;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         <div>
-          <strong style="color: var(--text-main); font-size: 1rem;">Security & Academic Transparency Notice</strong>
+          <strong style="color: var(--text-main); font-size: 1rem;">Security &amp; Academic Transparency Notice</strong>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.35rem;">
-            FileGuard implements cryptographic integrity verification via SHA-256. A matching hash verifies that the served bytes match the exact upload snapshot; it does not constitute malware scanning or zero-knowledge end-to-end encryption. Files are stored unencrypted at rest within a restricted filesystem directory and automatically deleted after 12 hours.
+            FileGuard implements cryptographic integrity verification via SHA-256 to ensure delivered bytes match the exact upload snapshot (detecting bit-rot and tampering, but not serving as a malware scanner). Stored objects are protected with AES-256-GCM encryption at rest in Backblaze B2 cloud storage and automatically purged after 12 hours.
           </p>
         </div>
       </div>
