@@ -265,36 +265,53 @@ body {
   color: inherit;
 }
 
-.btn-primary,
-.btn-primary:hover,
-.btn-primary:active,
-.btn-primary:focus {
+.btn-primary {
   background-color: var(--comic-pink);
-  color: #FFFFFF !important;
+  color: #FFFFFF;
 }
 
 .btn-primary:hover {
   background-color: #FF0A7B;
+  color: #FFFFFF;
 }
 
-.btn-secondary,
-.btn-secondary:hover,
-.btn-secondary:active,
-.btn-secondary:focus {
+.btn-primary:active,
+.btn-primary:focus {
+  color: #FFFFFF;
+}
+
+.btn-secondary {
   background-color: var(--comic-cyan);
-  color: var(--text-dark) !important;
+  color: var(--text-dark);
 }
 
 .btn-secondary:hover {
   background-color: #27F5FF;
+  color: var(--text-dark);
+}
+
+.btn-secondary:active,
+.btn-secondary:focus {
+  color: var(--text-dark);
 }
 
 .btn-accent,
-.btn-accent:hover,
+#download-btn,
+#download-btn:hover,
+#download-btn:active,
+#download-btn:focus {
+  background-color: var(--comic-yellow);
+  color: #000000 !important;
+}
+
+.btn-accent:hover {
+  background-color: #FACC15;
+  color: #000000 !important;
+}
+
 .btn-accent:active,
 .btn-accent:focus {
-  background-color: var(--comic-yellow);
-  color: var(--text-dark) !important;
+  color: #000000 !important;
 }
 
 .btn-danger,

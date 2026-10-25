@@ -35,7 +35,7 @@ def create_report():
     normal_style = doc.styles['Normal']
     normal_style.font.name = 'Calibri'
     normal_style.font.size = Pt(10.5)
-    normal_style.font.color.rgb = RGBColor(15, 23, 42)
+    normal_style.font.color.rgb = RGBColor(0, 0, 0)
     normal_style.paragraph_format.line_spacing = 1.15
     normal_style.paragraph_format.space_after = Pt(4)
 
@@ -46,14 +46,14 @@ def create_report():
     run_title = title_p.add_run("FILEGUARD: SECURE EPHEMERAL FILE SHARING SYSTEM")
     run_title.font.size = Pt(16)
     run_title.font.bold = True
-    run_title.font.color.rgb = RGBColor(15, 23, 42)
+    run_title.font.color.rgb = RGBColor(0, 0, 0)
 
     sub_p = doc.add_paragraph()
     sub_p.paragraph_format.space_after = Pt(8)
     run_sub = sub_p.add_run("Cryptographic Integrity Monitoring, Digital Forensics & Ephemeral Cloud Architecture")
     run_sub.font.size = Pt(11)
     run_sub.font.bold = True
-    run_sub.font.color.rgb = RGBColor(2, 132, 199)
+    run_sub.font.color.rgb = RGBColor(0, 0, 0)
 
     # Metadata & Student Information Table (Alphabetical Order)
     meta_table = doc.add_table(rows=4, cols=2)
@@ -95,15 +95,11 @@ def create_report():
         h.paragraph_format.keep_with_next = True
         r = h.add_run(text)
         r.font.bold = True
+        r.font.color.rgb = RGBColor(0, 0, 0)
         if level == 1:
             r.font.size = Pt(12)
-            r.font.color.rgb = RGBColor(15, 23, 42)
-            pPr = h._p.get_or_add_pPr()
-            pBdr = parse_xml(f'<w:pBdr {nsdecls("w")}><w:bottom w:val="single" w:sz="6" w:space="2" w:color="0284C7"/></w:pBdr>')
-            pPr.append(pBdr)
         else:
             r.font.size = Pt(10.5)
-            r.font.color.rgb = RGBColor(2, 132, 199)
         return h
 
     def add_bullet(bold_prefix="", text=""):

@@ -112,9 +112,9 @@
 
       <!-- Full-Width Download Button & Inline PIN Unlock -->
       <div style="margin-top: 1.35rem; padding-top: 1.2rem; border-top: 2px dashed #334155;">
-        <a href="{{ url_for('downloads.download_file', token=token) }}" id="download-btn" onclick="handleDownloadClick(event)" class="btn btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem; font-size: clamp(1rem, 3vw, 1.25rem); background: var(--comic-yellow); color: #000000; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center; text-decoration: none;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" style="flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          <span>DOWNLOAD NOW</span>
+        <a href="{{ url_for('downloads.download_file', token=token) }}" id="download-btn" onclick="handleDownloadClick(event)" class="btn btn-accent" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem; font-size: clamp(1rem, 3vw, 1.25rem); background: var(--comic-yellow); color: #000000 !important; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center; text-decoration: none;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.8" style="flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span style="color: #000000 !important;">DOWNLOAD NOW</span>
         </a>
 
         <div id="inline-pin-box" style="display: none; margin-top: 0.85rem; padding: 0.85rem; background: #1E293B; border: 2px solid #000000; border-radius: 4px; box-shadow: 3px 3px 0px #000000;">
