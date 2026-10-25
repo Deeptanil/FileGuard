@@ -283,7 +283,7 @@ def download_file(token: str):
         send_file(
             stream,
             as_attachment=True,
-            download_name=record.display_name,
+            download_name=record.download_filename,
             mimetype=record.detected_mime_type
         )
     )

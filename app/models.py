@@ -42,6 +42,34 @@ class FileRecord(db.Model):
         return self.original_filename
 
     @property
+    def download_filename(self):
+        """Authoritative filename for Content-Disposition header with proper extension guaranteed."""
+        from app.security import sanitize_filename
+
+        # If it's a bundle or ZIP archive:
+        if getattr(self, "is_bundle", False) or self.file_extension == "zip" or self.detected_mime_type == "application/zip":
+            if self.display_title and self.display_title.strip():
+                title = self.display_title.strip()
+                # If auto-generated bundle summary e.g. "screenshot.png + 1 more file"
+                if " + " in title and ("more file" in title or "more files" in title):
+                    return self.original_filename if (self.original_filename and self.original_filename.lower().endswith(".zip")) else "FileGuard_Bundle.zip"
+                clean_name, _ = sanitize_filename(title)
+                if not clean_name.lower().endswith(".zip"):
+                    clean_name = f"{clean_name}.zip"
+                return clean_name
+            return self.original_filename if (self.original_filename and self.original_filename.lower().endswith(".zip")) else "FileGuard_Bundle.zip"
+
+        # Single file:
+        ext = (self.file_extension or "").lstrip(".").lower()
+        if self.display_title and self.display_title.strip():
+            clean_title, _ = sanitize_filename(self.display_title.strip())
+            if ext and not clean_title.lower().endswith(f".{ext}"):
+                return f"{clean_title}.{ext}"
+            return clean_title
+
+        return self.original_filename
+
+    @property
     def has_password(self):
         """Whether download requires a password or PIN."""
         return bool(self.password_hash)

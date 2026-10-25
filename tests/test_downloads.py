@@ -175,4 +175,29 @@ def test_seo_routes_and_metadata(client):
     assert '"@type": "FAQPage"' in home_html
 
 
+def test_bundle_download_filename_has_zip_extension(client, db_session):
+    """Verify downloading a multi-file bundle sets Content-Disposition with .zip extension."""
+    with client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_test_zip_ext"
+
+    data = {
+        "file": [
+            (io.BytesIO(b"Document 1 content"), "doc1.txt"),
+            (io.BytesIO(b"Document 2 content"), "doc2.txt")
+        ],
+        "display_title": "Project Classified Report",
+        "csrf_token": "csrf_test_zip_ext"
+    }
+    res_upload = client.post("/api/files", data=data, content_type="multipart/form-data")
+    assert res_upload.status_code == 201
+    token = res_upload.get_json()["token"]
+
+    res_down = client.get(f"/api/files/{token}/download")
+    assert res_down.status_code == 200
+    disp = res_down.headers.get("Content-Disposition", "")
+    assert 'filename="Project_Classified_Report.zip"' in disp or 'filename=Project_Classified_Report.zip' in disp
+    assert disp.lower().endswith('.zip"') or disp.lower().endswith('.zip')
+
+
+
 
