@@ -49,9 +49,11 @@ storage/*
 .coverage
 htmlcov/
 
+# Node / npm
+node_modules/
+package-lock.json
+
 # Operating System Files
 .DS_Store
 Thumbs.db
 
-~$leGuard_Project_Report.docx
-FileGuard_Project_Report.docx
