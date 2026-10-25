@@ -269,6 +269,9 @@ def upload_file():
         db.session.add(record)
         db.session.commit()
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        current_app.logger.error(f"Failed to record file metadata: {e}")
         db.session.rollback()
         delete_stored_file(storage_id)
         return jsonify({"error": "Failed to record file metadata"}), 500

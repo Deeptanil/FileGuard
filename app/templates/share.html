@@ -191,64 +191,64 @@
       </div>
     </div>
 
-    <!-- ================= POST-UPLOAD SETTINGS (UPLOADER CONTROLS) ================= -->
+    <!-- ================= POST-UPLOAD SETTINGS (UPLOADER CONTROLS - LIGHT THEME) ================= -->
     {% if is_owner or just_uploaded %}
-      <div class="card" style="margin-bottom: 1.5rem; background: #1E293B; border: var(--border-heavy); box-shadow: var(--shadow-3d); color: #FFFFFF;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid #334155; padding-bottom: 0.75rem;">
+      <div class="card" style="margin-bottom: 1.5rem; background: #FFFFFF; border: var(--border-heavy); box-shadow: var(--shadow-3d); color: #000000;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 3px solid #000000; padding-bottom: 0.75rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1.3rem;">⚙️</span>
-            <span style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 900; color: var(--comic-yellow);">TRANSFER SETTINGS &amp; CONTROLS</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 900; color: #000000;">TRANSFER SETTINGS &amp; CONTROLS</span>
           </div>
-          <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.7rem;">UPLOADER ONLY</span>
+          <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.7rem; border: 2px solid #000000;">UPLOADER ONLY</span>
         </div>
 
-        <div id="settings-alert" style="display: none; margin-bottom: 1rem; padding: 0.65rem 1rem; border-radius: 4px; font-weight: 700; font-size: 0.85rem;"></div>
+        <div id="settings-alert" style="display: none; margin-bottom: 1rem; padding: 0.65rem 1rem; border-radius: 4px; font-weight: 800; font-size: 0.85rem; border: 2px solid #000000;"></div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
           <!-- 1. Display Title -->
           <div>
-            <label style="display: block; font-family: var(--font-display); font-size: 0.8rem; color: #E2E8F0; margin-bottom: 0.35rem;">
+            <label style="display: block; font-family: var(--font-display); font-size: 0.78rem; color: #000000; font-weight: 800; margin-bottom: 0.35rem;">
               CUSTOM TITLE / DESCRIPTION
             </label>
-            <input type="text" id="setting-title" class="form-control" value="{{ file.display_title or '' }}" placeholder="{{ file.original_filename }}" maxlength="200" style="background: #0F172A; color: #FFFFFF; border: 2px solid #475569; font-size: 0.85rem;">
-            <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 0.25rem;">Shown to recipients instead of raw filename.</div>
+            <input type="text" id="setting-title" class="form-control" value="{{ file.display_title or '' }}" placeholder="{{ file.original_filename }}" maxlength="200" style="background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; font-size: 0.85rem; border-radius: 4px;">
+            <div style="font-size: 0.72rem; color: #475569; margin-top: 0.25rem; font-weight: 600;">Shown to recipients instead of raw filename.</div>
           </div>
 
           <!-- 2. PIN / Password Protection -->
           <div>
-            <label style="display: block; font-family: var(--font-display); font-size: 0.8rem; color: #E2E8F0; margin-bottom: 0.35rem;">
+            <label style="display: block; font-family: var(--font-display); font-size: 0.78rem; color: #000000; font-weight: 800; margin-bottom: 0.35rem;">
               PIN / PASSWORD PROTECTION
             </label>
             <div style="display: flex; gap: 0.4rem;">
-              <input type="password" id="setting-password" class="form-control" placeholder="{% if file.has_password %}(Protected) Enter new to change{% else %}Set PIN / password{% endif %}" style="background: #0F172A; color: #FFFFFF; border: 2px solid #475569; font-size: 0.85rem; flex: 1;">
+              <input type="password" id="setting-password" class="form-control" placeholder="{% if file.has_password %}(Protected) Enter new to change{% else %}Set PIN / password{% endif %}" style="background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; font-size: 0.85rem; border-radius: 4px; flex: 1;">
               {% if file.has_password %}
-                <button type="button" id="btn-remove-pwd" onclick="removePasswordProtection()" class="btn btn-secondary btn-sm" style="background: var(--comic-pink); color: #FFF; font-size: 0.72rem; white-space: nowrap; border: 2px solid #000;">
+                <button type="button" id="btn-remove-pwd" onclick="removePasswordProtection()" class="btn btn-secondary btn-sm" style="background: var(--comic-pink); color: #FFF; font-size: 0.72rem; white-space: nowrap; border: 2px solid #000; box-shadow: 2px 2px 0px #000; font-weight: 800;">
                   REMOVE PIN
                 </button>
               {% endif %}
             </div>
-            <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 0.25rem;">
+            <div style="font-size: 0.72rem; color: #475569; margin-top: 0.25rem; font-weight: 600;">
               {% if file.has_password %}Currently locked with PIN.{% else %}Leave empty for open link.{% endif %}
             </div>
           </div>
 
           <!-- 3. Expiration Adjustment -->
           <div>
-            <label style="display: block; font-family: var(--font-display); font-size: 0.8rem; color: #E2E8F0; margin-bottom: 0.35rem;">
+            <label style="display: block; font-family: var(--font-display); font-size: 0.78rem; color: #000000; font-weight: 800; margin-bottom: 0.35rem;">
               ADJUST EXPIRATION
             </label>
-            <select id="setting-expiration" class="form-control" style="background: #0F172A; color: #FFFFFF; border: 2px solid #475569; font-size: 0.85rem;">
+            <select id="setting-expiration" class="form-control" style="background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; font-size: 0.85rem; border-radius: 4px; cursor: pointer; font-weight: 700;">
               <option value="1">1 Hour</option>
               <option value="3">3 Hours</option>
               <option value="6">6 Hours</option>
               <option value="12" selected>12 Hours (Max allowed)</option>
             </select>
-            <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 0.25rem;">Strict 12h maximum lifetime enforced.</div>
+            <div style="font-size: 0.72rem; color: #475569; margin-top: 0.25rem; font-weight: 600;">Strict 12h maximum lifetime enforced.</div>
           </div>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button type="button" id="save-settings-btn" onclick="saveTransferSettings()" class="btn btn-primary" style="background: var(--comic-cyan); color: #000; font-weight: 800; border: 2px solid #000; box-shadow: 3px 3px 0 #000; padding: 0.5rem 1.25rem;">
+          <button type="button" id="save-settings-btn" onclick="saveTransferSettings()" class="btn btn-primary" style="background: var(--comic-yellow); color: #000000; font-weight: 900; border: 2px solid #000000; box-shadow: 3px 3px 0px #000000; padding: 0.55rem 1.35rem; font-family: var(--font-display); font-size: 0.85rem;">
             UPDATE TRANSFER SETTINGS
           </button>
         </div>

@@ -97,6 +97,7 @@
 
     <!-- Quick Dropzone on Homepage -->
     <div style="max-width: 680px; margin: 0 auto 3rem;">
+      <!-- 1. Dedicated Dropzone Area (Initialises Uploads Only) -->
       <div id="dropzone" class="dropzone" data-max-mb="100" data-allowed-exts="pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm">
         <input type="file" id="file-input" multiple style="display: none;">
         <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
@@ -122,75 +123,75 @@
             <span>Select Folder</span>
           </button>
         </div>
+      </div>
 
-        <!-- Optional Transfer Settings Accordion -->
-        <div style="margin-top: 1.25rem; text-align: left; background: #131929; border: 2px solid #000; border-radius: 8px; padding: 0.85rem 1rem; color: #FFF; box-shadow: 3px 3px 0px #000;">
-          <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="document.getElementById('upload-options-body').classList.toggle('active-options')">
-            <span style="font-family: var(--font-display); font-size: 0.82rem; color: var(--comic-yellow); display: flex; align-items: center; gap: 0.4rem;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              <span>TRANSFER OPTIONS &amp; SECURITY SETTINGS (OPTIONAL)</span>
-            </span>
-            <span style="font-size: 0.8rem; color: var(--comic-cyan); font-weight: 800;">[Toggle Options]</span>
+      <!-- 2. Selected File Preview & Progress (Separate section below dropzone) -->
+      <div id="file-preview" class="file-preview-card" style="display: none; margin-top: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <div style="text-align: left;">
+            <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; text-transform: uppercase; color: #000000; font-family: var(--font-pixel); margin-bottom: 0.25rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <span>FILE READY</span>
+            </div>
+            <strong id="file-name-display" class="file-preview-name">filename.pdf</strong>
+            <div id="file-size-display" class="file-preview-size">0 KB</div>
           </div>
+          <button type="button" id="upload-btn" class="btn btn-primary" style="background: var(--comic-pink); color: #FFFFFF; font-weight: 800; padding: 0.75rem 1.5rem; font-size: 0.95rem;">
+            UPLOAD NOW
+          </button>
+        </div>
+      </div>
 
-          <div id="upload-options-body" style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.65rem;">
-            <div>
-              <label for="opt-display-title" style="font-size: 0.75rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Custom Display Title</label>
-              <input type="text" id="opt-display-title" class="form-control" placeholder="E.g. Biology Lab Report or Q4 Invoice (Leave empty to use filename)" style="font-size: 0.82rem; padding: 0.45rem 0.65rem; margin-top: 0.2rem; background: #0B0E17; color: #FFF; border: 2px solid #334155;">
-            </div>
+      <div id="progress-container" class="progress-container" style="margin-top: 1rem;">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <div id="progress-percent" style="font-size: 0.95rem; color: #000000; font-weight: 900; font-family: var(--font-mono); margin-top: 0.5rem; text-align: center;"></div>
 
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 180px;">
-                <label for="opt-password" style="font-size: 0.75rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Download PIN / Password</label>
-                <input type="password" id="opt-password" class="form-control" placeholder="Optional PIN to restrict download" style="font-size: 0.82rem; padding: 0.45rem 0.65rem; margin-top: 0.2rem; background: #0B0E17; color: #FFF; border: 2px solid #334155;">
-              </div>
-              <div style="width: 140px;">
-                <label for="opt-expiration" style="font-size: 0.75rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Lifespan</label>
-                <select id="opt-expiration" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.65rem; margin-top: 0.2rem; background: #0B0E17; color: #FFF; border: 2px solid #334155; cursor: pointer;">
-                  <option value="12" selected>12 Hours</option>
-                  <option value="6">6 Hours</option>
-                  <option value="3">3 Hours</option>
-                  <option value="1">1 Hour</option>
-                </select>
-              </div>
-            </div>
+      <div id="upload-error" class="alert alert-danger" style="display: none; margin-top: 1rem; text-align: left;"></div>
 
-            <!-- Zero-Knowledge Client-Side E2EE Toggle -->
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.4rem; border-top: 1px dashed #334155; margin-top: 0.2rem;">
-              <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; font-size: 0.8rem; font-weight: 700; color: var(--comic-lime);">
-                <input type="checkbox" id="opt-e2ee" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--comic-lime);">
-                <span>Enable Zero-Knowledge Client-Side E2EE (AES-256-GCM)</span>
-              </label>
-              <button type="button" onclick="openE2eeReviewModal()" style="background: none; border: none; color: var(--comic-cyan); text-decoration: underline; font-size: 0.75rem; cursor: pointer; font-weight: 700;">
-                [How E2EE Works &amp; Review]
-              </button>
-            </div>
-          </div>
+      <!-- 3. Dedicated Options & Security Settings Section (Below upload section) -->
+      <div class="card" style="margin-top: 1.5rem; text-align: left; background: #FFFFFF; border: 3px solid #000000; border-radius: 8px; padding: 1.1rem 1.25rem; color: #000000; box-shadow: 4px 4px 0px #000000;">
+        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;" onclick="const b = document.getElementById('upload-options-body'); b.style.display = (b.style.display === 'none' ? 'flex' : 'none');">
+          <span style="font-family: var(--font-display); font-size: 0.88rem; color: #000000; font-weight: 900; display: flex; align-items: center; gap: 0.45rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>TRANSFER OPTIONS &amp; SECURITY SETTINGS (OPTIONAL)</span>
+          </span>
+          <span style="font-size: 0.75rem; color: #000000; font-weight: 800; background: var(--comic-yellow); padding: 0.2rem 0.55rem; border: 2px solid #000000; border-radius: 4px; box-shadow: 2px 2px 0px #000000;">[Toggle Options]</span>
         </div>
 
-        <!-- Selected File Preview -->
-        <div id="file-preview" class="file-preview-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <div style="text-align: left;">
-              <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; text-transform: uppercase; color: #000000; font-family: var(--font-pixel); margin-bottom: 0.25rem;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                <span>FILE READY</span>
-              </div>
-              <strong id="file-name-display" class="file-preview-name">filename.pdf</strong>
-              <div id="file-size-display" class="file-preview-size">0 KB</div>
+        <div id="upload-options-body" style="margin-top: 0.95rem; display: flex; flex-direction: column; gap: 0.75rem;">
+          <div>
+            <label for="opt-display-title" style="font-family: var(--font-display); font-size: 0.74rem; font-weight: 800; color: #000000; text-transform: uppercase;">Custom Display Title</label>
+            <input type="text" id="opt-display-title" class="form-control" placeholder="E.g. Biology Lab Report or Q4 Invoice (Leave empty to use filename)" style="font-size: 0.85rem; padding: 0.5rem 0.75rem; margin-top: 0.25rem; background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; border-radius: 4px;">
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 180px;">
+              <label for="opt-password" style="font-family: var(--font-display); font-size: 0.74rem; font-weight: 800; color: #000000; text-transform: uppercase;">Download PIN / Password</label>
+              <input type="password" id="opt-password" class="form-control" placeholder="Optional PIN to restrict download" style="font-size: 0.85rem; padding: 0.5rem 0.75rem; margin-top: 0.25rem; background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; border-radius: 4px;">
             </div>
-            <button type="button" id="upload-btn" class="btn btn-primary" style="background: var(--comic-pink); color: #FFFFFF; font-weight: 800; padding: 0.65rem 1.25rem; font-size: 0.85rem;">
-              UPLOAD NOW
+            <div style="width: 140px;">
+              <label for="opt-expiration" style="font-family: var(--font-display); font-size: 0.74rem; font-weight: 800; color: #000000; text-transform: uppercase;">Lifespan</label>
+              <select id="opt-expiration" class="form-control" style="font-size: 0.85rem; padding: 0.5rem 0.75rem; margin-top: 0.25rem; background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; border-radius: 4px; cursor: pointer; font-weight: 700;">
+                <option value="12" selected>12 Hours</option>
+                <option value="6">6 Hours</option>
+                <option value="3">3 Hours</option>
+                <option value="1">1 Hour</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Zero-Knowledge Client-Side E2EE Toggle -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.55rem; border-top: 2px dashed #000000; margin-top: 0.35rem;">
+            <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.82rem; font-weight: 800; color: #000000;">
+              <input type="checkbox" id="opt-e2ee" style="width: 16px; height: 16px; cursor: pointer; accent-color: #000000;">
+              <span>Enable Zero-Knowledge Client-Side E2EE (AES-256-GCM)</span>
+            </label>
+            <button type="button" onclick="openE2eeReviewModal()" style="background: none; border: none; color: #000000; text-decoration: underline; font-size: 0.78rem; cursor: pointer; font-weight: 800; padding: 0;">
+              [How E2EE Works &amp; Review]
             </button>
           </div>
         </div>
-
-        <div id="progress-container" class="progress-container">
-          <div id="progress-bar" class="progress-bar"></div>
-        </div>
-        <div id="progress-percent" style="font-size: 0.85rem; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 0.5rem;"></div>
-
-        <div id="upload-error" class="alert alert-danger" style="display: none; margin-top: 1rem; text-align: left;"></div>
       </div>
     </div>
   </div>

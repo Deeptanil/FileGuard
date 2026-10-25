@@ -167,3 +167,26 @@ def test_custom_expiration_and_post_upload_settings(app, db_session):
     res_unauth = other_client.post(f"/api/files/{token}/settings", json={"display_title": "Hacked"})
     assert res_unauth.status_code == 403
 
+
+def test_multi_file_bundle_upload_with_name_and_pin(client, db_session):
+    """Verify uploading 2 files with custom display title and PIN succeeds."""
+    with client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_bundle_pin"
+
+    data = {
+        "file": [
+            (io.BytesIO(b"First bundle item"), "file1.txt"),
+            (io.BytesIO(b"Second bundle item"), "file2.txt")
+        ],
+        "display_title": "Project Deliverables Bundle",
+        "password": "4321",
+        "csrf_token": "csrf_bundle_pin"
+    }
+    res = client.post("/api/files", data=data, content_type="multipart/form-data")
+    assert res.status_code == 201
+    resp_json = res.get_json()
+    assert resp_json["success"] is True
+    assert resp_json["display_title"] == "Project Deliverables Bundle"
+    assert resp_json["has_password"] is True
+    assert resp_json["filename"].endswith(".zip")
+

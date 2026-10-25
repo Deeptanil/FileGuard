@@ -37,16 +37,34 @@ def create_app(config_class=None):
             inspector = inspect(db.engine)
             if "file_records" in inspector.get_table_names():
                 existing_cols = {c["name"] for c in inspector.get_columns("file_records")}
+                is_pg = db.engine.dialect.name == "postgresql"
+                bool_false = "FALSE" if is_pg else "0"
+                bool_true = "TRUE" if is_pg else "1"
                 with db.engine.connect() as conn:
                     if "display_title" not in existing_cols:
-                        conn.execute(text("ALTER TABLE file_records ADD COLUMN display_title VARCHAR(255)"))
+                        try:
+                            conn.execute(text("ALTER TABLE file_records ADD COLUMN display_title VARCHAR(255)"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
                     if "password_hash" not in existing_cols:
-                        conn.execute(text("ALTER TABLE file_records ADD COLUMN password_hash VARCHAR(255)"))
+                        try:
+                            conn.execute(text("ALTER TABLE file_records ADD COLUMN password_hash VARCHAR(255)"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
                     if "is_e2ee" not in existing_cols:
-                        conn.execute(text("ALTER TABLE file_records ADD COLUMN is_e2ee BOOLEAN DEFAULT 0"))
+                        try:
+                            conn.execute(text(f"ALTER TABLE file_records ADD COLUMN is_e2ee BOOLEAN DEFAULT {bool_false}"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
                     if "is_encrypted_at_rest" not in existing_cols:
-                        conn.execute(text("ALTER TABLE file_records ADD COLUMN is_encrypted_at_rest BOOLEAN DEFAULT 1"))
-                    conn.commit()
+                        try:
+                            conn.execute(text(f"ALTER TABLE file_records ADD COLUMN is_encrypted_at_rest BOOLEAN DEFAULT {bool_true}"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
         except Exception:
             pass
 
