@@ -244,6 +244,116 @@
   </div>
 </section>
 
+<!-- End-to-End Encryption & Cryptographic Pipeline Showcase -->
+<section id="encryption-pipeline" class="section-block" style="border-top: 1px solid var(--border-subtle); background: linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(11, 14, 23, 0.95) 100%);">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 2.75rem;">
+      <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--comic-lime); color: #000; padding: 0.35rem 0.85rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000; border-radius: 4px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.75rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>END-TO-END CRYPTOGRAPHIC PIPELINE</span>
+      </div>
+      <h2 class="section-heading">How End-to-End Encryption Protects Your Data</h2>
+      <p style="color: var(--text-muted); font-size: 1rem; max-width: 740px; margin: 0.5rem auto 0;">
+        From client memory to cloud storage, every transfer traverses a zero-exposure pipeline ensuring total confidentiality, authenticated integrity, and unrecoverable 12-hour self-destruction.
+      </p>
+    </div>
+
+    <!-- 4-Stage Architectural Flow Grid -->
+    <div class="e2ee-flow-grid">
+      <!-- Stage 1 -->
+      <div class="e2ee-card">
+        <div class="e2ee-stage-header">
+          <span class="badge" style="background: var(--comic-cyan); color: #000;">STAGE 01</span>
+          <span class="e2ee-tag">CLIENT MEMORY</span>
+        </div>
+        <div class="e2ee-icon-box" style="background: var(--comic-cyan); color: #000;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <h3 class="e2ee-stage-title">Browser Ingestion &amp; Pre-Flight Hash</h3>
+        <p class="e2ee-desc">
+          Files and folder trees are read directly in browser memory without unencrypted temporary staging. An authoritative 256-bit SHA-256 reference hash is calculated chunk-by-chunk before committing bytes to transit.
+        </p>
+        <div class="e2ee-spec-pills">
+          <span>SHA-256 Digest</span>
+          <span>Zero Disk Staging</span>
+        </div>
+      </div>
+
+      <!-- Arrow Divider (Desktop) -->
+      <div class="e2ee-flow-arrow">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+
+      <!-- Stage 2 -->
+      <div class="e2ee-card">
+        <div class="e2ee-stage-header">
+          <span class="badge" style="background: var(--comic-pink); color: #FFF;">STAGE 02</span>
+          <span class="e2ee-tag">IN-FLIGHT TRANSIT</span>
+        </div>
+        <div class="e2ee-icon-box" style="background: var(--comic-pink); color: #FFF;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <h3 class="e2ee-stage-title">TLS 1.3 Transport Tunnel</h3>
+        <p class="e2ee-desc">
+          Data streams traverse high-grade TLS 1.3 encrypted tunnels with Perfect Forward Secrecy (PFS). Packet sniffers, hostile public Wi-Fi networks, and internet service providers receive only scrambled ciphertext.
+        </p>
+        <div class="e2ee-spec-pills">
+          <span>TLS 1.3 Tunnel</span>
+          <span>Anti-Eavesdropping</span>
+        </div>
+      </div>
+
+      <!-- Arrow Divider (Desktop) -->
+      <div class="e2ee-flow-arrow">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+
+      <!-- Stage 3 -->
+      <div class="e2ee-card">
+        <div class="e2ee-stage-header">
+          <span class="badge" style="background: var(--comic-yellow); color: #000;">STAGE 03</span>
+          <span class="e2ee-tag">AT-REST CLOUD</span>
+        </div>
+        <div class="e2ee-icon-box" style="background: var(--comic-yellow); color: #000;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h3 class="e2ee-stage-title">AES-256-GCM Storage Vault</h3>
+        <p class="e2ee-desc">
+          Objects committed to Backblaze B2 S3 storage are transparently encrypted with AES-256-GCM authenticated envelopes. Raw share tokens are returned strictly to the uploader; only irreversible digests reside in the database.
+        </p>
+        <div class="e2ee-spec-pills">
+          <span>AES-256-GCM</span>
+          <span>Hashed Token Digests</span>
+        </div>
+      </div>
+
+      <!-- Arrow Divider (Desktop) -->
+      <div class="e2ee-flow-arrow">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+
+      <!-- Stage 4 -->
+      <div class="e2ee-card">
+        <div class="e2ee-stage-header">
+          <span class="badge" style="background: var(--comic-lime); color: #000;">STAGE 04</span>
+          <span class="e2ee-tag">DELIVERY &amp; PURGE</span>
+        </div>
+        <div class="e2ee-icon-box" style="background: var(--comic-lime); color: #000;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h3 class="e2ee-stage-title">Anti-Tamper Gate &amp; 12h Purge</h3>
+        <p class="e2ee-desc">
+          When the recipient requests download, bytes are re-hashed in real time before transmission. Any single-bit corruption triggers an instant HTTP 409 Anti-Tamper block. At 12 hours, files are permanently erased.
+        </p>
+        <div class="e2ee-spec-pills">
+          <span>HTTP 409 Anti-Tamper</span>
+          <span>12-Hour Self-Destruct</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Comparative Matrix Section (Factual Comparison for Quick Transfers) -->
 <section id="compare" class="section-block" style="border-top: 1px solid var(--border-subtle);">
   <div class="container">
@@ -258,6 +368,11 @@
     </div>
 
     <div class="card" style="padding: 1.25rem; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d);">
+      <div class="mobile-table-hint">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline><polyline points="19 18 13 12 19 6"></polyline></svg>
+        <span>Swipe sideways to compare all platforms</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline><polyline points="5 18 11 12 5 6"></polyline></svg>
+      </div>
       <table style="width: 100%; border-collapse: collapse; min-width: 760px; text-align: left;">
         <thead>
           <tr style="border-bottom: 3px solid #334155;">
@@ -484,6 +599,16 @@
         <h3 class="feature-title">Digital Forensics Module</h3>
         <p class="feature-desc">
           Administrative dashboard compares application database records against OS filesystem metadata (stat ctime, mtime, atime) with live tamper simulations.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+        </div>
+        <h3 class="feature-title">In-Memory Bundling &amp; Quotas</h3>
+        <p class="feature-desc">
+          Multiple files and whole folders are packaged into streaming ZIPs in memory with zero disk staging, protected by a rolling 100 MB client-IP quota to stop abuse.
         </p>
       </div>
     </div>
