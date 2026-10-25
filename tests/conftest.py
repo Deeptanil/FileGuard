@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash
 from app import create_app
 from app.config import TestingConfig
 from app.extensions import db
-from app.models import Administrator, FileRecord, SecurityEvent, IntegrityCheck, BlockedHash, AbuseReport
+from app.models import Administrator, FileRecord, SecurityEvent, IntegrityCheck, BlockedHash, AbuseReport, BlockedIp
 
 @pytest.fixture(scope="session")
 def app():
@@ -56,6 +56,7 @@ def db_session(app):
         yield db.session
         db.session.rollback()
         # Clean records between tests
+        BlockedIp.query.delete()
         AbuseReport.query.delete()
         BlockedHash.query.delete()
         SecurityEvent.query.delete()

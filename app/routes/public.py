@@ -1,8 +1,10 @@
 import os
+import re
 from flask import Blueprint, render_template, jsonify, send_from_directory, current_app, redirect, url_for, request
 from app.extensions import db
-from app.models import AbuseReport
-from app.security import generate_csrf_token, validate_csrf, get_client_ip
+from app.models import AbuseReport, FileRecord, BlockedHash, BlockedIp
+from app.security import generate_csrf_token, validate_csrf, get_client_ip, hash_token
+from app.storage import delete_stored_file
 from app.audit import log_security_event
 from app.cleanup import run_expired_files_cleanup
 
@@ -89,18 +91,99 @@ def report_abuse():
                 prefill_category=category
             ), 400
 
+        client_ip = get_client_ip()
+        match = re.search(r"([0-9]{4}-[0-9]{4})", token_or_url)
+        extracted_token = match.group(1) if match else token_or_url.strip()
+
+        token_h = hash_token(extracted_token)
+        file_rec = FileRecord.query.filter_by(share_token_hash=token_h).first()
+        file_rec_id = file_rec.id if file_rec else None
+
         # Persist abuse submission
         report = AbuseReport(
             token_or_url=token_or_url[:255],
             reporter_email=reporter_email[:255] if reporter_email else None,
             category=category[:64],
             description=description,
-            status="pending"
+            status="pending",
+            file_record_id=file_rec_id,
+            reporter_ip=client_ip
         )
         db.session.add(report)
         db.session.commit()
 
-        client_ip = get_client_ip()
+        # Check automated consensus takedown: more than 2 reports (> 2, i.e. >= 3)
+        if file_rec and file_rec.status == "active":
+            matching_reports_count = AbuseReport.query.filter(
+                (AbuseReport.file_record_id == file_rec.id) | (AbuseReport.token_or_url.like(f"%{extracted_token}%"))
+            ).count()
+
+            if matching_reports_count > 2:
+                # 1. Automated immediate takedown of the reported file
+                delete_stored_file(file_rec.storage_id)
+                file_rec.status = "deleted"
+                if not BlockedHash.query.filter_by(sha256_hash=file_rec.sha256_reference).first():
+                    db.session.add(BlockedHash(
+                        sha256_hash=file_rec.sha256_reference,
+                        reason=f"AUTO_TAKEDOWN_{category.upper()}",
+                        notes=f"Automated consensus purge ({matching_reports_count} reports)"
+                    ))
+
+                log_security_event(
+                    event_type="AUTO_ABUSE_TAKEDOWN",
+                    outcome="SUCCESS",
+                    severity="CRITICAL",
+                    file_record_id=file_rec.id,
+                    details=f"File {file_rec.original_filename} auto-purged following {matching_reports_count} abuse reports."
+                )
+
+                # 2. Cascade takedown: purge any active files from the same uploader IP
+                uploader_ip = file_rec.uploader_ip
+                if uploader_ip:
+                    sibling_files = FileRecord.query.filter(
+                        FileRecord.uploader_ip == uploader_ip,
+                        FileRecord.status == "active",
+                        FileRecord.id != file_rec.id
+                    ).all()
+                    for sib in sibling_files:
+                        delete_stored_file(sib.storage_id)
+                        sib.status = "deleted"
+                        if not BlockedHash.query.filter_by(sha256_hash=sib.sha256_reference).first():
+                            db.session.add(BlockedHash(
+                                sha256_hash=sib.sha256_reference,
+                                reason=f"CASCADE_TAKEDOWN_{category.upper()}",
+                                notes=f"Cascaded takedown from reported sibling {file_rec.storage_id} (IP: {uploader_ip})"
+                            ))
+
+                    # 3. Automated IP ban for repeat offenders (>= 2 deleted/purged files from this IP)
+                    total_purged_for_ip = FileRecord.query.filter(
+                        FileRecord.uploader_ip == uploader_ip,
+                        FileRecord.status == "deleted"
+                    ).count()
+
+                    if total_purged_for_ip >= 2:
+                        ip_block = BlockedIp.query.filter_by(ip_address=uploader_ip).first()
+                        if not ip_block:
+                            ip_block = BlockedIp(
+                                ip_address=uploader_ip,
+                                reason="REPEATED_ABUSE_TAKEDOWNS",
+                                violation_count=total_purged_for_ip,
+                                notes=f"Automated ban: {total_purged_for_ip} files purged following verified abuse reports."
+                            )
+                            db.session.add(ip_block)
+                        else:
+                            ip_block.violation_count = total_purged_for_ip
+
+                        log_security_event(
+                            event_type="IP_AUTO_BANNED",
+                            outcome="BLOCKED",
+                            severity="CRITICAL",
+                            ip_address=uploader_ip,
+                            details=f"IP {uploader_ip} permanently banned after {total_purged_for_ip} files purged for policy violations."
+                        )
+
+                db.session.commit()
+
         log_security_event(
             event_type="ABUSE_REPORT_SUBMITTED",
             outcome="SUCCESS",

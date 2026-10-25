@@ -213,7 +213,9 @@ class AbuseReport(db.Model):
     reporter_email = db.Column(db.String(255), nullable=True)
     category = db.Column(db.String(64), nullable=False)  # csam, malware, copyright, personal_data, harassment, other
     description = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(32), default="pending", nullable=False)  # pending, resolved, rejected
+    status = db.Column(db.String(32), default="pending", nullable=False)  # pending, resolved, rejected, auto_purged
+    file_record_id = db.Column(db.Integer, db.ForeignKey("file_records.id", ondelete="SET NULL"), nullable=True)
+    reporter_ip = db.Column(db.String(64), nullable=True, index=True)
     submitted_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     resolved_at = db.Column(db.DateTime, nullable=True)
     admin_notes = db.Column(db.Text, nullable=True)
@@ -226,5 +228,28 @@ class AbuseReport(db.Model):
             "status": self.status,
             "submitted_at": self.submitted_at.isoformat() + "Z"
         }
+
+
+class BlockedIp(db.Model):
+    """Persistent blocklist for malicious or abusive client IP addresses."""
+    __tablename__ = "blocked_ips"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    reason = db.Column(db.String(128), nullable=False)  # REPEATED_ABUSE, MALWARE_UPLOAD, ADMIN_BAN
+    violation_count = db.Column(db.Integer, default=1, nullable=False)
+    blocked_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "ip_address": self.ip_address,
+            "reason": self.reason,
+            "violation_count": self.violation_count,
+            "blocked_at": self.blocked_at.isoformat() + "Z",
+            "notes": self.notes
+        }
+
 
 

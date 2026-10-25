@@ -16,7 +16,8 @@ from app.security import (
     generate_share_token,
     hash_token,
     validate_csrf,
-    get_client_ip
+    get_client_ip,
+    is_ip_blocked
 )
 from app.audit import log_security_event, EVENT_UPLOAD_SUCCESS, EVENT_UPLOAD_REJECTED
 from app.scanner import dispatch_background_malware_scan
@@ -82,6 +83,20 @@ def upload_file():
     extension whitelist, and MIME signatures before saving with SHA-256 integrity hash.
     """
     client_ip = get_client_ip()
+
+    # 0. Blocked IP enforcement check
+    blocked, block_reason = is_ip_blocked(client_ip)
+    if blocked:
+        log_security_event(
+            event_type="BLOCKED_IP_UPLOAD_ATTEMPT",
+            outcome="BLOCKED",
+            severity="HIGH",
+            ip_address=client_ip,
+            details=f"Upload rejected: Client IP is banned ({block_reason})"
+        )
+        return jsonify({
+            "error": "Access restricted: Your IP address has been blocked due to repeated policy violations."
+        }), 403
 
     # 1. CSRF validation
     csrf_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")

@@ -178,3 +178,135 @@ def test_admin_resolve_and_purge_abuse_report(authenticated_admin_client, app):
 
         file_rec = FileRecord.query.filter_by(sha256_reference=sample_sha).first()
         assert file_rec.status == "deleted"
+
+
+def test_automated_consensus_takedown_and_cascade_ip_ban(client, app):
+    """When a file receives >2 reports, it is auto-takedown, cascades to IP siblings, and bans IP."""
+    raw_token_a, token_hash_a = generate_share_token()
+    raw_token_b, token_hash_b = generate_share_token()
+    uploader_ip = "198.51.100.99"
+
+    with app.app_context():
+        from datetime import datetime, timedelta, timezone
+        from app.extensions import db
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        
+        # File A
+        rec_a = FileRecord(
+            storage_id="target_abuse_file_a",
+            original_filename="infringing_movie.mp4",
+            file_size=1024,
+            file_extension="mp4",
+            detected_mime_type="video/mp4",
+            sha256_reference="1" * 64,
+            share_token_hash=token_hash_a,
+            uploaded_at=now,
+            expires_at=now + timedelta(hours=12),
+            status="active",
+            uploader_ip=uploader_ip
+        )
+        # Sibling File B from same uploader IP
+        rec_b = FileRecord(
+            storage_id="sibling_abuse_file_b",
+            original_filename="infringing_doc.pdf",
+            file_size=512,
+            file_extension="pdf",
+            detected_mime_type="application/pdf",
+            sha256_reference="2" * 64,
+            share_token_hash=token_hash_b,
+            uploaded_at=now,
+            expires_at=now + timedelta(hours=12),
+            status="active",
+            uploader_ip=uploader_ip
+        )
+        db.session.add(rec_a)
+        db.session.add(rec_b)
+        db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["_csrf_token"] = "valid-csrf"
+
+    # Report 1: File A
+    res1 = client.post(
+        "/report",
+        data={
+            "csrf_token": "valid-csrf",
+            "token_or_url": raw_token_a,
+            "category": "copyright",
+            "description": "Report 1 for copyright"
+        },
+        headers={"X-Forwarded-For": "203.0.113.1"}
+    )
+    assert res1.status_code == 200
+
+    # Ensure both files are still active after 1 report
+    with app.app_context():
+        assert FileRecord.query.filter_by(share_token_hash=token_hash_a).first().status == "active"
+        assert FileRecord.query.filter_by(share_token_hash=token_hash_b).first().status == "active"
+
+    # Report 2: File A
+    res2 = client.post(
+        "/report",
+        data={
+            "csrf_token": "valid-csrf",
+            "token_or_url": raw_token_a,
+            "category": "copyright",
+            "description": "Report 2 for copyright"
+        },
+        headers={"X-Forwarded-For": "203.0.113.2"}
+    )
+    assert res2.status_code == 200
+
+    # Ensure both files are still active after 2 reports
+    with app.app_context():
+        assert FileRecord.query.filter_by(share_token_hash=token_hash_a).first().status == "active"
+        assert FileRecord.query.filter_by(share_token_hash=token_hash_b).first().status == "active"
+
+    # Report 3: File A (> 2 reports threshold reached!)
+    res3 = client.post(
+        "/report",
+        data={
+            "csrf_token": "valid-csrf",
+            "token_or_url": raw_token_a,
+            "category": "copyright",
+            "description": "Report 3 for copyright"
+        },
+        headers={"X-Forwarded-For": "203.0.113.3"}
+    )
+    assert res3.status_code == 200
+
+    with app.app_context():
+        from app.models import BlockedIp, BlockedHash
+        # File A must be deleted
+        file_a = FileRecord.query.filter_by(share_token_hash=token_hash_a).first()
+        assert file_a.status == "deleted"
+
+        # Sibling File B from same IP must also be cascaded to deleted!
+        file_b = FileRecord.query.filter_by(share_token_hash=token_hash_b).first()
+        assert file_b.status == "deleted"
+
+        # Both hashes must be in BlockedHash quarantine
+        assert BlockedHash.query.filter_by(sha256_hash="1" * 64).first() is not None
+        assert BlockedHash.query.filter_by(sha256_hash="2" * 64).first() is not None
+
+        # Uploader IP must now be banned in BlockedIp table!
+        blocked_ip_record = BlockedIp.query.filter_by(ip_address=uploader_ip).first()
+        assert blocked_ip_record is not None
+        assert blocked_ip_record.violation_count >= 2
+
+    # Verify that future upload attempts from this banned IP are rejected with 403 Forbidden
+    upload_res = client.post(
+        "/api/files",
+        data={
+            "file": (io.BytesIO(b"Blocked uploader new payload"), "clean.txt"),
+            "csrf_token": "valid-csrf"
+        },
+        headers={
+            "X-Forwarded-For": uploader_ip,
+            "X-CSRFToken": "valid-csrf"
+        },
+        content_type="multipart/form-data"
+    )
+    assert upload_res.status_code == 403
+    assert "blocked" in upload_res.get_json()["error"].lower()
+

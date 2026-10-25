@@ -89,6 +89,22 @@ def create_app(config_class=None):
                             conn.commit()
                         except Exception:
                             conn.rollback()
+
+            if "abuse_reports" in inspector.get_table_names():
+                report_cols = {c["name"] for c in inspector.get_columns("abuse_reports")}
+                with db.engine.connect() as conn:
+                    if "file_record_id" not in report_cols:
+                        try:
+                            conn.execute(text("ALTER TABLE abuse_reports ADD COLUMN file_record_id INTEGER"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
+                    if "reporter_ip" not in report_cols:
+                        try:
+                            conn.execute(text("ALTER TABLE abuse_reports ADD COLUMN reporter_ip VARCHAR(64)"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
         except Exception:
             pass
 

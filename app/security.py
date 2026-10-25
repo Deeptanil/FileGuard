@@ -52,6 +52,23 @@ def get_client_ip():
     return (request.remote_addr or "127.0.0.1")[:64]
 
 
+def is_ip_blocked(ip_address: str) -> tuple[bool, str]:
+    """
+    Check if a client IP address is restricted on the BlockedIp list.
+    Returns (is_blocked, reason).
+    """
+    if not ip_address:
+        return False, ""
+    try:
+        from app.models import BlockedIp
+        entry = BlockedIp.query.filter_by(ip_address=ip_address).first()
+        if entry:
+            return True, entry.reason
+    except Exception:
+        pass
+    return False, ""
+
+
 def normalize_token(token: str) -> str:
     """
     Normalize sharing token format.
