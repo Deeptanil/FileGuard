@@ -254,32 +254,55 @@ body {
   box-shadow: 1px 1px 0px #000000;
 }
 
-.btn-primary {
+.btn:focus,
+.btn:focus-visible {
+  outline: none;
+}
+
+.btn:active,
+.btn:focus,
+.btn:focus-visible {
+  color: inherit;
+}
+
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:focus {
   background-color: var(--comic-pink);
-  color: #FFFFFF;
+  color: #FFFFFF !important;
 }
 
 .btn-primary:hover {
   background-color: #FF0A7B;
 }
 
-.btn-secondary {
+.btn-secondary,
+.btn-secondary:hover,
+.btn-secondary:active,
+.btn-secondary:focus {
   background-color: var(--comic-cyan);
-  color: var(--text-dark);
+  color: var(--text-dark) !important;
 }
 
 .btn-secondary:hover {
   background-color: #27F5FF;
 }
 
-.btn-accent {
+.btn-accent,
+.btn-accent:hover,
+.btn-accent:active,
+.btn-accent:focus {
   background-color: var(--comic-yellow);
-  color: var(--text-dark);
+  color: var(--text-dark) !important;
 }
 
-.btn-danger {
+.btn-danger,
+.btn-danger:hover,
+.btn-danger:active,
+.btn-danger:focus {
   background-color: #FF2A2A;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
 }
 
 .btn-danger:hover {

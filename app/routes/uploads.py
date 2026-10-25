@@ -283,7 +283,7 @@ def upload_file():
     if not canonical_base or "localhost" in canonical_base:
         # Use request's actual host URL if available (e.g. https://fileguard.onrender.com)
         canonical_base = request.host_url.rstrip("/")
-    share_url = f"{canonical_base}/share/{raw_token}"
+    share_url = f"{canonical_base}/{raw_token}"
     qr_data = generate_qr_base64(share_url)
 
     # 8. Log success audit event
@@ -386,7 +386,7 @@ def upload_success(token: str):
         return render_template("expired.html", reason="The requested upload session has expired or does not exist."), 404
 
     canonical_base = current_app.config["CANONICAL_URL"]
-    share_url = f"{canonical_base}/share/{token}"
+    share_url = f"{canonical_base}/{token}"
     qr_data = generate_qr_base64(share_url)
 
     return render_template(

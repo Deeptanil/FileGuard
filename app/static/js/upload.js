@@ -225,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           } catch (storageErr) {}
 
-          window.location.href = `/share/${data.token}?just_uploaded=true`;
+          window.location.href = `/${data.token}?just_uploaded=true`;
         } catch (e) {
           showError("Unexpected response from server.");
           resetUploadBtn();

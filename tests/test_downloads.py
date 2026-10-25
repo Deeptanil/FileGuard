@@ -21,7 +21,12 @@ def upload_sample_file(client, filename="sample.txt", content=b"Sample content f
 def test_8_valid_share_link_displays_file_info(client, db_session):
     """Test 8: A valid sharing link displays correct file information."""
     token, _, filename = upload_sample_file(client, "document.pdf", b"%PDF-1.4 sample content")
-    # Verify standard hyphenated link (e.g. 4829-1047)
+    # Verify shortened direct link (e.g. /4829-1047)
+    res_direct = client.get(f"/{token}")
+    assert res_direct.status_code == 200
+    assert filename in res_direct.get_data(as_text=True)
+
+    # Verify standard hyphenated link (e.g. /share/4829-1047)
     response = client.get(f"/share/{token}")
     assert response.status_code == 200
     assert filename in response.get_data(as_text=True)

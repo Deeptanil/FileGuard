@@ -31,10 +31,19 @@ from app.audit import (
 
 downloads_bp = Blueprint("downloads", __name__)
 
+RESERVED_ROOT_PATHS = {
+    "upload", "history", "admin", "forensics", "static", "api",
+    "robots.txt", "sitemap.xml", "llms.txt", "health", "favicon.ico", "favicon.png", "favicon.svg"
+}
 
+
+@downloads_bp.route("/<token>")
 @downloads_bp.route("/share/<token>")
 def view_shared_file(token: str):
     """Recipient view page for inspecting shared file metadata and remaining time."""
+    if token.lower() in RESERVED_ROOT_PATHS:
+        return render_template("errors/404.html"), 404
+
     token_h = hash_token(token)
     record = FileRecord.query.filter_by(share_token_hash=token_h).first()
 
@@ -66,7 +75,7 @@ def view_shared_file(token: str):
     canonical_base = current_app.config.get("CANONICAL_URL")
     if not canonical_base or "localhost" in canonical_base:
         canonical_base = request.host_url.rstrip("/")
-    share_url = f"{canonical_base}/share/{token}"
+    share_url = f"{canonical_base}/{token}"
     qr_data = generate_qr_base64(share_url)
 
     return render_template(
@@ -82,6 +91,7 @@ def view_shared_file(token: str):
     )
 
 
+@downloads_bp.route("/<token>/unlock", methods=["POST"])
 @downloads_bp.route("/share/<token>/unlock", methods=["POST"])
 @limiter.limit("15 per minute")
 def unlock_shared_file(token: str):
@@ -150,7 +160,7 @@ def download_qr(token: str):
         return jsonify({"error": "File not found"}), 404
 
     canonical_base = current_app.config["CANONICAL_URL"]
-    share_url = f"{canonical_base}/share/{token}"
+    share_url = f"{canonical_base}/{token}"
 
     qr = qrcode.QRCode(version=1, box_size=10, border=3)
     qr.add_data(share_url)
