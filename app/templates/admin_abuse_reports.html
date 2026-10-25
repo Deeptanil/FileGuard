@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Abuse & Takedown Reports — FileGuard Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem;">
+  <!-- Header Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--comic-pink); font-weight: 800; letter-spacing: 0.05em;">Compliance &amp; Takedowns</div>
+      <h1 class="section-heading" style="margin: 0.25rem 0 0;">Abuse &amp; DMCA Takedown Reports</h1>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="{{ url_for('admin.blocked_ips_list') }}" class="btn btn-secondary btn-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <span>Blocked IPs</span>
+      </a>
+      <a href="{{ url_for('admin.malware_dashboard') }}" class="btn btn-secondary btn-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>VirusTotal Scans</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card" style="border-top: 6px solid {% if pending_count > 0 %}var(--comic-pink){% else %}var(--comic-cyan){% endif %};">
+      <div class="stat-title" style="color: {% if pending_count > 0 %}var(--comic-pink){% else %}var(--comic-cyan){% endif %};">Pending Review</div>
+      <div class="stat-value" style="color: {% if pending_count > 0 %}var(--comic-pink){% else %}var(--comic-cyan){% endif %};">{{ pending_count }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-lime);">
+      <div class="stat-title" style="color: var(--comic-lime);">Resolved &amp; Takedowns</div>
+      <div class="stat-value" style="color: var(--comic-lime);">{{ resolved_count }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 6px solid #64748B;">
+      <div class="stat-title" style="color: #94A3B8;">Rejected Unsubstantiated</div>
+      <div class="stat-value" style="color: #CBD5E1;">{{ rejected_count }}</div>
+    </div>
+  </div>
+
+  <!-- Status & Category Filter Pills -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.abuse_reports_list', status='all', category=current_category) }}" class="btn btn-sm {% if current_status == 'all' %}btn-primary{% else %}btn-secondary{% endif %}" style="font-size: 0.75rem;">All Status</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status='pending', category=current_category) }}" class="btn btn-sm {% if current_status == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}" style="font-size: 0.75rem;">Pending</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status='resolved', category=current_category) }}" class="btn btn-sm {% if current_status == 'resolved' %}btn-primary{% else %}btn-secondary{% endif %}" style="font-size: 0.75rem;">Resolved</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status='rejected', category=current_category) }}" class="btn btn-sm {% if current_status == 'rejected' %}btn-primary{% else %}btn-secondary{% endif %}" style="font-size: 0.75rem;">Rejected</a>
+    </div>
+
+    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='all') }}" class="badge {% if current_category == 'all' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">All Categories</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='malware') }}" class="badge {% if current_category == 'malware' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">Malware</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='csam') }}" class="badge {% if current_category == 'csam' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">CSAM</a>
+      <a href="{{ url_for('admin.abuse_reports_list', status=current_status, category='copyright') }}" class="badge {% if current_category == 'copyright' %}badge-active{% endif %}" style="text-decoration: none; padding: 0.35rem 0.6rem;">Copyright</a>
+    </div>
+  </div>
+
+  <!-- Reports Table Card -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Submitted Reports ({{ report_items|length }})</h2>
+      <p class="card-subtitle">Community alerts, rights holder DMCA notices, and automated threat detections</p>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID / Date</th>
+            <th>Category</th>
+            <th>Reported Target</th>
+            <th>Uploader &amp; Status</th>
+            <th>Description &amp; Reporter</th>
+            <th>Report Status</th>
+            <th>Enforcement Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if report_items %}
+            {% for item in report_items %}
+              {% set r = item.report %}
+              {% set f = item.target_file %}
+              {% set uploader_ip = item.uploader_ip %}
+              <tr>
+                <td style="font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap;">
+                  <strong>#{{ r.id }}</strong><br>
+                  <span style="color: #64748B;">{{ r.submitted_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </td>
+                <td>
+                  {% if r.category == 'csam' %}
+                    <span class="badge" style="background: var(--comic-pink); color: #FFF; font-weight: 800; font-size: 0.7rem;">CSAM</span>
+                  {% elif r.category == 'malware' %}
+                    <span class="badge" style="background: var(--comic-pink); color: #FFF; font-weight: 800; font-size: 0.7rem;">MALWARE</span>
+                  {% elif r.category == 'copyright' %}
+                    <span class="badge" style="background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.7rem;">COPYRIGHT</span>
+                  {% else %}
+                    <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.7rem;">{{ r.category|upper }}</span>
+                  {% endif %}
+                </td>
+                <td style="font-size: 0.8rem; word-break: break-all;">
+                  <code style="color: var(--comic-cyan); font-weight: 700;">{{ r.token_or_url }}</code>
+                  {% if f %}
+                    <div style="margin-top: 0.35rem; color: #CBD5E1; font-weight: 600;">
+                      {{ f.original_filename }} ({{ (f.file_size / 1024)|round(1) }} KB)
+                    </div>
+                    <div>
+                      File Status: <span class="badge {% if f.status == 'active' %}badge-active{% elif f.status == 'deleted' %}badge-deleted{% else %}badge-expired{% endif %}" style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">{{ f.status|upper }}</span>
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if uploader_ip %}
+                    <a href="{{ url_for('admin.user_profile', ip_address=uploader_ip) }}" style="color: var(--comic-cyan); font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; text-decoration: underline;">
+                      {{ uploader_ip }}
+                    </a>
+                    <div style="margin-top: 0.25rem;">
+                      {% if item.is_uploader_banned %}
+                        <span class="badge" style="background: var(--comic-pink); color: #FFF; font-size: 0.65rem; padding: 0.15rem 0.4rem;">BANNED</span>
+                      {% else %}
+                        <span class="badge badge-active" style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">ACTIVE</span>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <span style="color: #64748B; font-size: 0.8rem;">Unknown / Purged</span>
+                  {% endif %}
+                </td>
+                <td style="font-size: 0.8rem; max-width: 260px;">
+                  <div style="color: #E2E8F0; margin-bottom: 0.35rem; line-height: 1.4;">{{ r.description }}</div>
+                  <div style="color: #64748B; font-size: 0.72rem;">
+                    Reporter: {{ r.reporter_email or 'Anonymous' }}
+                    {% if r.reporter_ip %} &bull; IP: <code>{{ r.reporter_ip }}</code>{% endif %}
+                  </div>
+                  {% if r.admin_notes %}
+                    <div style="margin-top: 0.35rem; font-size: 0.72rem; color: var(--comic-yellow);">
+                      Note: {{ r.admin_notes }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if r.status == 'pending' %}
+                    <span class="badge" style="background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.7rem;">PENDING</span>
+                  {% elif r.status == 'resolved' or r.status == 'auto_purged' %}
+                    <span class="badge badge-success" style="font-size: 0.7rem;">RESOLVED</span>
+                  {% elif r.status == 'rejected' %}
+                    <span class="badge badge-dim" style="font-size: 0.7rem;">REJECTED</span>
+                  {% else %}
+                    <span class="badge" style="font-size: 0.7rem;">{{ r.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; flex-direction: column; gap: 0.35rem; min-width: 140px;">
+                    {% if r.status == 'pending' %}
+                      <!-- Purge & Block Hash Action -->
+                      <form method="POST" action="{{ url_for('admin.resolve_abuse_report', report_id=r.id) }}" onsubmit="return confirm('Purge target file from storage and quarantine its SHA-256 hash?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="action" value="purge_and_block">
+                        <input type="hidden" name="notes" value="Verified violation: {{ r.category }}">
+                        <button type="submit" class="btn btn-sm" style="width: 100%; background: var(--comic-pink); color: #FFF; font-weight: 800; font-size: 0.7rem; padding: 0.35rem 0.5rem; justify-content: center; border: 2px solid #000;">
+                          Purge &amp; Block Hash
+                        </button>
+                      </form>
+
+                      <!-- Resolve Normal -->
+                      <form method="POST" action="{{ url_for('admin.resolve_abuse_report', report_id=r.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="action" value="resolve">
+                        <input type="hidden" name="notes" value="Reviewed by admin">
+                        <button type="submit" class="btn btn-sm" style="width: 100%; background: var(--comic-lime); color: #000; font-weight: 800; font-size: 0.7rem; padding: 0.35rem 0.5rem; justify-content: center; border: 2px solid #000;">
+                          Mark Resolved
+                        </button>
+                      </form>
+
+                      <!-- Reject -->
+                      <form method="POST" action="{{ url_for('admin.reject_abuse_report', report_id=r.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="notes" value="No violation found">
+                        <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.7rem; padding: 0.35rem 0.5rem; justify-content: center;">
+                          Reject Report
+                        </button>
+                      </form>
+                    {% endif %}
+
+                    {% if uploader_ip and not item.is_uploader_banned %}
+                      <!-- Ban Uploader Button -->
+                      <form method="POST" action="{{ url_for('admin.ban_ip') }}" onsubmit="return confirm('Block and ban uploader IP {{ uploader_ip }}?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="ip_address" value="{{ uploader_ip }}">
+                        <input type="hidden" name="reason" value="ABUSE_{{ r.category|upper }}">
+                        <input type="hidden" name="notes" value="Banned via Abuse Report #{{ r.id }}">
+                        <input type="hidden" name="purge_files" value="true">
+                        <button type="submit" class="btn btn-sm" style="width: 100%; background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.7rem; padding: 0.35rem 0.5rem; justify-content: center; border: 2px solid #000;">
+                          Ban Uploader IP
+                        </button>
+                      </form>
+                    {% endif %}
+
+                    {% if uploader_ip %}
+                      <a href="{{ url_for('admin.user_profile', ip_address=uploader_ip) }}" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.7rem; padding: 0.35rem 0.5rem; justify-content: center;">
+                        Inspect Uploader
+                      </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+                No abuse reports found matching the selected filter.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

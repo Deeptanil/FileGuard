@@ -27,10 +27,11 @@
           <th>ID</th>
           <th>Original Filename</th>
           <th>Size</th>
+          <th>Uploader IP</th>
+          <th>VirusTotal Status</th>
           <th>Storage ID</th>
           <th>Status</th>
           <th>Uploaded (UTC)</th>
-          <th>Expires (UTC)</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -41,6 +42,40 @@
               <td><strong>#{{ f.id }}</strong></td>
               <td style="font-weight: 600; word-break: break-all;">{{ f.original_filename }}</td>
               <td>{{ (f.file_size / 1024)|round(1) }} KB</td>
+              <td>
+                {% if f.uploader_ip %}
+                  <a href="{{ url_for('admin.user_profile', ip_address=f.uploader_ip) }}" style="color: var(--comic-cyan); font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; text-decoration: underline;">
+                    {{ f.uploader_ip }}
+                  </a>
+                  <div style="margin-top: 0.2rem;">
+                    {% if f.uploader_ip in banned_ips %}
+                      <span class="badge" style="background: var(--comic-pink); color: #FFF; font-size: 0.62rem; padding: 0.12rem 0.35rem;">BANNED</span>
+                    {% else %}
+                      <span class="badge badge-active" style="font-size: 0.62rem; padding: 0.12rem 0.35rem;">ACTIVE</span>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <span style="color: #64748B; font-size: 0.8rem;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if f.malware_status == 'malicious' %}
+                  <span class="badge" style="background: var(--comic-pink); color: #FFF; font-weight: 800; font-size: 0.68rem;">MALICIOUS</span>
+                {% elif f.malware_status == 'suspicious' %}
+                  <span class="badge" style="background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.68rem;">SUSPICIOUS</span>
+                {% elif f.malware_status == 'clean' %}
+                  <span class="badge badge-success" style="font-size: 0.68rem;">CLEAN</span>
+                {% elif f.malware_status in ['pending', 'scanning'] %}
+                  <span class="badge badge-warning" style="font-size: 0.68rem;">SCANNING</span>
+                {% else %}
+                  <span class="badge badge-dim" style="font-size: 0.68rem;">UNSCANNED</span>
+                {% endif %}
+                {% if f.malware_positives > 0 %}
+                  <div style="font-size: 0.7rem; color: var(--comic-pink); font-family: var(--font-mono); margin-top: 0.15rem;">
+                    {{ f.malware_positives }} flags
+                  </div>
+                {% endif %}
+              </td>
               <td><span class="hash-pill">{{ f.storage_id }}</span></td>
               <td>
                 {% if f.status == 'active' %}
@@ -55,18 +90,24 @@
                   <span class="badge">{{ f.status }}</span>
                 {% endif %}
               </td>
-              <td style="font-size: 0.8rem; font-family: var(--font-mono);">{{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
-              <td style="font-size: 0.8rem; font-family: var(--font-mono);">{{ f.expires_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td style="font-size: 0.8rem; font-family: var(--font-mono); white-space: nowrap;">{{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
               <td>
-                <a href="{{ url_for('forensics.forensics_index', file_id=f.id) }}" class="btn btn-secondary btn-sm">
-                  Forensic Inspect
-                </a>
+                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                  <a href="{{ url_for('forensics.forensics_index', file_id=f.id) }}" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.3rem 0.5rem;">
+                    Forensics
+                  </a>
+                  {% if f.uploader_ip %}
+                    <a href="{{ url_for('admin.user_profile', ip_address=f.uploader_ip) }}" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.3rem 0.5rem;">
+                      User
+                    </a>
+                  {% endif %}
+                </div>
               </td>
             </tr>
           {% endfor %}
         {% else %}
           <tr>
-            <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
+            <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
               No file records found matching the current filter.
             </td>
           </tr>

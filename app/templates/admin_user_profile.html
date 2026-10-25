@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}User &amp; Device Forensic Profile: {{ ip_address }} — FileGuard Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem;">
+  <!-- Header Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--comic-cyan); font-weight: 800; letter-spacing: 0.05em;">Client Device Forensics</div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <h1 class="section-heading" style="margin: 0.25rem 0 0; font-family: var(--font-mono); font-size: clamp(1.4rem, 4vw, 2.2rem);">
+          {{ ip_address }}
+        </h1>
+        {% if is_banned %}
+          <span class="badge" style="background: var(--comic-pink); color: #FFF; font-weight: 800; font-size: 0.85rem; padding: 0.35rem 0.75rem; border: 2px solid #000; box-shadow: 2px 2px 0 #000;">
+            RESTRICTED / BANNED
+          </span>
+        {% else %}
+          <span class="badge" style="background: var(--comic-lime); color: #000; font-weight: 800; font-size: 0.85rem; padding: 0.35rem 0.75rem; border: 2px solid #000; box-shadow: 2px 2px 0 #000;">
+            ACTIVE / ALLOWED
+          </span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.blocked_ips_list') }}" class="btn btn-secondary btn-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <span>All Blocked IPs</span>
+      </a>
+      <a href="{{ url_for('admin.abuse_reports_list') }}" class="btn btn-secondary btn-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Abuse Reports</span>
+      </a>
+      <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Dashboard</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card" style="border-top: 6px solid var(--comic-cyan);">
+      <div class="stat-title" style="color: var(--comic-cyan);">Total Uploads</div>
+      <div class="stat-value">{{ total_uploads }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-lime);">
+      <div class="stat-title" style="color: var(--comic-lime);">Active Files</div>
+      <div class="stat-value" style="color: var(--comic-lime);">{{ active_files }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-yellow);">
+      <div class="stat-title" style="color: var(--comic-yellow);">Active Storage Used</div>
+      <div class="stat-value" style="color: var(--comic-yellow);">{{ total_mb }} MB</div>
+    </div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-pink);">
+      <div class="stat-title" style="color: var(--comic-pink);">Malware / Suspicious</div>
+      <div class="stat-value" style="color: {% if malicious_files > 0 %}var(--comic-pink){% else %}#64748B{% endif %};">{{ malicious_files }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 6px solid var(--comic-pink);">
+      <div class="stat-title" style="color: var(--comic-pink);">Abuse Reports</div>
+      <div class="stat-value" style="color: {% if abuse_reports|length > 0 %}var(--comic-pink){% else %}#64748B{% endif %};">{{ abuse_reports|length }}</div>
+    </div>
+  </div>
+
+  <!-- Ban Management Action Box -->
+  <div class="card" style="margin-bottom: 2rem; background: {% if is_banned %}#1F1318{% else %}#0F172A{% endif %}; border: 3px solid {% if is_banned %}var(--comic-pink){% else %}var(--border-subtle){% endif %}; box-shadow: var(--shadow-3d); padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-family: var(--font-display); font-size: 1.15rem; color: {% if is_banned %}var(--comic-pink){% else %}var(--comic-yellow){% endif %}; margin: 0 0 0.35rem; text-transform: uppercase;">
+          Access Control &amp; Ban Management
+        </h2>
+        {% if is_banned %}
+          <p style="color: #CBD5E1; font-size: 0.88rem; margin: 0; line-height: 1.5;">
+            This client device was quarantined on <strong>{{ blocked_entry.blocked_at.strftime('%Y-%m-%d %H:%M UTC') }}</strong>.<br>
+            Reason: <strong style="color: var(--comic-pink);">{{ blocked_entry.reason }}</strong> &bull; Violations: <strong style="color: var(--comic-yellow);">{{ blocked_entry.violation_count }}x</strong>
+            {% if blocked_entry.notes %}&bull; Notes: <em>{{ blocked_entry.notes }}</em>{% endif %}
+          </p>
+        {% else %}
+          <p style="color: #94A3B8; font-size: 0.88rem; margin: 0;">
+            This IP is currently active and allowed to access upload endpoints subject to the standard 12-hour / 100 MB per-IP quota.
+          </p>
+        {% endif %}
+      </div>
+
+      <div>
+        {% if is_banned %}
+          <form method="POST" action="{{ url_for('admin.unban_ip') }}" onsubmit="return confirm('Restore access and unban IP {{ ip_address }}?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="ip_address" value="{{ ip_address }}">
+            <button type="submit" class="btn btn-accent" style="background: var(--comic-lime); color: #000; font-weight: 800; border: 3px solid #000; box-shadow: 3px 3px 0 #000; padding: 0.75rem 1.5rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>LIFT BAN &amp; RESTORE ACCESS</span>
+            </button>
+          </form>
+        {% else %}
+          <form method="POST" action="{{ url_for('admin.ban_ip') }}" style="display: flex; gap: 0.65rem; align-items: flex-end; flex-wrap: wrap;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="ip_address" value="{{ ip_address }}">
+            <div>
+              <label style="display: block; font-family: var(--font-display); font-size: 0.68rem; color: #CBD5E1; margin-bottom: 0.25rem;">BAN REASON</label>
+              <select name="reason" class="form-control" style="font-size: 0.8rem; padding: 0.5rem 0.75rem; background: #1E293B; color: #FFF; border: 2px solid #475569; border-radius: 4px;">
+                <option value="ADMIN_MANUAL_BAN">Manual Administrator Ban</option>
+                <option value="MALWARE_UPLOAD">Confirmed Malware Dropper Upload</option>
+                <option value="CSAM_ATTEMPT">Child Sexual Abuse Material (CSAM)</option>
+                <option value="COPYRIGHT_INFRINGEMENT">DMCA / Copyright Infringement</option>
+                <option value="REPEATED_ABUSE">Repeated Abuse / Policy Violations</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-family: var(--font-display); font-size: 0.68rem; color: #CBD5E1; margin-bottom: 0.25rem;">PURGE ACTIVE</label>
+              <label style="display: flex; align-items: center; gap: 0.35rem; color: #FFF; font-size: 0.8rem; height: 36px; cursor: pointer;">
+                <input type="checkbox" name="purge_files" value="true" checked style="width: 16px; height: 16px; accent-color: var(--comic-pink);">
+                <span>Purge Files</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="background: var(--comic-pink); color: #FFF; font-weight: 800; border: 2px solid #000; box-shadow: 2px 2px 0 #000; height: 38px;">
+              BAN USER / IP
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: User's Uploads & VirusTotal Telemetry -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <h2 class="card-title">Uploaded Files Inventory ({{ files|length }})</h2>
+      <p class="card-subtitle">All historical transfers uploaded from this IP, including VirusTotal scans and physical status</p>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>Uploaded (UTC)</th>
+            <th>Status</th>
+            <th>VirusTotal Verdict</th>
+            <th>Consensus</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if files %}
+            {% for f in files %}
+              <tr>
+                <td><strong>#{{ f.id }}</strong></td>
+                <td style="font-weight: 700; color: #FFFFFF; word-break: break-all;">
+                  {{ f.original_filename }}
+                </td>
+                <td>{{ (f.file_size / 1024)|round(1) }} KB</td>
+                <td style="font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap;">
+                  {{ f.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+                </td>
+                <td>
+                  <span class="badge {% if f.status == 'active' %}badge-active{% elif f.status == 'deleted' %}badge-deleted{% else %}badge-expired{% endif %}" style="font-size: 0.68rem;">
+                    {{ f.status|upper }}
+                  </span>
+                </td>
+                <td>
+                  {% if f.malware_status == 'malicious' %}
+                    <span class="badge" style="background: var(--comic-pink); color: #FFF; font-weight: 800; font-size: 0.68rem;">MALICIOUS</span>
+                  {% elif f.malware_status == 'suspicious' %}
+                    <span class="badge" style="background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.68rem;">SUSPICIOUS</span>
+                  {% elif f.malware_status == 'clean' %}
+                    <span class="badge badge-success" style="font-size: 0.68rem;">CLEAN</span>
+                  {% elif f.malware_status in ['pending', 'scanning'] %}
+                    <span class="badge badge-warning" style="font-size: 0.68rem;">SCANNING</span>
+                  {% else %}
+                    <span class="badge badge-dim" style="font-size: 0.68rem;">UNSCANNED</span>
+                  {% endif %}
+                </td>
+                <td style="font-family: var(--font-mono); font-size: 0.78rem;">
+                  {% if f.malware_positives > 0 %}
+                    <strong style="color: {% if f.malware_positives >= 4 %}var(--comic-pink){% else %}var(--comic-yellow){% endif %};">
+                      {{ f.malware_positives }}
+                    </strong> engines
+                  {% else %}
+                    <span style="color: var(--comic-lime);">0 engines</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                    <a href="{{ url_for('forensics.forensics_index', file_id=f.id) }}" class="btn btn-secondary btn-sm" style="font-size: 0.68rem; padding: 0.25rem 0.5rem;">
+                      Forensics
+                    </a>
+                    <a href="https://www.virustotal.com/gui/file/{{ f.sha256_reference }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.68rem; padding: 0.25rem 0.5rem; background: var(--comic-cyan); color: #000; font-weight: 800;">
+                      VT Report
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
+                No uploads recorded for this IP address.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 2: Abuse Reports Against This User's Uploads -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <h2 class="card-title">Abuse Reports on This User's Transfers ({{ abuse_reports|length }})</h2>
+      <p class="card-subtitle">Community complaints and legal notices associated with this client's uploads</p>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Report ID</th>
+            <th>Category</th>
+            <th>Target Token / URL</th>
+            <th>Description</th>
+            <th>Submitted (UTC)</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if abuse_reports %}
+            {% for r in abuse_reports %}
+              <tr>
+                <td><strong>#{{ r.id }}</strong></td>
+                <td>
+                  <span class="badge" style="font-size: 0.7rem; background: {% if r.category in ['csam', 'malware'] %}var(--comic-pink){% else %}var(--comic-yellow){% endif %}; color: #000; font-weight: 800;">
+                    {{ r.category|upper }}
+                  </span>
+                </td>
+                <td><code style="color: var(--comic-cyan);">{{ r.token_or_url }}</code></td>
+                <td style="font-size: 0.8rem; color: #E2E8F0; max-width: 260px;">{{ r.description }}</td>
+                <td style="font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap;">
+                  {{ r.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+                </td>
+                <td>
+                  <span class="badge {% if r.status == 'pending' %}badge-warning{% elif r.status == 'resolved' %}badge-success{% else %}badge-dim{% endif %}" style="font-size: 0.68rem;">
+                    {{ r.status|upper }}
+                  </span>
+                </td>
+                <td>
+                  {% if r.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('admin.resolve_abuse_report', report_id=r.id) }}" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                      <input type="hidden" name="action" value="purge_and_block">
+                      <input type="hidden" name="notes" value="Resolved via user inspection">
+                      <button type="submit" class="btn btn-sm" style="background: var(--comic-pink); color: #FFF; font-weight: 800; font-size: 0.68rem; padding: 0.25rem 0.5rem; border: 2px solid #000;">
+                        Purge File
+                      </button>
+                    </form>
+                  {% else %}
+                    <span style="color: #64748B; font-size: 0.78rem;">Resolved</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
+                No abuse reports filed against any files uploaded by this IP.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 3: Audit Event Activity Stream -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Security Events for {{ ip_address }}</h2>
+      <p class="card-subtitle">Authentication, upload quotas, download attempts, and rate-limits</p>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp (UTC)</th>
+            <th>Event Type</th>
+            <th>Severity</th>
+            <th>Outcome</th>
+            <th>Audit Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if events %}
+            {% for e in events %}
+              <tr>
+                <td style="font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap;">
+                  {{ e.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                </td>
+                <td><code>{{ e.event_type }}</code></td>
+                <td>
+                  <span class="badge {% if e.severity in ['CRITICAL', 'HIGH'] %}badge-fail{% elif e.severity == 'MEDIUM' %}badge-warning{% else %}badge-active{% endif %}" style="font-size: 0.68rem;">
+                    {{ e.severity }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge {% if e.outcome == 'SUCCESS' %}badge-success{% elif e.outcome == 'BLOCKED' %}badge-fail{% else %}badge-warning{% endif %}" style="font-size: 0.68rem;">
+                    {{ e.outcome }}
+                  </span>
+                </td>
+                <td style="font-size: 0.8rem; color: #94A3B8; word-break: break-all;">
+                  {{ e.sanitized_details }}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+                No audit events recorded for this IP address.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
