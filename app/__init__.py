@@ -124,6 +124,21 @@ def create_app(config_class=None):
     # Register HTTP error handlers
     register_error_handlers(app)
 
+    # Intercept blocked/banned IPs across the platform
+    @app.before_request
+    def check_banned_ip():
+        if request.endpoint == "static" or request.path.startswith("/static") or request.path.startswith("/admin"):
+            return None
+        from app.security import get_client_ip, is_ip_blocked
+        client_ip = get_client_ip()
+        blocked, reason = is_ip_blocked(client_ip)
+        if blocked:
+            if request.is_json or request.path.startswith("/api/"):
+                return jsonify({
+                    "error": f"Access restricted: Your IP address has been blocked due to: {reason or 'Repeated policy violations'}. If you believe this is a mistake, email: deeptanilsinha27@gmail.com"
+                }), 403
+            return render_template("errors/banned.html", reason=reason or "Repeated acceptable use or security policy violations"), 403
+
     # Template context processor for security tokens
     @app.context_processor
     def inject_security_context():

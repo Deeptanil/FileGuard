@@ -199,5 +199,108 @@ def test_bundle_download_filename_has_zip_extension(client, db_session):
     assert disp.lower().endswith('.zip"') or disp.lower().endswith('.zip')
 
 
+def test_incorrect_pin_does_not_duplicate_error_flash(client, app):
+    """Verify entering incorrect PIN flashes error message exactly once without duplication."""
+    with client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_test_pin_dup"
+
+    data = {
+        "file": (io.BytesIO(b"Secret Document Protected"), "secret.txt"),
+        "password": "CorrectPIN123",
+        "csrf_token": "csrf_test_pin_dup"
+    }
+    res_upload = client.post("/api/files", data=data, content_type="multipart/form-data")
+    token = res_upload.get_json()["token"]
+
+    recipient_client = app.test_client()
+    with recipient_client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_recipient_unlock"
+
+    # Submit incorrect PIN via standard form POST
+    res_unlock = recipient_client.post(
+        f"/share/{token}/unlock",
+        data={
+            "csrf_token": "csrf_recipient_unlock",
+            "password": "WrongPIN"
+        },
+        follow_redirects=True
+    )
+    assert res_unlock.status_code == 200
+    html = res_unlock.get_data(as_text=True)
+    # The error message should appear exactly once
+    assert html.count("Incorrect PIN or password") == 1
+
+
+def test_pin_unlock_persists_across_refresh(client, app):
+    """Verify unlocking PIN persists in session and survives subsequent page refreshes."""
+    with client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_test_pin_persist"
+
+    data = {
+        "file": (io.BytesIO(b"Secret Protected Document"), "secret.txt"),
+        "password": "UnlockPass123",
+        "csrf_token": "csrf_test_pin_persist"
+    }
+    res_upload = client.post("/api/files", data=data, content_type="multipart/form-data")
+    token = res_upload.get_json()["token"]
+
+    recipient_client = app.test_client()
+    with recipient_client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_recipient_unlock"
+
+    # Unlock with valid PIN
+    res_unlock = recipient_client.post(
+        f"/share/{token}/unlock",
+        data={
+            "csrf_token": "csrf_recipient_unlock",
+            "password": "UnlockPass123"
+        },
+        follow_redirects=True
+    )
+    assert res_unlock.status_code == 200
+    assert "DOWNLOAD NOW" in res_unlock.get_data(as_text=True)
+
+    # Simulate page refresh / second visit
+    res_refresh = recipient_client.get(f"/share/{token}")
+    assert res_refresh.status_code == 200
+    refresh_html = res_refresh.get_data(as_text=True)
+    assert "DOWNLOAD NOW" in refresh_html
+    assert "Password-Protected Transfer" not in refresh_html
+
+    # Download succeeds directly
+    res_down = recipient_client.get(f"/api/files/{token}/download")
+    assert res_down.status_code == 200
+    assert res_down.data == b"Secret Protected Document"
+
+
+def test_banned_user_messaging_and_appeal_email(client, app):
+    """Verify banned users receive the block reason and contact email."""
+    from app.models import BlockedIp, db
+    banned_ip = "198.51.100.99"
+    with app.app_context():
+        entry = BlockedIp(
+            ip_address=banned_ip,
+            reason="Multiple malicious file uploads detected",
+            violation_count=3
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+    # HTML page request from banned IP
+    res_page = client.get("/", headers={"X-Forwarded-For": banned_ip})
+    assert res_page.status_code == 403
+    page_html = res_page.get_data(as_text=True)
+    assert "Multiple malicious file uploads detected" in page_html
+    assert "deeptanilsinha27@gmail.com" in page_html
+
+    # API request from banned IP
+    res_api = client.get("/api/files/1234-5678/status", headers={"X-Forwarded-For": banned_ip})
+    assert res_api.status_code == 403
+    api_json = res_api.get_json()
+    assert "deeptanilsinha27@gmail.com" in api_json["error"]
+    assert "Multiple malicious file uploads detected" in api_json["error"]
+
+
+
 
 

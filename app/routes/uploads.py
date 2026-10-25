@@ -95,7 +95,7 @@ def upload_file():
             details=f"Upload rejected: Client IP is banned ({block_reason})"
         )
         return jsonify({
-            "error": "Access restricted: Your IP address has been blocked due to repeated policy violations."
+            "error": f"Access restricted: Your IP address has been blocked due to: {block_reason or 'Repeated policy violations'}. If you believe this is a mistake, email: deeptanilsinha27@gmail.com"
         }), 403
 
     # 1. CSRF validation

@@ -1478,3 +1478,16 @@ body {
   }
 }
 
+/* Mobile input stabilization: minimum 16px font-size prevents iOS viewport zoom & layout glitches */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="email"],
+  select,
+  textarea,
+  .form-control {
+    font-size: 16px !important;
+  }
+}
+

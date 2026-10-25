@@ -84,8 +84,12 @@ def view_shared_file(token: str):
 
     # Check password lock status
     is_owner = bool(session.get(f"uploader_{token}"))
-    is_unlocked = bool(session.get(f"unlocked_{record.id}"))
-    is_locked = bool(record.has_password and not is_unlocked and not is_owner)
+    is_unlocked = bool(
+        session.get(f"unlocked_{record.id}") or 
+        session.get(f"unlocked_{token}") or 
+        is_owner
+    )
+    is_locked = bool(record.has_password and not is_unlocked)
 
     from app.routes.uploads import generate_qr_base64
     canonical_base = current_app.config.get("CANONICAL_URL")
@@ -130,6 +134,9 @@ def unlock_shared_file(token: str):
     password_attempt = (request.form.get("password") or json_body.get("password") or "").strip()
     if record.password_hash and check_password_hash(record.password_hash, password_attempt):
         session[f"unlocked_{record.id}"] = True
+        session[f"unlocked_{token}"] = True
+        session.permanent = True
+        session.modified = True
         if request.is_json:
             return jsonify({
                 "success": True,
@@ -234,11 +241,19 @@ def download_file(token: str):
 
     # Password authorization check if file is protected
     if record.has_password:
-        is_unlocked = bool(session.get(f"unlocked_{record.id}"))
+        is_owner = bool(session.get(f"uploader_{token}"))
+        is_unlocked = bool(
+            session.get(f"unlocked_{record.id}") or 
+            session.get(f"unlocked_{token}") or 
+            is_owner
+        )
         provided_pwd = request.args.get("password") or request.headers.get("X-File-Password")
         if provided_pwd and check_password_hash(record.password_hash, provided_pwd.strip()):
             is_unlocked = True
             session[f"unlocked_{record.id}"] = True
+            session[f"unlocked_{token}"] = True
+            session.permanent = True
+            session.modified = True
 
         if not is_unlocked:
             return jsonify({"error": "Password required to access this file"}), 403
