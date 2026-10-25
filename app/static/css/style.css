@@ -372,6 +372,18 @@ body {
   transform: translate(-3px, -3px);
 }
 
+.dropzone.has-files {
+  background: var(--comic-yellow);
+  border: 4px solid #000000;
+  cursor: default;
+}
+
+.dropzone.has-files:hover {
+  background: var(--comic-yellow);
+  transform: none;
+  box-shadow: var(--shadow-3d-xl);
+}
+
 .dropzone-icon {
   width: 68px;
   height: 68px;

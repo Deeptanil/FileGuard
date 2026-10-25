@@ -7,18 +7,19 @@
   
   {% if just_uploaded %}
     <!-- Uploader Confirmation Banner -->
-    <div class="alert alert-success" style="border: var(--border-heavy); box-shadow: var(--shadow-3d); margin-bottom: 1.5rem; transform: rotate(-0.5deg);">
-      <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #000000; color: var(--comic-yellow); flex-shrink: 0;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.5rem;">
-        <div>
-          <strong style="font-family: var(--font-display); font-size: 1rem;">FILE UPLOADED &amp; ENCRYPTED!</strong>
-          <span style="font-size: 0.9rem; margin-left: 0.5rem;">Protected with AES-256-GCM. Copy your link below or adjust transfer settings.</span>
+    <div class="alert alert-success" style="border: var(--border-heavy); box-shadow: var(--shadow-3d); margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.75rem;">
+        <div style="font-weight: 800; font-size: 0.95rem;">
+          File uploaded and encrypted. Share link or QR code.
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="copyCurrentShareLink('copy-top-btn')" id="copy-top-btn" style="background: var(--comic-cyan); color: #000; font-size: 0.75rem; padding: 0.4rem 0.85rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000;">
-          COPY LINK
-        </button>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="copyCurrentShareLink('copy-top-btn')" id="copy-top-btn" style="background: var(--comic-cyan); color: #000; font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.85rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000;">
+            COPY LINK
+          </button>
+          <a href="{{ url_for('public.upload_page') }}" class="btn btn-secondary btn-sm" style="background: var(--comic-pink); color: #FFF; font-size: 0.75rem; font-weight: 800; padding: 0.4rem 0.85rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000; text-decoration: none;">
+            SHARE ANOTHER FILE
+          </a>
+        </div>
       </div>
     </div>
   {% endif %}
@@ -44,63 +45,45 @@
         Password-Protected Transfer
       </h1>
       <p style="color: #94A3B8; font-size: 0.92rem; max-width: 480px; margin: 0 auto 1.75rem; font-weight: 500;">
-        The sender has secured this file with a PIN or password. Enter the code below to decrypt and unlock the download.
+        Enter the PIN or password below to unlock this download.
       </p>
 
       <form method="POST" action="{{ url_for('downloads.unlock_shared_file', token=token) }}" style="max-width: 420px; margin: 0 auto;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-          <input type="password" name="password" class="form-control" placeholder="Enter PIN or Password" required autofocus style="flex: 1; min-width: 200px; font-family: var(--font-mono); font-size: 1rem; padding: 0.75rem 1rem; border: 3px solid #000; box-shadow: 3px 3px 0 #000; background: #FFFFFF; color: #000000;">
-          <button type="submit" class="btn btn-primary" style="background: var(--comic-yellow); color: #000; font-weight: 900; border: 3px solid #000; box-shadow: 3px 3px 0 #000; padding: 0.75rem 1.5rem; font-family: var(--font-display);">
+          <input type="password" name="password" class="form-control" placeholder="Enter PIN or Password" required autofocus style="flex: 1; min-width: 200px; font-family: var(--font-mono); font-size: 0.9rem; padding: 0.7rem 1rem; border: 3px solid #000; box-shadow: 3px 3px 0 #000; background: #FFFFFF; color: #000000;">
+          <button type="submit" class="btn btn-primary" style="background: var(--comic-yellow); color: #000; font-weight: 900; border: 3px solid #000; box-shadow: 3px 3px 0 #000; padding: 0.7rem 1.5rem; font-family: var(--font-display);">
             UNLOCK
           </button>
         </div>
       </form>
-
-      <div style="margin-top: 1.5rem; font-size: 0.8rem; color: #64748B; font-weight: 600;">
-        Transfer Token: <span class="badge" style="background: var(--comic-cyan); color: #000;">#{{ token }}</span> &bull; 
-        Encrypted with AES-256-GCM
-      </div>
     </div>
 
   {% else %}
     <!-- ================= UNLOCKED / ACTIVE TRANSFER VIEW ================= -->
 
-    <!-- Hero Header Card: File Info, Badges, Timer, and Download -->
+    <!-- Hero Header Card: File Name, Compact Meta, Timer, and Full-Width Download Button -->
     <div class="card" style="margin-bottom: 1.5rem; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d);">
       <div class="share-hero-flex">
         
-        <!-- Left: File Details & Security Badges -->
+        <!-- Left: File Name on Top + Max 3 Compact Info Tags Underneath -->
         <div style="flex: 1; min-width: min(100%, 260px);">
-          <div style="display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.6rem; flex-wrap: wrap;">
-            <span class="badge" id="badge-ephemeral" style="background: var(--comic-pink); color: #FFF; font-size: 0.72rem;">EPHEMERAL</span>
-            <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.72rem;">{{ (file.file_size / 1024)|round(1) }} KB</span>
-            <span class="badge badge-active" style="font-size: 0.72rem;">#{{ token }}</span>
-            <span class="badge badge-pass" style="font-size: 0.72rem;">SHA-256 CHECKED</span>
-            {% if file.is_encrypted_at_rest %}
-              <span class="badge" style="background: #10B981; color: #000; font-weight: 800; font-size: 0.72rem;">AES-256 AT REST</span>
-            {% endif %}
-            {% if file.is_e2ee %}
-              <span class="badge" style="background: #8B5CF6; color: #FFF; font-weight: 800; font-size: 0.72rem;">E2EE ZERO-KNOWLEDGE</span>
-            {% endif %}
-            {% if file.has_password %}
-              <span class="badge" id="badge-has-pwd" style="background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.72rem;">PIN PROTECTED</span>
-            {% endif %}
-          </div>
-
-          <!-- Filename or Display Title -->
-          <h1 id="file-title-heading" style="font-size: clamp(1.2rem, 3.5vw, 1.6rem); font-family: var(--font-display); letter-spacing: 0.02em; text-transform: uppercase; margin: 0 0 0.35rem; color: #FFFFFF; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25;" title="{{ file.display_name }}">
+          <h1 id="file-title-heading" style="font-size: clamp(1.25rem, 3.5vw, 1.65rem); font-family: var(--font-display); letter-spacing: 0.02em; text-transform: uppercase; margin: 0 0 0.6rem; color: #FFFFFF; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25;" title="{{ file.display_name }}">
             {{ file.display_name }}
           </h1>
 
-          {% if file.display_title and file.display_title != file.original_filename %}
-            <div id="file-sub-filename" style="font-size: 0.82rem; color: var(--comic-cyan); font-family: var(--font-mono); margin-bottom: 0.4rem;">
-              Original: {{ file.original_filename }}
-            </div>
-          {% endif %}
-
-          <div style="font-size: 0.85rem; color: #94A3B8; font-weight: 600;">
-            Ready to save • Safe download with real-time cryptographic integrity check.
+          <div id="file-meta-badges" style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+            <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.68rem; padding: 0.18rem 0.5rem;">
+              {% if file.file_size >= 1048576 %}
+                {{ (file.file_size / 1048576)|round(2) }} MB
+              {% else %}
+                {{ (file.file_size / 1024)|round(1) }} KB
+              {% endif %}
+            </span>
+            <span class="badge badge-active" style="font-size: 0.68rem; padding: 0.18rem 0.5rem;">#{{ token }}</span>
+            {% if file.has_password %}
+              <span class="badge" id="badge-has-pwd" style="background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.68rem; padding: 0.18rem 0.5rem;">PIN PROTECTED</span>
+            {% endif %}
           </div>
         </div>
 
@@ -127,26 +110,21 @@
 
       </div>
 
-      <!-- Decryption Status Banner (if E2EE) -->
-      <div id="e2ee-status" style="display: none; margin-top: 1rem; padding: 0.75rem 1rem; background: rgba(139, 92, 246, 0.2); border: 2px solid #8B5CF6; border-radius: 4px; color: #E9D5FF; font-size: 0.85rem; font-weight: 600;">
-        <span id="e2ee-status-text">Decrypting zero-knowledge payload in browser...</span>
-      </div>
+      <!-- Full-Width Download Button & Inline PIN Unlock -->
+      <div style="margin-top: 1.35rem; padding-top: 1.2rem; border-top: 2px dashed #334155;">
+        <a href="{{ url_for('downloads.download_file', token=token) }}" id="download-btn" onclick="handleDownloadClick(event)" class="btn btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem; font-size: clamp(1rem, 3vw, 1.25rem); background: var(--comic-yellow); color: #000000; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center; text-decoration: none;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" style="flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>DOWNLOAD NOW</span>
+        </a>
 
-      <!-- Download Action Button Bar -->
-      <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 2px dashed #334155; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-        {% if file.is_e2ee %}
-          <button type="button" id="e2ee-download-btn" class="btn btn-primary" onclick="startE2EEDownload()" style="flex: 1; min-width: min(100%, 240px); padding: 1rem; font-size: clamp(1rem, 3vw, 1.3rem); background: var(--comic-yellow); color: #000000; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" style="vertical-align: middle; margin-right: 0.35rem; flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span id="download-btn-text">DECRYPT &amp; DOWNLOAD NOW</span>
-          </button>
-        {% else %}
-          <a href="{{ url_for('downloads.download_file', token=token) }}" id="download-btn" class="btn btn-primary" style="flex: 1; min-width: min(100%, 240px); padding: 1rem; font-size: clamp(1rem, 3vw, 1.3rem); background: var(--comic-yellow); color: #000000; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" style="vertical-align: middle; margin-right: 0.35rem; flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span>DOWNLOAD THIS FILE NOW</span>
-          </a>
-        {% endif %}
-        <div style="font-size: 0.8rem; color: #64748B; font-weight: 700; white-space: nowrap;">
-          HTTP 409 Anti-Tamper Protected
+        <div id="inline-pin-box" style="display: none; margin-top: 0.85rem; padding: 0.85rem; background: #1E293B; border: 2px solid #000000; border-radius: 4px; box-shadow: 3px 3px 0px #000000;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="password" id="inline-pin-input" class="form-control" placeholder="Enter PIN to unlock download" onkeydown="if(event.key==='Enter'){event.preventDefault();submitInlinePin();}" style="flex: 1; min-width: 180px; background: #0F172A; color: #FFFFFF; border: 2px solid #475569; font-size: 0.82rem; padding: 0.5rem 0.75rem; border-radius: 4px;">
+            <button type="button" id="inline-pin-btn" onclick="submitInlinePin()" class="btn btn-primary" style="background: var(--comic-cyan); color: #000000; font-weight: 900; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; padding: 0.5rem 1rem; font-family: var(--font-display); font-size: 0.8rem;">
+              UNLOCK &amp; DOWNLOAD
+            </button>
+          </div>
+          <div id="inline-pin-error" style="display: none; margin-top: 0.5rem; color: var(--comic-pink); font-size: 0.78rem; font-weight: 700;"></div>
         </div>
       </div>
     </div>
@@ -172,7 +150,7 @@
         </div>
         <div style="display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.78rem; font-weight: 700; color: #1E293B;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1E293B" stroke-width="2.5" style="flex-shrink: 0; margin-top: 0.1rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span>Anyone with this link can download before the countdown reaches zero.{% if file.has_password %} PIN required to download.{% endif %}</span>
+          <span id="share-link-note">Anyone with this link can download before the countdown reaches zero.{% if file.has_password %} PIN required to download.{% endif %}</span>
         </div>
       </div>
 
@@ -191,64 +169,57 @@
       </div>
     </div>
 
-    <!-- ================= POST-UPLOAD SETTINGS (UPLOADER CONTROLS - LIGHT THEME) ================= -->
+    <!-- ================= POST-UPLOAD SETTINGS (DARK THEME MATCHING TOP HALF) ================= -->
     {% if is_owner or just_uploaded %}
-      <div class="card" style="margin-bottom: 1.5rem; background: #FFFFFF; border: var(--border-heavy); box-shadow: var(--shadow-3d); color: #000000;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 3px solid #000000; padding-bottom: 0.75rem;">
+      {% set current_exp_hours = ((file.expires_at - file.uploaded_at).total_seconds() / 3600)|round|int %}
+      <div class="card" style="margin-bottom: 1.5rem; background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); color: #FFFFFF;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px dashed #334155; padding-bottom: 0.75rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 900; color: #000000;">TRANSFER SETTINGS &amp; CONTROLS</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 900; color: var(--comic-yellow);">TRANSFER SETTINGS</span>
           </div>
-          <span class="badge" style="background: var(--comic-cyan); color: #000; font-size: 0.7rem; border: 2px solid #000000;">UPLOADER ONLY</span>
         </div>
 
-        <div id="settings-alert" style="display: none; margin-bottom: 1rem; padding: 0.65rem 1rem; border-radius: 4px; font-weight: 800; font-size: 0.85rem; border: 2px solid #000000;"></div>
+        <div id="settings-alert" style="display: none; margin-bottom: 1rem; padding: 0.6rem 0.9rem; border-radius: 4px; font-weight: 800; font-size: 0.8rem; border: 2px solid #000000;"></div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-          <!-- 1. Display Title -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.1rem;">
+          <!-- 1. Custom Title -->
           <div>
-            <label style="display: block; font-family: var(--font-display); font-size: 0.78rem; color: #000000; font-weight: 800; margin-bottom: 0.35rem;">
-              CUSTOM TITLE / DESCRIPTION
+            <label style="display: block; font-family: var(--font-display); font-size: 0.72rem; color: #CBD5E1; margin-bottom: 0.3rem;">
+              CUSTOM TITLE
             </label>
-            <input type="text" id="setting-title" class="form-control" value="{{ file.display_title or '' }}" placeholder="{{ file.original_filename }}" maxlength="200" style="background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; font-size: 0.85rem; border-radius: 4px;">
-            <div style="font-size: 0.72rem; color: #475569; margin-top: 0.25rem; font-weight: 600;">Shown to recipients instead of raw filename.</div>
+            <input type="text" id="setting-title" class="form-control" value="{{ file.display_name }}" placeholder="Enter title" maxlength="200" style="background: #1E293B; color: #FFFFFF; border: 2px solid #334155; font-size: 0.78rem; padding: 0.45rem 0.65rem; border-radius: 4px;">
           </div>
 
-          <!-- 2. PIN / Password Protection -->
+          <!-- 2. PIN Protection -->
           <div>
-            <label style="display: block; font-family: var(--font-display); font-size: 0.78rem; color: #000000; font-weight: 800; margin-bottom: 0.35rem;">
-              PIN / PASSWORD PROTECTION
+            <label style="display: block; font-family: var(--font-display); font-size: 0.72rem; color: #CBD5E1; margin-bottom: 0.3rem;">
+              PIN PROTECTION
             </label>
             <div style="display: flex; gap: 0.4rem;">
-              <input type="password" id="setting-password" class="form-control" placeholder="{% if file.has_password %}(Protected) Enter new to change{% else %}Set PIN / password{% endif %}" style="background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; font-size: 0.85rem; border-radius: 4px; flex: 1;">
-              {% if file.has_password %}
-                <button type="button" id="btn-remove-pwd" onclick="removePasswordProtection()" class="btn btn-secondary btn-sm" style="background: var(--comic-pink); color: #FFF; font-size: 0.72rem; white-space: nowrap; border: 2px solid #000; box-shadow: 2px 2px 0px #000; font-weight: 800;">
-                  REMOVE PIN
-                </button>
-              {% endif %}
-            </div>
-            <div style="font-size: 0.72rem; color: #475569; margin-top: 0.25rem; font-weight: 600;">
-              {% if file.has_password %}Currently locked with PIN.{% else %}Leave empty for open link.{% endif %}
+              <input type="password" id="setting-password" class="form-control" placeholder="{% if file.has_password %}Change PIN{% else %}Set PIN{% endif %}" style="background: #1E293B; color: #FFFFFF; border: 2px solid #334155; font-size: 0.78rem; padding: 0.45rem 0.65rem; border-radius: 4px; flex: 1;">
+              <button type="button" id="btn-remove-pwd" onclick="removePasswordProtection()" class="btn btn-secondary btn-sm" style="display: {% if file.has_password %}inline-flex{% else %}none{% endif %}; align-items: center; background: var(--comic-pink); color: #FFF; font-size: 0.68rem; padding: 0.35rem 0.6rem; white-space: nowrap; border: 2px solid #000; font-weight: 800;">
+                REMOVE
+              </button>
             </div>
           </div>
 
-          <!-- 3. Expiration Adjustment -->
+          <!-- 3. Expiration -->
           <div>
-            <label style="display: block; font-family: var(--font-display); font-size: 0.78rem; color: #000000; font-weight: 800; margin-bottom: 0.35rem;">
-              ADJUST EXPIRATION
+            <label style="display: block; font-family: var(--font-display); font-size: 0.72rem; color: #CBD5E1; margin-bottom: 0.3rem;">
+              EXPIRATION
             </label>
-            <select id="setting-expiration" class="form-control" style="background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; font-size: 0.85rem; border-radius: 4px; cursor: pointer; font-weight: 700;">
-              <option value="1">1 Hour</option>
-              <option value="3">3 Hours</option>
-              <option value="6">6 Hours</option>
-              <option value="12" selected>12 Hours (Max allowed)</option>
+            <select id="setting-expiration" class="form-control" style="background: #1E293B; color: #FFFFFF; border: 2px solid #334155; font-size: 0.78rem; padding: 0.45rem 0.65rem; border-radius: 4px; cursor: pointer;">
+              <option value="1" {% if current_exp_hours <= 1 %}selected{% endif %}>1 Hour</option>
+              <option value="3" {% if current_exp_hours > 1 and current_exp_hours <= 3 %}selected{% endif %}>3 Hours</option>
+              <option value="6" {% if current_exp_hours > 3 and current_exp_hours <= 6 %}selected{% endif %}>6 Hours</option>
+              <option value="12" {% if current_exp_hours > 6 %}selected{% endif %}>12 Hours</option>
             </select>
-            <div style="font-size: 0.72rem; color: #475569; margin-top: 0.25rem; font-weight: 600;">Strict 12h maximum lifetime enforced.</div>
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button type="button" id="save-settings-btn" onclick="saveTransferSettings()" class="btn btn-primary" style="background: var(--comic-yellow); color: #000000; font-weight: 900; border: 2px solid #000000; box-shadow: 3px 3px 0px #000000; padding: 0.55rem 1.35rem; font-family: var(--font-display); font-size: 0.85rem;">
+        <div style="display: flex; justify-content: flex-end;">
+          <button type="button" id="save-settings-btn" onclick="saveTransferSettings()" class="btn btn-primary" style="background: var(--comic-cyan); color: #000000; font-weight: 900; border: 2px solid #000000; box-shadow: 3px 3px 0px #000000; padding: 0.5rem 1.2rem; font-family: var(--font-display); font-size: 0.8rem;">
             UPDATE TRANSFER SETTINGS
           </button>
         </div>
@@ -265,9 +236,6 @@
     </div>
     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
       <span style="color: #94A3B8; font-size: 0.78rem;">Self-Destructs: <strong style="color: var(--comic-yellow);">{{ file.expires_at.strftime('%H:%M:%S UTC') }}</strong></span>
-      <a href="{{ url_for('public.upload_page') }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.4rem 0.85rem;">
-        &larr; SHARE ANOTHER FILE
-      </a>
     </div>
   </div>
 
@@ -277,17 +245,119 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/countdown.js') }}"></script>
 <script>
+  let hasPinProtection = {{ 'true' if file.has_password else 'false' }};
+  let isPinUnlocked = {{ 'true' if is_unlocked else 'false' }};
+
   function getFullShareUrl() {
-    let url = {{ share_url|tojson }};
-    if (window.location.hash) {
-      url += window.location.hash;
-    }
-    return url;
+    return {{ share_url|tojson }};
   }
 
   function copyCurrentShareLink(btnId) {
     const fullUrl = getFullShareUrl();
     copyToClipboard(fullUrl, btnId);
+  }
+
+  function handleDownloadClick(e) {
+    if (hasPinProtection && !isPinUnlocked) {
+      e.preventDefault();
+      const pinBox = document.getElementById("inline-pin-box");
+      const pinInput = document.getElementById("inline-pin-input");
+      if (pinBox) {
+        pinBox.style.display = "block";
+      }
+      if (pinInput) {
+        pinInput.focus();
+      }
+    }
+  }
+
+  async function submitInlinePin() {
+    const pinInput = document.getElementById("inline-pin-input");
+    const pinBtn = document.getElementById("inline-pin-btn");
+    const pinError = document.getElementById("inline-pin-error");
+    const pinVal = pinInput ? pinInput.value.trim() : "";
+
+    if (!pinVal) {
+      if (pinError) {
+        pinError.textContent = "Please enter the PIN.";
+        pinError.style.display = "block";
+      }
+      return;
+    }
+
+    if (pinError) pinError.style.display = "none";
+    if (pinBtn) {
+      pinBtn.disabled = true;
+      pinBtn.textContent = "VERIFYING...";
+    }
+
+    try {
+      const res = await fetch("{{ url_for('downloads.unlock_shared_file', token=token) }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ password: pinVal })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        isPinUnlocked = true;
+        const pinBox = document.getElementById("inline-pin-box");
+        if (pinBox) pinBox.style.display = "none";
+        window.location.href = data.download_url || "{{ url_for('downloads.download_file', token=token) }}";
+      } else {
+        if (pinError) {
+          pinError.textContent = data.error || "Incorrect PIN. Please try again.";
+          pinError.style.display = "block";
+        }
+      }
+    } catch (err) {
+      if (pinError) {
+        pinError.textContent = "Could not verify PIN. Please try again.";
+        pinError.style.display = "block";
+      }
+    } finally {
+      if (pinBtn) {
+        pinBtn.disabled = false;
+        pinBtn.textContent = "UNLOCK & DOWNLOAD";
+      }
+    }
+  }
+
+  function syncPinUiState(hasPin) {
+    const pwdInput = document.getElementById("setting-password");
+    if (pwdInput) {
+      pwdInput.value = "";
+      pwdInput.placeholder = hasPin ? "Change PIN" : "Set PIN";
+    }
+
+    const removeBtn = document.getElementById("btn-remove-pwd");
+    if (removeBtn) {
+      removeBtn.style.display = hasPin ? "inline-flex" : "none";
+    }
+
+    let pwdBadge = document.getElementById("badge-has-pwd");
+    if (hasPin && !pwdBadge) {
+      const badgeContainer = document.getElementById("file-meta-badges");
+      if (badgeContainer) {
+        const newBadge = document.createElement("span");
+        newBadge.id = "badge-has-pwd";
+        newBadge.className = "badge";
+        newBadge.style.cssText = "background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.68rem; padding: 0.18rem 0.5rem;";
+        newBadge.textContent = "PIN PROTECTED";
+        badgeContainer.appendChild(newBadge);
+      }
+    } else if (!hasPin && pwdBadge) {
+      pwdBadge.remove();
+    }
+
+    const shareNote = document.getElementById("share-link-note");
+    if (shareNote) {
+      shareNote.textContent = hasPin
+        ? "Anyone with this link can download before the countdown reaches zero. PIN required to download."
+        : "Anyone with this link can download before the countdown reaches zero.";
+    }
   }
 
   // Handle post-upload settings save
@@ -300,7 +370,7 @@
 
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.textContent = "Saving...";
+      saveBtn.textContent = "SAVING...";
     }
 
     try {
@@ -327,29 +397,19 @@
           alertBox.style.display = "block";
           alertBox.style.background = "#10B981";
           alertBox.style.color = "#000";
-          alertBox.textContent = "Settings saved successfully!";
+          alertBox.textContent = "Settings updated.";
         }
-        // Update title in heading
         const heading = document.getElementById("file-title-heading");
         if (heading && data.display_title) {
           heading.textContent = data.display_title;
         }
-        // Update password badge
-        let pwdBadge = document.getElementById("badge-has-pwd");
-        if (data.has_password && !pwdBadge) {
-          const badgeContainer = document.querySelector("#file-title-heading")?.previousElementSibling;
-          if (badgeContainer) {
-            const newBadge = document.createElement("span");
-            newBadge.id = "badge-has-pwd";
-            newBadge.className = "badge";
-            newBadge.style.cssText = "background: var(--comic-yellow); color: #000; font-weight: 800; font-size: 0.72rem;";
-            newBadge.textContent = "PIN PROTECTED";
-            badgeContainer.appendChild(newBadge);
-          }
+        if (pwdVal) {
+          hasPinProtection = true;
+          isPinUnlocked = false;
         }
-        // Clear password input
-        if (document.getElementById("setting-password")) {
-          document.getElementById("setting-password").value = "";
+        syncPinUiState(Boolean(data.has_password));
+        if (data.expires_at && typeof initCountdown === "function") {
+          initCountdown(data.expires_at, "{{ token }}");
         }
       } else {
         throw new Error(data.error || "Failed to update settings");
@@ -370,7 +430,6 @@
   }
 
   async function removePasswordProtection() {
-    if (!confirm("Are you sure you want to remove PIN protection? Anyone with the link will be able to download.")) return;
     try {
       const res = await fetch("/api/files/{{ token }}/settings", {
         method: "POST",
@@ -382,10 +441,11 @@
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        const pwdBadge = document.getElementById("badge-has-pwd");
-        if (pwdBadge) pwdBadge.remove();
-        const removeBtn = document.getElementById("btn-remove-pwd");
-        if (removeBtn) removeBtn.remove();
+        hasPinProtection = false;
+        isPinUnlocked = true;
+        const pinBox = document.getElementById("inline-pin-box");
+        if (pinBox) pinBox.style.display = "none";
+        syncPinUiState(false);
         const alertBox = document.getElementById("settings-alert");
         if (alertBox) {
           alertBox.style.display = "block";
@@ -395,105 +455,25 @@
         }
       }
     } catch (e) {
-      alert("Error removing password: " + e.message);
-    }
-  }
-
-  // Client-Side Zero-Knowledge E2EE Download Handler
-  async function startE2EEDownload() {
-    const statusBox = document.getElementById("e2ee-status");
-    const statusText = document.getElementById("e2ee-status-text");
-    const downloadBtn = document.getElementById("e2ee-download-btn");
-
-    let keyBase64Url = "";
-    if (window.location.hash.includes("key=")) {
-      keyBase64Url = window.location.hash.split("key=")[1].split("&")[0];
-    } else {
-      keyBase64Url = prompt("Enter the Zero-Knowledge Decryption Key for this file:");
-      if (!keyBase64Url) return;
-    }
-
-    try {
-      if (statusBox) statusBox.style.display = "block";
-      if (statusText) statusText.textContent = "Fetching encrypted payload from secure server...";
-      if (downloadBtn) downloadBtn.disabled = true;
-
-      const response = await fetch("{{ url_for('downloads.download_file', token=token) }}");
-      if (!response.ok) {
-        throw new Error(`Download failed with status ${response.status}`);
-      }
-
-      const buffer = await response.arrayBuffer();
-      if (statusText) statusText.textContent = "Decrypting with AES-256-GCM locally in browser...";
-
-      // Base64URL decode key
-      const base64 = keyBase64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const padLen = (4 - (base64.length % 4)) % 4;
-      const padded = base64 + "=".repeat(padLen);
-      const binaryKey = atob(padded);
-      const keyBytes = new Uint8Array(binaryKey.length);
-      for (let i = 0; i < binaryKey.length; i++) {
-        keyBytes[i] = binaryKey.charCodeAt(i);
-      }
-
-      const cryptoKey = await window.crypto.subtle.importKey(
-        "raw",
-        keyBytes,
-        { name: "AES-GCM" },
-        false,
-        ["decrypt"]
-      );
-
-      // First 12 bytes are IV
-      const iv = buffer.slice(0, 12);
-      const ciphertext = buffer.slice(12);
-
-      const decrypted = await window.crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: iv },
-        cryptoKey,
-        ciphertext
-      );
-
-      if (statusText) statusText.textContent = "Decryption successful! Saving file...";
-
-      const blob = new Blob([decrypted], { type: "{{ file.detected_mime_type }}" });
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = {{ file.original_filename|tojson }};
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(downloadUrl);
-      a.remove();
-
-      if (statusText) statusText.textContent = "Download complete and verified!";
-    } catch (err) {
-      if (statusBox) {
-        statusBox.style.display = "block";
-        statusBox.style.background = "rgba(239, 68, 68, 0.2)";
-        statusBox.style.border = "2px solid #EF4444";
-        statusBox.style.color = "#FCA5A5";
-      }
-      if (statusText) statusText.textContent = "Decryption failed! The key may be incorrect or corrupted.";
-      console.error("E2EE Decrypt error:", err);
-    } finally {
-      if (downloadBtn) downloadBtn.disabled = false;
+      alert("Error removing PIN: " + e.message);
     }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     initCountdown("{{ file.expires_at.isoformat() }}Z", "{{ token }}");
 
-    // Sync input share link if hash key exists
     const shareInput = document.getElementById("share-link-input");
     if (shareInput && window.location.hash) {
       shareInput.value = window.location.origin + window.location.pathname + window.location.hash;
     }
 
     const isJustUploaded = window.location.search.includes("just_uploaded") || {{ 'true' if just_uploaded else 'false' }};
-    if (isJustUploaded) {
-      try {
-        const uploads = JSON.parse(localStorage.getItem("fileguard_user_uploads") || "[]");
+    const isOwner = {{ 'true' if is_owner else 'false' }};
+    try {
+      const uploads = JSON.parse(localStorage.getItem("fileguard_user_uploads") || "[]");
+      const isAlreadyOwned = isOwner || isJustUploaded || uploads.some(u => u.token === "{{ token }}");
+
+      if (isAlreadyOwned) {
         if (!uploads.some(u => u.token === "{{ token }}")) {
           uploads.unshift({
             token: "{{ token }}",
@@ -509,9 +489,13 @@
           if (uploads.length > 100) uploads.length = 100;
           localStorage.setItem("fileguard_user_uploads", JSON.stringify(uploads));
         }
-      } catch (e) {}
-    } else {
-      try {
+        // Ensure owned file is never listed under "Shared With Me"
+        const views = JSON.parse(localStorage.getItem("fileguard_user_views") || "[]");
+        const filteredViews = views.filter(v => v.token !== "{{ token }}");
+        if (filteredViews.length !== views.length) {
+          localStorage.setItem("fileguard_user_views", JSON.stringify(filteredViews));
+        }
+      } else {
         const views = JSON.parse(localStorage.getItem("fileguard_user_views") || "[]");
         const existingIdx = views.findIndex(v => v.token === "{{ token }}");
         const viewEntry = {
@@ -532,8 +516,8 @@
         }
         if (views.length > 100) views.length = 100;
         localStorage.setItem("fileguard_user_views", JSON.stringify(views));
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
   });
 </script>
 {% endblock %}

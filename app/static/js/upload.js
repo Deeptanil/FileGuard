@@ -1,14 +1,17 @@
 /**
- * FileGuard - Drag & Drop Upload Engine with Progress & Pre-validation
+ * FileGuard - Drag & Drop Upload Engine with In-Place Yellow Bundle Preview & Multi-Step Accumulation
  */
 document.addEventListener("DOMContentLoaded", () => {
   const dropzone = document.getElementById("dropzone");
+  const dropzoneInitial = document.getElementById("dropzone-initial");
+  const dropzoneSelected = document.getElementById("dropzone-selected");
   const fileInput = document.getElementById("file-input");
   const folderInput = document.getElementById("folder-input");
   const selectFilesBtn = document.getElementById("select-files-btn");
   const selectFolderBtn = document.getElementById("select-folder-btn");
-  const uploadForm = document.getElementById("upload-form");
-  const filePreview = document.getElementById("file-preview");
+  const addMoreFilesBtn = document.getElementById("add-more-files-btn");
+  const addMoreFolderBtn = document.getElementById("add-more-folder-btn");
+  const clearFilesBtn = document.getElementById("clear-files-btn");
   const fileNameDisplay = document.getElementById("file-name-display");
   const fileSizeDisplay = document.getElementById("file-size-display");
   const progressContainer = document.getElementById("progress-container");
@@ -50,22 +53,57 @@ document.addEventListener("DOMContentLoaded", () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
+  function getBundleSummaryName(filesArray) {
+    if (!filesArray || filesArray.length === 0) return "";
+    if (filesArray.length === 1) {
+      return filesArray[0].name;
+    }
+    if (filesArray.length === 2) {
+      return `${filesArray[0].name} + 1 more file`;
+    }
+    return `${filesArray[0].name} + ${filesArray.length - 1} more files`;
+  }
+
+  function updateDropzoneView() {
+    if (selectedFiles.length === 0) {
+      dropzone.classList.remove("has-files");
+      if (dropzoneInitial) dropzoneInitial.style.display = "block";
+      if (dropzoneSelected) dropzoneSelected.style.display = "none";
+      return;
+    }
+
+    let totalBytes = 0;
+    for (const f of selectedFiles) {
+      totalBytes += f.size;
+    }
+
+    dropzone.classList.add("has-files");
+    if (dropzoneInitial) dropzoneInitial.style.display = "none";
+    if (dropzoneSelected) dropzoneSelected.style.display = "block";
+
+    if (fileNameDisplay) {
+      fileNameDisplay.textContent = getBundleSummaryName(selectedFiles);
+    }
+    if (fileSizeDisplay) {
+      fileSizeDisplay.textContent = `${formatBytes(totalBytes)} • ${selectedFiles.length} ${selectedFiles.length === 1 ? "file" : "files"}`;
+    }
+  }
+
   function handleFilesSelect(fileList, isFolderSelection = false) {
     clearError();
     if (!fileList || fileList.length === 0) return;
 
-    const filesArray = Array.from(fileList);
+    const incomingFiles = Array.from(fileList);
+    const combinedFiles = [...selectedFiles, ...incomingFiles];
     let totalBytes = 0;
 
-    const hasRelativePaths = filesArray.some(
+    const hasRelativePaths = combinedFiles.some(
       f => (f.webkitRelativePath && f.webkitRelativePath.includes("/")) || (f.relativePath && f.relativePath.includes("/"))
     );
-    selectedIsFolder = Boolean(isFolderSelection || hasRelativePaths);
 
-    for (const file of filesArray) {
+    for (const file of combinedFiles) {
       totalBytes += file.size;
 
-      // Check extension unless it's a hidden metadata entry
       const nameParts = file.name.split(".");
       const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "";
       if (ext && !ALLOWED_EXTS.includes(ext)) {
@@ -79,62 +117,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    selectedFiles = filesArray;
-
-    if (fileNameDisplay) {
-      if (selectedIsFolder) {
-        const firstPath = filesArray[0].webkitRelativePath || filesArray[0].relativePath || filesArray[0].name;
-        const folderName = firstPath.includes("/") ? firstPath.split("/")[0] : firstPath;
-        fileNameDisplay.textContent = `Folder: ${folderName} (${filesArray.length} file${filesArray.length === 1 ? "" : "s"})`;
-      } else if (filesArray.length === 1) {
-        fileNameDisplay.textContent = filesArray[0].name;
-      } else {
-        fileNameDisplay.textContent = `Bundle: ${filesArray.length} files (${filesArray[0].name} + ${filesArray.length - 1} more)`;
-      }
-    }
-    if (fileSizeDisplay) fileSizeDisplay.textContent = formatBytes(totalBytes);
-    if (filePreview) filePreview.style.display = "block";
-
-    // Auto-scroll or highlight upload button so user can review options or proceed immediately
-    if (uploadBtn) {
-      uploadBtn.focus();
-    }
+    selectedFiles = combinedFiles;
+    selectedIsFolder = Boolean(selectedIsFolder || isFolderSelection || hasRelativePaths);
+    updateDropzoneView();
   }
 
-  // WebCrypto helper for Client-Side Zero-Knowledge E2EE
-  async function encryptBlobE2EE(file) {
-    const key = await window.crypto.subtle.generateKey(
-      { name: "AES-GCM", length: 256 },
-      true,
-      ["encrypt", "decrypt"]
-    );
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    const arrayBuffer = await file.arrayBuffer();
-    const ciphertext = await window.crypto.subtle.encrypt(
-      { name: "AES-GCM", iv: iv },
-      key,
-      arrayBuffer
-    );
-
-    // Prepend 12-byte IV to ciphertext
-    const combined = new Uint8Array(iv.byteLength + ciphertext.byteLength);
-    combined.set(iv, 0);
-    combined.set(new Uint8Array(ciphertext), iv.byteLength);
-    const encryptedBlob = new Blob([combined], { type: "application/octet-stream" });
-
-    // Export raw key as URL-safe base64
-    const rawKey = await window.crypto.subtle.exportKey("raw", key);
-    const keyBytes = new Uint8Array(rawKey);
-    let binary = "";
-    for (let i = 0; i < keyBytes.byteLength; i++) {
-      binary += String.fromCharCode(keyBytes[i]);
-    }
-    const keyBase64Url = btoa(binary)
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
-    return { encryptedBlob, keyBase64Url };
+  function clearSelectedFiles() {
+    selectedFiles = [];
+    selectedIsFolder = false;
+    clearError();
+    updateDropzoneView();
   }
 
   async function startUpload(files, isFolder = false) {
@@ -142,54 +134,33 @@ document.addEventListener("DOMContentLoaded", () => {
     clearError();
     const isBundle = isFolder || files.length > 1;
 
-    // Check optional settings
     const titleInput = document.getElementById("opt-display-title");
     const passwordInput = document.getElementById("opt-password");
     const expirationSelect = document.getElementById("opt-expiration");
-    const e2eeCheckbox = document.getElementById("opt-e2ee");
 
-    const displayTitle = titleInput ? titleInput.value.trim() : "";
+    let displayTitle = titleInput ? titleInput.value.trim() : "";
+    if (!displayTitle && files.length > 1) {
+      displayTitle = getBundleSummaryName(files);
+    }
+
     const password = passwordInput ? passwordInput.value.trim() : "";
     const expirationHours = expirationSelect ? expirationSelect.value : "12";
-    const useE2EE = Boolean(e2eeCheckbox && e2eeCheckbox.checked);
 
     if (uploadBtn) {
       uploadBtn.setAttribute("disabled", "true");
-      uploadBtn.textContent = useE2EE ? "Encrypting with AES-256..." : (isBundle ? "Bundling & Uploading..." : "Uploading & Hashing...");
+      uploadBtn.textContent = "GENERATING SHAREABLE LINK...";
     }
     if (progressContainer) progressContainer.style.display = "block";
     if (progressBar) progressBar.style.width = "0%";
-    if (progressPercent) progressPercent.textContent = useE2EE ? "Encrypting locally in browser..." : "0%";
+    if (progressPercent) {
+      progressPercent.style.display = "block";
+      progressPercent.textContent = "0%";
+    }
 
-    let e2eeKeyUrlParam = "";
     const formData = new FormData();
-
-    try {
-      if (useE2EE) {
-        if (progressPercent) progressPercent.textContent = "Locking with zero-knowledge AES-256...";
-        // For bundle or single file, encrypt payload
-        if (files.length === 1) {
-          const { encryptedBlob, keyBase64Url } = await encryptBlobE2EE(files[0]);
-          e2eeKeyUrlParam = keyBase64Url;
-          formData.append("file", encryptedBlob, files[0].name);
-        } else {
-          // Multiple files in folder bundle with E2EE: upload will be bundled into ZIP by server then client E2EE applied
-          for (const file of files) {
-            const relPath = file.webkitRelativePath || file.relativePath || file.name;
-            formData.append("file", file, relPath);
-          }
-        }
-        formData.append("is_e2ee", "true");
-      } else {
-        for (const file of files) {
-          const relPath = file.webkitRelativePath || file.relativePath || file.name;
-          formData.append("file", file, relPath);
-        }
-      }
-    } catch (encErr) {
-      showError("Client-side encryption failed: " + encErr.message);
-      resetUploadBtn();
-      return;
+    for (const file of files) {
+      const relPath = file.webkitRelativePath || file.relativePath || file.name;
+      formData.append("file", file, relPath);
     }
 
     if (isFolder) {
@@ -222,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const percent = Math.round((evt.loaded / evt.total) * 100);
         if (progressBar) progressBar.style.width = `${percent}%`;
         if (progressPercent) {
-          progressPercent.textContent = `${percent}% (${isBundle ? 'Bundling & transferring' : 'Transferring to encrypted vault'})`;
+          progressPercent.textContent = `${percent}% (${isBundle ? "Bundling & uploading" : "Uploading"})`;
         }
       }
     });
@@ -231,12 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (xhr.status === 201) {
         try {
           const data = JSON.parse(xhr.responseText);
-          if (progressPercent) progressPercent.textContent = "100% (Verifying SHA-256...)";
-
-          let finalShareUrl = data.share_url;
-          if (useE2EE && e2eeKeyUrlParam) {
-            finalShareUrl += `#key=${e2eeKeyUrlParam}`;
-          }
+          if (progressPercent) progressPercent.textContent = "100% — Redirecting...";
 
           try {
             const uploads = JSON.parse(localStorage.getItem("fileguard_user_uploads") || "[]");
@@ -246,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 filename: data.display_title || data.filename,
                 original_filename: data.filename,
                 file_size: data.file_size,
-                share_url: finalShareUrl,
+                share_url: data.share_url,
                 has_password: data.has_password,
                 is_e2ee: data.is_e2ee,
                 sha256: data.sha256_reference,
@@ -257,17 +223,11 @@ document.addEventListener("DOMContentLoaded", () => {
               if (uploads.length > 100) uploads.length = 100;
               localStorage.setItem("fileguard_user_uploads", JSON.stringify(uploads));
             }
-          } catch (storageErr) {
-            console.warn("Could not write upload to localStorage:", storageErr);
-          }
+          } catch (storageErr) {}
 
-          let redirectUrl = `/share/${data.token}?just_uploaded=true`;
-          if (useE2EE && e2eeKeyUrlParam) {
-            redirectUrl += `#key=${e2eeKeyUrlParam}`;
-          }
-          window.location.href = redirectUrl;
+          window.location.href = `/share/${data.token}?just_uploaded=true`;
         } catch (e) {
-          showError("Unexpected response format from server.");
+          showError("Unexpected response from server.");
           resetUploadBtn();
         }
       } else {
@@ -282,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     xhr.addEventListener("error", () => {
-      showError("Network connection error during file upload.");
+      showError("Network error occurred during file upload.");
       resetUploadBtn();
     });
 
@@ -292,44 +252,46 @@ document.addEventListener("DOMContentLoaded", () => {
   function resetUploadBtn() {
     if (uploadBtn) {
       uploadBtn.removeAttribute("disabled");
-      uploadBtn.textContent = "Try Uploading Again";
+      uploadBtn.textContent = "GET SHAREABLE LINK";
     }
     if (progressContainer) progressContainer.style.display = "none";
+    if (progressPercent) progressPercent.style.display = "none";
   }
 
-  // Recursive helper to read files from dropped folders (FileSystemEntry API)
-  function readEntryFiles(entry, pathPrefix = "") {
-    return new Promise((resolve) => {
-      if (entry.isFile) {
+  async function readEntryFiles(entry, pathPrefix = "") {
+    if (entry.isFile) {
+      return new Promise((resolve) => {
         entry.file((file) => {
-          file.relativePath = pathPrefix ? `${pathPrefix}/${file.name}` : file.name;
+          file.relativePath = pathPrefix + file.name;
           resolve([file]);
         }, () => resolve([]));
-      } else if (entry.isDirectory) {
-        const dirReader = entry.createReader();
+      });
+    } else if (entry.isDirectory) {
+      const dirReader = entry.createReader();
+      const entries = await new Promise((resolve) => {
         const allEntries = [];
-        const readBatch = () => {
-          dirReader.readEntries(async (entries) => {
-            if (!entries.length) {
-              const nestedPrefix = pathPrefix ? `${pathPrefix}/${entry.name}` : entry.name;
-              const nestedResults = await Promise.all(
-                allEntries.map(child => readEntryFiles(child, nestedPrefix))
-              );
-              resolve(nestedResults.flat());
+        function readBatch() {
+          dirReader.readEntries((batch) => {
+            if (batch.length === 0) {
+              resolve(allEntries);
             } else {
-              allEntries.push(...entries);
+              allEntries.push(...batch);
               readBatch();
             }
-          }, () => resolve([]));
-        };
+          }, () => resolve(allEntries));
+        }
         readBatch();
-      } else {
-        resolve([]);
+      });
+      const nestedFiles = [];
+      for (const child of entries) {
+        const subFiles = await readEntryFiles(child, `${pathPrefix}${entry.name}/`);
+        nestedFiles.push(...subFiles);
       }
-    });
+      return nestedFiles;
+    }
+    return [];
   }
 
-  // Standard File input change (single or multiple files)
   fileInput.addEventListener("change", (e) => {
     if (e.target.files && e.target.files.length > 0) {
       handleFilesSelect(e.target.files, false);
@@ -337,7 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Folder input change (entire directory)
   if (folderInput) {
     folderInput.addEventListener("change", (e) => {
       if (e.target.files && e.target.files.length > 0) {
@@ -363,7 +324,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Drag and drop events
+  if (addMoreFilesBtn) {
+    addMoreFilesBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      fileInput.click();
+    });
+  }
+
+  if (addMoreFolderBtn && folderInput) {
+    addMoreFolderBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      folderInput.click();
+    });
+  }
+
+  if (clearFilesBtn) {
+    clearFilesBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      clearSelectedFiles();
+    });
+  }
+
   ["dragenter", "dragover"].forEach(evt => {
     dropzone.addEventListener(evt, (e) => {
       e.preventDefault();
@@ -405,9 +389,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Trigger file selection on dropzone click (defaults to file picker so users can select files)
   dropzone.addEventListener("click", (e) => {
-    if (e.target.closest("#file-preview") || e.target.closest("button") || e.target.closest("a") || e.target.closest(".folder-select-btn")) {
+    if (
+      dropzone.classList.contains("has-files") ||
+      e.target.closest("button") ||
+      e.target.closest("a") ||
+      e.target.closest("#dropzone-selected")
+    ) {
       return;
     }
     fileInput.click();
@@ -425,4 +413,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-

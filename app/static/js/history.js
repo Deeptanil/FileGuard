@@ -31,7 +31,12 @@
     }
 
     try {
-      viewItems = JSON.parse(localStorage.getItem("fileguard_user_views") || "[]");
+      const rawViews = JSON.parse(localStorage.getItem("fileguard_user_views") || "[]");
+      const ownedTokens = new Set(uploadItems.map(u => u.token));
+      viewItems = rawViews.filter(v => !ownedTokens.has(v.token));
+      if (viewItems.length !== rawViews.length) {
+        localStorage.setItem("fileguard_user_views", JSON.stringify(viewItems));
+      }
     } catch (e) {
       viewItems = [];
     }

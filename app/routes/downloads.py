@@ -59,8 +59,8 @@ def view_shared_file(token: str):
 
     # Check password lock status
     is_owner = bool(session.get(f"uploader_{token}"))
-    is_unlocked = is_owner or bool(session.get(f"unlocked_{record.id}"))
-    is_locked = bool(record.has_password and not is_unlocked)
+    is_unlocked = bool(session.get(f"unlocked_{record.id}"))
+    is_locked = bool(record.has_password and not is_unlocked and not is_owner)
 
     from app.routes.uploads import generate_qr_base64
     canonical_base = current_app.config.get("CANONICAL_URL")
@@ -76,6 +76,7 @@ def view_shared_file(token: str):
         share_url=share_url,
         qr_code_base64=qr_data,
         is_locked=is_locked,
+        is_unlocked=is_unlocked,
         is_owner=is_owner,
         just_uploaded=(request.args.get("just_uploaded") == "true")
     )
@@ -88,18 +89,30 @@ def unlock_shared_file(token: str):
     token_h = hash_token(token)
     record = FileRecord.query.filter_by(share_token_hash=token_h).first()
     if not record or is_file_expired(record):
+        if request.is_json:
+            return jsonify({"error": "File not found or expired."}), 404
         return redirect(url_for("downloads.view_shared_file", token=token))
 
-    csrf_token = request.form.get("csrf_token")
+    json_body = request.get_json(silent=True) or {}
+    csrf_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token") or json_body.get("csrf_token")
     if not validate_csrf(csrf_token):
+        if request.is_json:
+            return jsonify({"error": "Session expired or invalid security token. Please refresh."}), 403
         flash("Session expired or invalid form token. Please try again.", "danger")
         return redirect(url_for("downloads.view_shared_file", token=token))
 
-    password_attempt = (request.form.get("password") or "").strip()
+    password_attempt = (request.form.get("password") or json_body.get("password") or "").strip()
     if record.password_hash and check_password_hash(record.password_hash, password_attempt):
         session[f"unlocked_{record.id}"] = True
+        if request.is_json:
+            return jsonify({
+                "success": True,
+                "download_url": url_for("downloads.download_file", token=token)
+            }), 200
         return redirect(url_for("downloads.view_shared_file", token=token))
     else:
+        if request.is_json:
+            return jsonify({"error": "Incorrect PIN or password."}), 403
         flash("Incorrect PIN or password. Access to this transfer is restricted.", "danger")
         return redirect(url_for("downloads.view_shared_file", token=token))
 
@@ -182,8 +195,7 @@ def download_file(token: str):
 
     # Password authorization check if file is protected
     if record.has_password:
-        is_owner = bool(session.get(f"uploader_{token}"))
-        is_unlocked = is_owner or bool(session.get(f"unlocked_{record.id}"))
+        is_unlocked = bool(session.get(f"unlocked_{record.id}"))
         provided_pwd = request.args.get("password") or request.headers.get("X-File-Password")
         if provided_pwd and check_password_hash(record.password_hash, provided_pwd.strip()):
             is_unlocked = True

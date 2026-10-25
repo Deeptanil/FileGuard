@@ -269,16 +269,14 @@ def upload_file():
         db.session.add(record)
         db.session.commit()
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         current_app.logger.error(f"Failed to record file metadata: {e}")
         db.session.rollback()
         delete_stored_file(storage_id)
         return jsonify({"error": "Failed to record file metadata"}), 500
 
-    # Mark uploader session as owner and unlocked
+    # Mark uploader session as owner (require PIN unlock if password is set)
     session[f"uploader_{raw_token}"] = True
-    session[f"unlocked_{record.id}"] = True
+    session[f"unlocked_{record.id}"] = not bool(password_hash)
 
     # 7. Construct canonical URLs and QR Code
     canonical_base = current_app.config.get("CANONICAL_URL")
@@ -351,11 +349,12 @@ def update_file_settings(token: str):
     # 2. Update / Remove Password
     if data.get("remove_password") in (True, "true", "1"):
         record.password_hash = None
+        session[f"unlocked_{record.id}"] = True
     elif "password" in data:
         new_pwd = str(data.get("password", "")).strip()
         if new_pwd:
             record.password_hash = generate_password_hash(new_pwd, method="scrypt")
-            session[f"unlocked_{record.id}"] = True
+            session[f"unlocked_{record.id}"] = False
 
     # 3. Shorten Expiration if requested
     if "expiration_hours" in data:

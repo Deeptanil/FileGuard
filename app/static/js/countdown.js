@@ -2,6 +2,9 @@
  * FileGuard - Authoritative Expiration Countdown
  */
 function initCountdown(targetIsoString, token, onExpireCallback) {
+  if (window._fgCountdownTimer) {
+    clearTimeout(window._fgCountdownTimer);
+  }
   const targetDate = new Date(targetIsoString).getTime();
 
   function update() {
@@ -48,7 +51,7 @@ function initCountdown(targetIsoString, token, onExpireCallback) {
     if (minsEl) minsEl.textContent = String(minutes).padStart(2, "0");
     if (secsEl) secsEl.textContent = String(seconds).padStart(2, "0");
 
-    setTimeout(update, 1000);
+    window._fgCountdownTimer = setTimeout(update, 1000);
   }
 
   update();

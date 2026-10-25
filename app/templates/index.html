@@ -97,102 +97,113 @@
 
     <!-- Quick Dropzone on Homepage -->
     <div style="max-width: 680px; margin: 0 auto 3rem;">
-      <!-- 1. Dedicated Dropzone Area (Initialises Uploads Only) -->
+      <!-- 1. Dropzone Box (Turns Yellow & Shows File/Bundle Info in-place when files are selected) -->
       <div id="dropzone" class="dropzone" data-max-mb="100" data-allowed-exts="pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm">
         <input type="file" id="file-input" multiple style="display: none;">
         <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
         
-        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
-          <path d="M12 12v9"></path>
-          <path d="m16 16-4-4-4 4"></path>
-        </svg>
+        <!-- Initial Empty State -->
+        <div id="dropzone-initial">
+          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+            <path d="M12 12v9"></path>
+            <path d="m16 16-4-4-4 4"></path>
+          </svg>
 
-        <h3 class="dropzone-title">Click to select files, or drag & drop files / folders</h3>
-        <p class="dropzone-hint">
-          Multiple files & whole folders auto-packaged into a secure ZIP • 100 MB Limit • 12-Hour Device Quota
-        </p>
+          <h3 class="dropzone-title">Click to select files, or drag &amp; drop files / folders</h3>
+          <p class="dropzone-hint">
+            Multiple files &amp; whole folders auto-packaged into a secure ZIP • 100 MB Limit
+          </p>
 
-        <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
-          <button type="button" id="select-files-btn" class="btn btn-primary btn-sm" style="background: var(--comic-pink); color: #FFFFFF;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <span>Select Files</span>
-          </button>
-          <button type="button" id="select-folder-btn" class="btn btn-secondary btn-sm folder-select-btn" style="background: var(--comic-cyan); color: #000000;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-            <span>Select Folder</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 2. Selected File Preview & Progress (Separate section below dropzone) -->
-      <div id="file-preview" class="file-preview-card" style="display: none; margin-top: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <div style="text-align: left;">
-            <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; text-transform: uppercase; color: #000000; font-family: var(--font-pixel); margin-bottom: 0.25rem;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              <span>FILE READY</span>
-            </div>
-            <strong id="file-name-display" class="file-preview-name">filename.pdf</strong>
-            <div id="file-size-display" class="file-preview-size">0 KB</div>
+          <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
+            <button type="button" id="select-files-btn" class="btn btn-primary btn-sm" style="background: var(--comic-pink); color: #FFFFFF;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>Select Files</span>
+            </button>
+            <button type="button" id="select-folder-btn" class="btn btn-secondary btn-sm folder-select-btn" style="background: var(--comic-cyan); color: #000000;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Select Folder</span>
+            </button>
           </div>
-          <button type="button" id="upload-btn" class="btn btn-primary" style="background: var(--comic-pink); color: #FFFFFF; font-weight: 800; padding: 0.75rem 1.5rem; font-size: 0.95rem;">
-            UPLOAD NOW
-          </button>
+        </div>
+
+        <!-- Selected Files State (Replaces Initial State in the same space & turns box yellow) -->
+        <div id="dropzone-selected" style="display: none;">
+          <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.68rem; text-transform: uppercase; color: #000000; font-family: var(--font-pixel); margin-bottom: 0.6rem; background: #FFFFFF; padding: 0.25rem 0.6rem; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <span>FILES READY</span>
+          </div>
+
+          <h3 id="file-name-display" style="font-size: clamp(1.2rem, 3.2vw, 1.55rem); font-family: var(--font-display); color: #000000; margin: 0.25rem 0; word-break: break-word;">
+            filename.pdf
+          </h3>
+          <div id="file-size-display" style="font-size: 0.85rem; font-family: var(--font-mono); font-weight: 800; color: #1E293B; margin-bottom: 1.15rem;">
+            0 KB
+          </div>
+
+          <div style="border-top: 2px dashed rgba(0, 0, 0, 0.3); padding-top: 0.95rem; margin-top: 0.5rem;">
+            <div style="font-size: 0.72rem; font-family: var(--font-display); color: #000000; margin-bottom: 0.55rem; letter-spacing: 0.03em;">
+              UPLOAD MORE FILES OR FOLDERS
+            </div>
+            <div style="display: flex; justify-content: center; gap: 0.55rem; flex-wrap: wrap;">
+              <button type="button" id="add-more-files-btn" class="btn btn-primary btn-sm" style="background: var(--comic-pink); color: #FFFFFF; font-size: 0.75rem; padding: 0.4rem 0.85rem;">
+                + Upload More Files
+              </button>
+              <button type="button" id="add-more-folder-btn" class="btn btn-secondary btn-sm folder-select-btn" style="background: var(--comic-cyan); color: #000000; font-size: 0.75rem; padding: 0.4rem 0.85rem;">
+                + Upload Folder
+              </button>
+              <button type="button" id="clear-files-btn" class="btn btn-secondary btn-sm" style="background: #FFFFFF; color: #000000; font-size: 0.75rem; padding: 0.4rem 0.75rem;">
+                Clear
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- 2. Settings Section (Minimized by default, styled in sleek dark slate) -->
+      <div class="card" style="margin-top: 1rem; text-align: left; background: #1E293B; border: 3px solid #000000; border-radius: 8px; padding: 0.85rem 1.1rem; color: #FFFFFF; box-shadow: 4px 4px 0px #000000;">
+        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;" onclick="const b = document.getElementById('upload-options-body'); const t = document.getElementById('toggle-options-label'); if (b.style.display === 'none') { b.style.display = 'grid'; if (t) t.textContent = 'Hide'; } else { b.style.display = 'none'; if (t) t.textContent = 'Configure'; }">
+          <span style="font-family: var(--font-display); font-size: 0.82rem; color: var(--comic-yellow); font-weight: 900; display: flex; align-items: center; gap: 0.45rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--comic-yellow)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>TRANSFER SETTINGS (OPTIONAL)</span>
+          </span>
+          <span id="toggle-options-label" style="font-size: 0.72rem; color: #000000; font-weight: 800; background: var(--comic-cyan); padding: 0.18rem 0.55rem; border: 2px solid #000000; border-radius: 4px; box-shadow: 2px 2px 0px #000000;">Configure</span>
+        </div>
+
+        <div id="upload-options-body" style="display: none; margin-top: 0.85rem; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; padding-top: 0.85rem; border-top: 2px dashed #334155;">
+          <div>
+            <label for="opt-display-title" style="display: block; font-family: var(--font-display); font-size: 0.68rem; color: #CBD5E1; margin-bottom: 0.25rem;">CUSTOM TITLE</label>
+            <input type="text" id="opt-display-title" class="form-control" placeholder="Optional title" style="font-size: 0.76rem; padding: 0.4rem 0.6rem; background: #0F172A; color: #FFFFFF; border: 2px solid #475569; border-radius: 4px;">
+          </div>
+
+          <div>
+            <label for="opt-password" style="display: block; font-family: var(--font-display); font-size: 0.68rem; color: #CBD5E1; margin-bottom: 0.25rem;">PIN PROTECTION</label>
+            <input type="password" id="opt-password" class="form-control" placeholder="Optional PIN" style="font-size: 0.76rem; padding: 0.4rem 0.6rem; background: #0F172A; color: #FFFFFF; border: 2px solid #475569; border-radius: 4px;">
+          </div>
+
+          <div>
+            <label for="opt-expiration" style="display: block; font-family: var(--font-display); font-size: 0.68rem; color: #CBD5E1; margin-bottom: 0.25rem;">EXPIRATION</label>
+            <select id="opt-expiration" class="form-control" style="font-size: 0.76rem; padding: 0.4rem 0.6rem; background: #0F172A; color: #FFFFFF; border: 2px solid #475569; border-radius: 4px; cursor: pointer;">
+              <option value="12" selected>12 Hours</option>
+              <option value="6">6 Hours</option>
+              <option value="3">3 Hours</option>
+              <option value="1">1 Hour</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Primary "Get Shareable Link" Action Button -->
+      <button type="button" id="upload-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.95rem 1.5rem; font-size: 1.1rem; font-family: var(--font-display); background: var(--comic-pink); color: #FFFFFF; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center; justify-content: center;">
+        GET SHAREABLE LINK
+      </button>
 
       <div id="progress-container" class="progress-container" style="margin-top: 1rem;">
         <div id="progress-bar" class="progress-bar"></div>
       </div>
-      <div id="progress-percent" style="font-size: 0.95rem; color: #000000; font-weight: 900; font-family: var(--font-mono); margin-top: 0.5rem; text-align: center;"></div>
+      <div id="progress-percent" style="display: none; font-size: 0.85rem; color: var(--comic-yellow); background: #0F172A; border: 2px solid #000000; padding: 0.35rem 0.75rem; border-radius: 4px; font-weight: 800; font-family: var(--font-mono); margin-top: 0.5rem; text-align: center;"></div>
 
       <div id="upload-error" class="alert alert-danger" style="display: none; margin-top: 1rem; text-align: left;"></div>
-
-      <!-- 3. Dedicated Options & Security Settings Section (Below upload section) -->
-      <div class="card" style="margin-top: 1.5rem; text-align: left; background: #FFFFFF; border: 3px solid #000000; border-radius: 8px; padding: 1.1rem 1.25rem; color: #000000; box-shadow: 4px 4px 0px #000000;">
-        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;" onclick="const b = document.getElementById('upload-options-body'); b.style.display = (b.style.display === 'none' ? 'flex' : 'none');">
-          <span style="font-family: var(--font-display); font-size: 0.88rem; color: #000000; font-weight: 900; display: flex; align-items: center; gap: 0.45rem;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span>TRANSFER OPTIONS &amp; SECURITY SETTINGS (OPTIONAL)</span>
-          </span>
-          <span style="font-size: 0.75rem; color: #000000; font-weight: 800; background: var(--comic-yellow); padding: 0.2rem 0.55rem; border: 2px solid #000000; border-radius: 4px; box-shadow: 2px 2px 0px #000000;">[Toggle Options]</span>
-        </div>
-
-        <div id="upload-options-body" style="margin-top: 0.95rem; display: flex; flex-direction: column; gap: 0.75rem;">
-          <div>
-            <label for="opt-display-title" style="font-family: var(--font-display); font-size: 0.74rem; font-weight: 800; color: #000000; text-transform: uppercase;">Custom Display Title</label>
-            <input type="text" id="opt-display-title" class="form-control" placeholder="E.g. Biology Lab Report or Q4 Invoice (Leave empty to use filename)" style="font-size: 0.85rem; padding: 0.5rem 0.75rem; margin-top: 0.25rem; background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; border-radius: 4px;">
-          </div>
-
-          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 180px;">
-              <label for="opt-password" style="font-family: var(--font-display); font-size: 0.74rem; font-weight: 800; color: #000000; text-transform: uppercase;">Download PIN / Password</label>
-              <input type="password" id="opt-password" class="form-control" placeholder="Optional PIN to restrict download" style="font-size: 0.85rem; padding: 0.5rem 0.75rem; margin-top: 0.25rem; background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; border-radius: 4px;">
-            </div>
-            <div style="width: 140px;">
-              <label for="opt-expiration" style="font-family: var(--font-display); font-size: 0.74rem; font-weight: 800; color: #000000; text-transform: uppercase;">Lifespan</label>
-              <select id="opt-expiration" class="form-control" style="font-size: 0.85rem; padding: 0.5rem 0.75rem; margin-top: 0.25rem; background: #FFFFFF; color: #000000; border: 2px solid #000000; box-shadow: 2px 2px 0px #000000; border-radius: 4px; cursor: pointer; font-weight: 700;">
-                <option value="12" selected>12 Hours</option>
-                <option value="6">6 Hours</option>
-                <option value="3">3 Hours</option>
-                <option value="1">1 Hour</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Zero-Knowledge Client-Side E2EE Toggle -->
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.55rem; border-top: 2px dashed #000000; margin-top: 0.35rem;">
-            <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.82rem; font-weight: 800; color: #000000;">
-              <input type="checkbox" id="opt-e2ee" style="width: 16px; height: 16px; cursor: pointer; accent-color: #000000;">
-              <span>Enable Zero-Knowledge Client-Side E2EE (AES-256-GCM)</span>
-            </label>
-            <button type="button" onclick="openE2eeReviewModal()" style="background: none; border: none; color: #000000; text-decoration: underline; font-size: 0.78rem; cursor: pointer; font-weight: 800; padding: 0;">
-              [How E2EE Works &amp; Review]
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
