@@ -28,6 +28,28 @@ def create_app(config_class=None):
     db.init_app(app)
     limiter.init_app(app)
 
+    # Ensure database schema is migrated with new columns
+    with app.app_context():
+        try:
+            db.create_all()
+            # Perform safe alter table column additions for SQLite/Postgres
+            from sqlalchemy import inspect, text
+            inspector = inspect(db.engine)
+            if "file_records" in inspector.get_table_names():
+                existing_cols = {c["name"] for c in inspector.get_columns("file_records")}
+                with db.engine.connect() as conn:
+                    if "display_title" not in existing_cols:
+                        conn.execute(text("ALTER TABLE file_records ADD COLUMN display_title VARCHAR(255)"))
+                    if "password_hash" not in existing_cols:
+                        conn.execute(text("ALTER TABLE file_records ADD COLUMN password_hash VARCHAR(255)"))
+                    if "is_e2ee" not in existing_cols:
+                        conn.execute(text("ALTER TABLE file_records ADD COLUMN is_e2ee BOOLEAN DEFAULT 0"))
+                    if "is_encrypted_at_rest" not in existing_cols:
+                        conn.execute(text("ALTER TABLE file_records ADD COLUMN is_encrypted_at_rest BOOLEAN DEFAULT 1"))
+                    conn.commit()
+        except Exception:
+            pass
+
     # Register blueprints
     from app.routes.public import public_bp
     from app.routes.uploads import uploads_bp
@@ -43,6 +65,12 @@ def create_app(config_class=None):
 
     # Register HTTP error handlers
     register_error_handlers(app)
+
+    # Template context processor for security tokens
+    @app.context_processor
+    def inject_security_context():
+        from app.security import generate_csrf_token
+        return {"csrf_token": generate_csrf_token()}
 
     # Register global security response headers
     @app.after_request

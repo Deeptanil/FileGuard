@@ -13,11 +13,15 @@ class FileRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     storage_id = db.Column(db.String(64), unique=True, nullable=False, index=True)
     original_filename = db.Column(db.String(255), nullable=False)
+    display_title = db.Column(db.String(255), nullable=True)
     file_size = db.Column(db.BigInteger, nullable=False)
     file_extension = db.Column(db.String(32), nullable=False)
     detected_mime_type = db.Column(db.String(128), nullable=False)
     sha256_reference = db.Column(db.String(64), nullable=False)
     share_token_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(255), nullable=True)
+    is_e2ee = db.Column(db.Boolean, default=False, nullable=False)
+    is_encrypted_at_rest = db.Column(db.Boolean, default=True, nullable=False)
     uploaded_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False, index=True)
     status = db.Column(db.String(32), default="active", nullable=False, index=True)  # active, expired, deleted, tampered
@@ -29,6 +33,18 @@ class FileRecord(db.Model):
     # Relationships
     security_events = db.relationship("SecurityEvent", backref="file_record", lazy="dynamic", cascade="all, delete-orphan")
     integrity_checks = db.relationship("IntegrityCheck", backref="file_record", lazy="dynamic", cascade="all, delete-orphan")
+
+    @property
+    def display_name(self):
+        """User-facing title or original filename fallback."""
+        if self.display_title and self.display_title.strip():
+            return self.display_title.strip()
+        return self.original_filename
+
+    @property
+    def has_password(self):
+        """Whether download requires a password or PIN."""
+        return bool(self.password_hash)
 
     @property
     def is_expired(self):
@@ -46,9 +62,13 @@ class FileRecord(db.Model):
         data = {
             "id": self.id if include_sensitive else None,
             "filename": self.original_filename,
+            "display_title": self.display_name,
             "file_size": self.file_size,
             "extension": self.file_extension,
             "mime_type": self.detected_mime_type,
+            "has_password": self.has_password,
+            "is_e2ee": self.is_e2ee,
+            "is_encrypted_at_rest": self.is_encrypted_at_rest,
             "uploaded_at": self.uploaded_at.isoformat() + "Z",
             "expires_at": self.expires_at.isoformat() + "Z",
             "remaining_seconds": self.remaining_seconds,

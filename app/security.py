@@ -86,19 +86,39 @@ def compute_sha256(file_path_or_stream, chunk_size: int = 65536) -> str:
     """
     Calculate the SHA-256 hex digest of a file or stream.
     Supports either a Path/string or a file-like object with .read().
+    If the file is encrypted at rest (starts with FG_ENC_V1), decrypts and computes the digest of the payload.
+    If decryption fails due to ciphertext modification, returns a tamper-signaling digest.
     """
-    hasher = hashlib.sha256()
-    if hasattr(file_path_or_stream, "read"):
+    if isinstance(file_path_or_stream, (str, Path)):
+        p = Path(file_path_or_stream)
+        if not p.exists():
+            return ""
+        with open(p, "rb") as f:
+            header = f.read(9)
+            f.seek(0)
+            if header == b"FG_ENC_V1":
+                data = f.read()
+                try:
+                    decrypted = decrypt_at_rest(data)
+                    return hashlib.sha256(decrypted).hexdigest()
+                except Exception:
+                    # Ciphertext or GCM authentication tag corrupted/tampered
+                    return "TAMPERED_CIPHERTEXT_OR_INVALID_GCM_AUTH_TAG"
+            else:
+                hasher = hashlib.sha256()
+                while chunk := f.read(chunk_size):
+                    hasher.update(chunk)
+                return hasher.hexdigest()
+    elif hasattr(file_path_or_stream, "read"):
+        hasher = hashlib.sha256()
         pos = file_path_or_stream.tell() if hasattr(file_path_or_stream, "tell") else 0
         file_path_or_stream.seek(0)
         while chunk := file_path_or_stream.read(chunk_size):
             hasher.update(chunk)
         file_path_or_stream.seek(pos)
+        return hasher.hexdigest()
     else:
-        with open(file_path_or_stream, "rb") as f:
-            while chunk := f.read(chunk_size):
-                hasher.update(chunk)
-    return hasher.hexdigest()
+        return hashlib.sha256(file_path_or_stream).hexdigest()
 
 
 def sanitize_filename(filename: str) -> tuple[str, str]:
@@ -174,4 +194,53 @@ def admin_required(f):
             return redirect(url_for("admin.login", next=request.path))
         return f(*args, **kwargs)
     return decorated_function
+
+
+# ============================================================================
+# Transparent AES-256-GCM Storage Encryption at Rest
+# ============================================================================
+
+def get_storage_master_key() -> bytes:
+    """Derive a 256-bit AES-GCM master key deterministically from application SECRET_KEY."""
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+    from cryptography.hazmat.primitives import hashes
+    secret = current_app.config.get("SECRET_KEY", "dev-secret-key-fileguard-ins-2026")
+    if isinstance(secret, str):
+        secret = secret.encode("utf-8")
+    hkdf = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=b"FileGuardStorageSaltV1",
+        info=b"FileGuardAtRestEncryptionKey"
+    )
+    return hkdf.derive(secret)
+
+
+def encrypt_at_rest(data: bytes) -> bytes:
+    """
+    Encrypt raw plaintext bytes using AES-256-GCM authenticated cipher before writing to disk/S3.
+    Format: b'FG_ENC_V1' (9 bytes) + 12-byte random nonce + ciphertext & 16-byte authentication tag.
+    """
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    key = get_storage_master_key()
+    aesgcm = AESGCM(key)
+    nonce = secrets.token_bytes(12)  # 96-bit random IV
+    ciphertext = aesgcm.encrypt(nonce, data, b"FileGuardAtRest")
+    return b"FG_ENC_V1" + nonce + ciphertext
+
+
+def decrypt_at_rest(stored_bytes: bytes) -> bytes:
+    """
+    Decrypt stored bytes using AES-256-GCM.
+    If bytes do not have the FG_ENC_V1 header, returns raw bytes directly for backward compatibility.
+    """
+    if not stored_bytes.startswith(b"FG_ENC_V1") or len(stored_bytes) < 37:
+        return stored_bytes
+
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    key = get_storage_master_key()
+    aesgcm = AESGCM(key)
+    nonce = stored_bytes[9:21]
+    ciphertext = stored_bytes[21:]
+    return aesgcm.decrypt(nonce, ciphertext, b"FileGuardAtRest")
 

@@ -161,6 +161,50 @@
     </div>
   </footer>
 
+  <!-- Zero-Knowledge Client-Side E2EE Review Modal -->
+  <div id="e2ee-review-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); z-index: 10000; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div class="card" style="background: #0F172A; border: 4px solid var(--comic-cyan); box-shadow: 10px 10px 0px #000; max-width: 620px; width: 100%; padding: 2rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 8px; background: rgba(0, 240, 255, 0.15); border: 2px solid var(--comic-cyan); color: var(--comic-cyan); flex-shrink: 0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div>
+          <h3 style="font-family: var(--font-display); font-size: 1.35rem; color: #FFFFFF; margin: 0;">CLIENT-SIDE ZERO-KNOWLEDGE E2EE</h3>
+          <span class="badge" style="background: var(--comic-lime); color: #000; font-size: 0.65rem; margin-top: 0.2rem;">AES-256-GCM BROWSER ENCRYPTION</span>
+        </div>
+      </div>
+
+      <div style="color: #CBD5E1; font-size: 0.9rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.85rem;">
+        <p>
+          <strong style="color: var(--comic-cyan);">1. Encryption happens in your browser:</strong> Before your file is transmitted over the internet, your browser generates a random 256-bit AES-GCM symmetric key via the native Web Crypto API and encrypts the file bytes locally on your device.
+        </p>
+        <p>
+          <strong style="color: var(--comic-yellow);">2. Zero knowledge on the server:</strong> The secret decryption key is placed exclusively in the URL hash fragment (<code>#key=...</code>). By internet specification (RFC 3986), hash fragments are <em>never</em> sent to servers in HTTP requests. The server only receives encrypted ciphertext.
+        </p>
+        <p>
+          <strong style="color: var(--comic-pink);">3. Recipient-only decryption:</strong> Only recipients who receive your full link with the <code>#key=...</code> fragment can decrypt and view the file. Even if our servers or cloud buckets were completely breached, the attacker would only have unusable ciphertext.
+        </p>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.75rem;">
+        <button type="button" class="btn btn-primary" onclick="closeE2eeReviewModal()" style="background: var(--comic-cyan); color: #000; font-weight: 800;">
+          GOT IT &amp; CLOSE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openE2eeReviewModal() {
+      const modal = document.getElementById("e2ee-review-modal");
+      if (modal) modal.style.display = "flex";
+    }
+    function closeE2eeReviewModal() {
+      const modal = document.getElementById("e2ee-review-modal");
+      if (modal) modal.style.display = "none";
+    }
+  </script>
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>

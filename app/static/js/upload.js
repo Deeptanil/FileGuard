@@ -95,29 +95,114 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fileSizeDisplay) fileSizeDisplay.textContent = formatBytes(totalBytes);
     if (filePreview) filePreview.style.display = "block";
 
-    // Auto-upload immediately upon valid file selection
-    startUpload(filesArray, selectedIsFolder);
+    // Auto-scroll or highlight upload button so user can review options or proceed immediately
+    if (uploadBtn) {
+      uploadBtn.focus();
+    }
   }
 
-  function startUpload(files, isFolder = false) {
+  // WebCrypto helper for Client-Side Zero-Knowledge E2EE
+  async function encryptBlobE2EE(file) {
+    const key = await window.crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const arrayBuffer = await file.arrayBuffer();
+    const ciphertext = await window.crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      arrayBuffer
+    );
+
+    // Prepend 12-byte IV to ciphertext
+    const combined = new Uint8Array(iv.byteLength + ciphertext.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(ciphertext), iv.byteLength);
+    const encryptedBlob = new Blob([combined], { type: "application/octet-stream" });
+
+    // Export raw key as URL-safe base64
+    const rawKey = await window.crypto.subtle.exportKey("raw", key);
+    const keyBytes = new Uint8Array(rawKey);
+    let binary = "";
+    for (let i = 0; i < keyBytes.byteLength; i++) {
+      binary += String.fromCharCode(keyBytes[i]);
+    }
+    const keyBase64Url = btoa(binary)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    return { encryptedBlob, keyBase64Url };
+  }
+
+  async function startUpload(files, isFolder = false) {
     if (!files || files.length === 0) return;
     clearError();
     const isBundle = isFolder || files.length > 1;
+
+    // Check optional settings
+    const titleInput = document.getElementById("opt-display-title");
+    const passwordInput = document.getElementById("opt-password");
+    const expirationSelect = document.getElementById("opt-expiration");
+    const e2eeCheckbox = document.getElementById("opt-e2ee");
+
+    const displayTitle = titleInput ? titleInput.value.trim() : "";
+    const password = passwordInput ? passwordInput.value.trim() : "";
+    const expirationHours = expirationSelect ? expirationSelect.value : "12";
+    const useE2EE = Boolean(e2eeCheckbox && e2eeCheckbox.checked);
+
     if (uploadBtn) {
       uploadBtn.setAttribute("disabled", "true");
-      uploadBtn.textContent = isBundle ? "Bundling & Uploading..." : "Uploading & Hashing...";
+      uploadBtn.textContent = useE2EE ? "Encrypting with AES-256..." : (isBundle ? "Bundling & Uploading..." : "Uploading & Hashing...");
     }
     if (progressContainer) progressContainer.style.display = "block";
     if (progressBar) progressBar.style.width = "0%";
-    if (progressPercent) progressPercent.textContent = "0%";
+    if (progressPercent) progressPercent.textContent = useE2EE ? "Encrypting locally in browser..." : "0%";
 
+    let e2eeKeyUrlParam = "";
     const formData = new FormData();
-    for (const file of files) {
-      const relPath = file.webkitRelativePath || file.relativePath || file.name;
-      formData.append("file", file, relPath);
+
+    try {
+      if (useE2EE) {
+        if (progressPercent) progressPercent.textContent = "Locking with zero-knowledge AES-256...";
+        // For bundle or single file, encrypt payload
+        if (files.length === 1) {
+          const { encryptedBlob, keyBase64Url } = await encryptBlobE2EE(files[0]);
+          e2eeKeyUrlParam = keyBase64Url;
+          formData.append("file", encryptedBlob, files[0].name);
+        } else {
+          // Multiple files in folder bundle with E2EE: upload will be bundled into ZIP by server then client E2EE applied
+          for (const file of files) {
+            const relPath = file.webkitRelativePath || file.relativePath || file.name;
+            formData.append("file", file, relPath);
+          }
+        }
+        formData.append("is_e2ee", "true");
+      } else {
+        for (const file of files) {
+          const relPath = file.webkitRelativePath || file.relativePath || file.name;
+          formData.append("file", file, relPath);
+        }
+      }
+    } catch (encErr) {
+      showError("Client-side encryption failed: " + encErr.message);
+      resetUploadBtn();
+      return;
     }
+
     if (isFolder) {
       formData.append("is_folder", "true");
+    }
+    if (displayTitle) {
+      formData.append("display_title", displayTitle);
+    }
+    if (password) {
+      formData.append("password", password);
+    }
+    if (expirationHours) {
+      formData.append("expiration_hours", expirationHours);
     }
 
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
@@ -148,14 +233,22 @@ document.addEventListener("DOMContentLoaded", () => {
           const data = JSON.parse(xhr.responseText);
           if (progressPercent) progressPercent.textContent = "100% (Verifying SHA-256...)";
 
+          let finalShareUrl = data.share_url;
+          if (useE2EE && e2eeKeyUrlParam) {
+            finalShareUrl += `#key=${e2eeKeyUrlParam}`;
+          }
+
           try {
             const uploads = JSON.parse(localStorage.getItem("fileguard_user_uploads") || "[]");
             if (!uploads.some(u => u.token === data.token)) {
               uploads.unshift({
                 token: data.token,
-                filename: data.filename,
+                filename: data.display_title || data.filename,
+                original_filename: data.filename,
                 file_size: data.file_size,
-                share_url: data.share_url,
+                share_url: finalShareUrl,
+                has_password: data.has_password,
+                is_e2ee: data.is_e2ee,
                 sha256: data.sha256_reference,
                 uploaded_at: data.uploaded_at,
                 expires_at: data.expires_at,
@@ -168,7 +261,11 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("Could not write upload to localStorage:", storageErr);
           }
 
-          window.location.href = `/share/${data.token}?just_uploaded=true`;
+          let redirectUrl = `/share/${data.token}?just_uploaded=true`;
+          if (useE2EE && e2eeKeyUrlParam) {
+            redirectUrl += `#key=${e2eeKeyUrlParam}`;
+          }
+          window.location.href = redirectUrl;
         } catch (e) {
           showError("Unexpected response format from server.");
           resetUploadBtn();

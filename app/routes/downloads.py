@@ -7,12 +7,17 @@ from flask import (
     jsonify,
     current_app,
     make_response,
-    request
+    request,
+    session,
+    flash,
+    redirect,
+    url_for
 )
+from werkzeug.security import check_password_hash
 from app.extensions import db, limiter
 from app.models import FileRecord
-from app.storage import get_storage_path, delete_stored_file
-from app.security import hash_token, compute_sha256
+from app.storage import get_storage_path, delete_stored_file, get_decrypted_stream
+from app.security import hash_token, compute_sha256, validate_csrf
 from app.expiration import is_file_expired
 from app.integrity import verify_file_integrity
 from app.audit import (
@@ -52,6 +57,11 @@ def view_shared_file(token: str):
         )
         return render_template("expired.html", file=record), 410
 
+    # Check password lock status
+    is_owner = bool(session.get(f"uploader_{token}"))
+    is_unlocked = is_owner or bool(session.get(f"unlocked_{record.id}"))
+    is_locked = bool(record.has_password and not is_unlocked)
+
     from app.routes.uploads import generate_qr_base64
     canonical_base = current_app.config.get("CANONICAL_URL")
     if not canonical_base or "localhost" in canonical_base:
@@ -65,8 +75,33 @@ def view_shared_file(token: str):
         token=token,
         share_url=share_url,
         qr_code_base64=qr_data,
+        is_locked=is_locked,
+        is_owner=is_owner,
         just_uploaded=(request.args.get("just_uploaded") == "true")
     )
+
+
+@downloads_bp.route("/share/<token>/unlock", methods=["POST"])
+@limiter.limit("15 per minute")
+def unlock_shared_file(token: str):
+    """Verify submitted PIN or password and unlock recipient session."""
+    token_h = hash_token(token)
+    record = FileRecord.query.filter_by(share_token_hash=token_h).first()
+    if not record or is_file_expired(record):
+        return redirect(url_for("downloads.view_shared_file", token=token))
+
+    csrf_token = request.form.get("csrf_token")
+    if not validate_csrf(csrf_token):
+        flash("Session expired or invalid form token. Please try again.", "danger")
+        return redirect(url_for("downloads.view_shared_file", token=token))
+
+    password_attempt = (request.form.get("password") or "").strip()
+    if record.password_hash and check_password_hash(record.password_hash, password_attempt):
+        session[f"unlocked_{record.id}"] = True
+        return redirect(url_for("downloads.view_shared_file", token=token))
+    else:
+        flash("Incorrect PIN or password. Access to this transfer is restricted.", "danger")
+        return redirect(url_for("downloads.view_shared_file", token=token))
 
 
 @downloads_bp.route("/api/files/<token>/status")
@@ -145,6 +180,18 @@ def download_file(token: str):
         )
         return render_template("errors/invalid_share.html"), 404
 
+    # Password authorization check if file is protected
+    if record.has_password:
+        is_owner = bool(session.get(f"uploader_{token}"))
+        is_unlocked = is_owner or bool(session.get(f"unlocked_{record.id}"))
+        provided_pwd = request.args.get("password") or request.headers.get("X-File-Password")
+        if provided_pwd and check_password_hash(record.password_hash, provided_pwd.strip()):
+            is_unlocked = True
+            session[f"unlocked_{record.id}"] = True
+
+        if not is_unlocked:
+            return jsonify({"error": "Password required to access this file"}), 403
+
     # Check 2 & 3: Expiration & Status Verification
     if is_file_expired(record):
         log_security_event(
@@ -196,20 +243,25 @@ def download_file(token: str):
             observed=current_sha256
         ), 409
 
-    # All 5 security checks passed: Serve the file safely
+    # All 5 security checks passed: Serve the file safely (decrypting if stored under AES-256-GCM)
     log_security_event(
         event_type=EVENT_DOWNLOAD_SUCCESS,
         outcome="SUCCESS",
         severity="INFO",
         file_record_id=record.id,
-        details={"filename": record.original_filename, "bytes": record.file_size}
+        details={"filename": record.original_filename, "display_title": record.display_name, "bytes": record.file_size}
     )
+
+    try:
+        stream = get_decrypted_stream(record.storage_id)
+    except Exception as e:
+        return render_template("errors/server_error.html", message="Failed to decrypt file stream"), 500
 
     response = make_response(
         send_file(
-            path,
+            stream,
             as_attachment=True,
-            download_name=record.original_filename,
+            download_name=record.display_name,
             mimetype=record.detected_mime_type
         )
     )

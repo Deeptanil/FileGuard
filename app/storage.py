@@ -1,4 +1,5 @@
 import os
+import io
 import uuid
 import hashlib
 from pathlib import Path
@@ -66,11 +67,12 @@ def get_storage_path(storage_id: str) -> Path:
     return target
 
 
-def save_upload_stream(file_storage) -> tuple[str, int, str]:
+def save_upload_stream(file_storage, encrypt_at_rest_flag: bool = True) -> tuple[str, int, str]:
     """
     Save incoming FileStorage to storage under a generated storage ID.
-    Calculates SHA-256 and byte length during write.
-    If STORAGE_BACKEND is 's3', also pushes the file to Backblaze B2 / S3 bucket.
+    Applies transparent AES-256-GCM encryption at rest before writing to disk / S3.
+    Calculates SHA-256 and byte length of the original content.
+    If STORAGE_BACKEND is 's3', also pushes the encrypted file to Backblaze B2 / S3 bucket.
     Returns: (storage_id, byte_size, sha256_hash)
     """
     storage_dir = Path(current_app.config["STORAGE_DIR"]).resolve()
@@ -82,15 +84,25 @@ def save_upload_stream(file_storage) -> tuple[str, int, str]:
     hasher = hashlib.sha256()
     bytes_written = 0
     max_bytes = current_app.config["MAX_CONTENT_LENGTH"]
+    raw_buffer = io.BytesIO()
 
     try:
+        while chunk := file_storage.read(262144):  # 256 KB streaming buffer
+            bytes_written += len(chunk)
+            if bytes_written > max_bytes:
+                raise StorageError(f"File exceeded maximum permitted size ({current_app.config['MAX_CONTENT_LENGTH_MB']} MB)")
+            hasher.update(chunk)
+            raw_buffer.write(chunk)
+
+        raw_bytes = raw_buffer.getvalue()
+        if encrypt_at_rest_flag:
+            from app.security import encrypt_at_rest
+            payload_to_store = encrypt_at_rest(raw_bytes)
+        else:
+            payload_to_store = raw_bytes
+
         with open(target_path, "wb") as f:
-            while chunk := file_storage.read(262144):  # 256 KB high-throughput streaming buffer
-                bytes_written += len(chunk)
-                if bytes_written > max_bytes:
-                    raise StorageError(f"File exceeded maximum permitted size ({current_app.config['MAX_CONTENT_LENGTH_MB']} MB)")
-                hasher.update(chunk)
-                f.write(chunk)
+            f.write(payload_to_store)
 
         # Upload to S3/Backblaze B2 if S3 backend is enabled with TransferConfig for multi-threaded upload
         if current_app.config.get("STORAGE_BACKEND") == "s3":
@@ -113,6 +125,26 @@ def save_upload_stream(file_storage) -> tuple[str, int, str]:
         raise e
 
     return storage_id, bytes_written, hasher.hexdigest()
+
+
+def get_decrypted_stream(storage_id: str) -> io.BytesIO:
+    """
+    Read stored file and decrypt it using AES-256-GCM if encrypted at rest.
+    Returns a BytesIO stream of the decrypted plaintext file.
+    """
+    path = get_storage_path(storage_id)
+    if not path.exists():
+        raise StorageError(f"Storage file {storage_id} does not exist.")
+    with open(path, "rb") as f:
+        stored_bytes = f.read()
+
+    from app.security import decrypt_at_rest
+    try:
+        decrypted_bytes = decrypt_at_rest(stored_bytes)
+    except Exception as e:
+        raise StorageError(f"Cryptographic authentication failed on storage block: {str(e)}")
+
+    return io.BytesIO(decrypted_bytes)
 
 
 def delete_stored_file(storage_id: str) -> bool:

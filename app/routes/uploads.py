@@ -4,7 +4,8 @@ import zipfile
 import base64
 from datetime import timedelta
 import qrcode
-from flask import Blueprint, request, jsonify, render_template, current_app, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, current_app, redirect, url_for, session
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 from app.extensions import db, limiter
 from app.models import FileRecord, utc_now
@@ -228,22 +229,37 @@ def upload_file():
         )
         return jsonify({"error": quota_err}), 429
 
-    # 5. Generate sharing token & calculate strict 12-hour expiration
+    # 5. Generate sharing token & calculate expiration
     raw_token, token_hash = generate_share_token()
     upload_time = utc_now()
-    expiration_hours = current_app.config["EXPIRATION_HOURS"]
+    default_exp_hours = current_app.config.get("EXPIRATION_HOURS", 12)
+    try:
+        req_exp_hours = int(request.form.get("expiration_hours", default_exp_hours))
+        expiration_hours = max(1, min(12, req_exp_hours))
+    except (ValueError, TypeError):
+        expiration_hours = default_exp_hours
     expires_time = upload_time + timedelta(hours=expiration_hours)
+
+    # Optional custom title & PIN/password protection
+    display_title = (request.form.get("display_title") or "").strip() or None
+    raw_password = (request.form.get("password") or "").strip()
+    password_hash = generate_password_hash(raw_password, method="scrypt") if raw_password else None
+    is_e2ee = (request.form.get("is_e2ee") == "true")
 
     # 6. Save metadata record to database
     try:
         record = FileRecord(
             storage_id=storage_id,
             original_filename=clean_name,
+            display_title=display_title,
             file_size=byte_size,
             file_extension=ext,
             detected_mime_type=detected_mime,
             sha256_reference=sha256_hash,
             share_token_hash=token_hash,
+            password_hash=password_hash,
+            is_e2ee=is_e2ee,
+            is_encrypted_at_rest=True,
             uploaded_at=upload_time,
             expires_at=expires_time,
             status="active",
@@ -256,6 +272,10 @@ def upload_file():
         db.session.rollback()
         delete_stored_file(storage_id)
         return jsonify({"error": "Failed to record file metadata"}), 500
+
+    # Mark uploader session as owner and unlocked
+    session[f"uploader_{raw_token}"] = True
+    session[f"unlocked_{record.id}"] = True
 
     # 7. Construct canonical URLs and QR Code
     canonical_base = current_app.config.get("CANONICAL_URL")
@@ -273,8 +293,11 @@ def upload_file():
         file_record_id=record.id,
         details={
             "filename": clean_name,
+            "display_title": record.display_name,
             "size": byte_size,
             "sha256": sha256_hash,
+            "has_password": bool(password_hash),
+            "is_e2ee": is_e2ee,
             "expires_at": expires_time.isoformat() + "Z"
         }
     )
@@ -285,12 +308,71 @@ def upload_file():
         "share_url": share_url,
         "qr_code_base64": qr_data,
         "filename": clean_name,
+        "display_title": record.display_name,
         "file_size": byte_size,
+        "has_password": bool(password_hash),
+        "is_e2ee": is_e2ee,
         "sha256_reference": sha256_hash,
         "uploaded_at": upload_time.isoformat() + "Z",
         "expires_at": expires_time.isoformat() + "Z",
         "remaining_seconds": int((expires_time - upload_time).total_seconds())
     }), 201
+
+
+@uploads_bp.route("/api/files/<token>/settings", methods=["POST"])
+@limiter.limit("20 per minute")
+def update_file_settings(token: str):
+    """
+    Allow uploader to adjust title, password, or shorten expiration post-upload.
+    """
+    token_h = hash_token(token)
+    record = FileRecord.query.filter_by(share_token_hash=token_h).first()
+    if not record or record.status in ("deleted", "tampered") or record.is_expired:
+        return jsonify({"error": "File not found or inactive"}), 404
+
+    is_owner = bool(session.get(f"uploader_{token}"))
+    if not is_owner:
+        return jsonify({"error": "Unauthorized. Only the uploader can modify transfer settings."}), 403
+
+    csrf_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token") or (request.get_json(silent=True) or {}).get("csrf_token")
+    if csrf_token and not validate_csrf(csrf_token):
+        return jsonify({"error": "Invalid CSRF token"}), 403
+
+    data = request.get_json(silent=True) or request.form.to_dict()
+
+    # 1. Update Display Title
+    if "display_title" in data:
+        new_title = str(data.get("display_title", "")).strip()
+        record.display_title = new_title[:200] if new_title else None
+
+    # 2. Update / Remove Password
+    if data.get("remove_password") in (True, "true", "1"):
+        record.password_hash = None
+    elif "password" in data:
+        new_pwd = str(data.get("password", "")).strip()
+        if new_pwd:
+            record.password_hash = generate_password_hash(new_pwd, method="scrypt")
+            session[f"unlocked_{record.id}"] = True
+
+    # 3. Shorten Expiration if requested
+    if "expiration_hours" in data:
+        try:
+            exp_h = max(1, min(12, int(data.get("expiration_hours"))))
+            new_exp = record.uploaded_at + timedelta(hours=exp_h)
+            if new_exp > utc_now():
+                record.expires_at = new_exp
+        except (ValueError, TypeError):
+            pass
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "display_title": record.display_name,
+        "has_password": record.has_password,
+        "expires_at": record.expires_at.isoformat() + "Z",
+        "remaining_seconds": record.remaining_seconds
+    }), 200
 
 
 @uploads_bp.route("/upload-success/<token>")
