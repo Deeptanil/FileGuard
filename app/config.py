@@ -82,6 +82,7 @@ class TestingConfig(Config):
     RATELIMIT_ENABLED = False
     WTF_CSRF_ENABLED = False
     STORAGE_BACKEND = "local"
+    VIRUSTOTAL_API_KEY = ""
 
 
 class ProductionConfig(Config):

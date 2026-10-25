@@ -23,6 +23,7 @@ def app():
         STORAGE_DIR = Path(temp_storage)
         WTF_CSRF_ENABLED = False
         RATELIMIT_ENABLED = False
+        VIRUSTOTAL_API_KEY = ""
 
     app = create_app(TestAppConfig)
 

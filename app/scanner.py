@@ -148,7 +148,7 @@ def check_virustotal_hash(sha256_hash: str, api_key: str = None, min_positives: 
             return {
                 "status": "unscanned",
                 "positives": 0,
-                "details": "VirusTotal API rate limit reached"
+                "details": "VirusTotal daily API quota exceeded (500/500 requests used). Resets at 00:00 UTC."
             }
         elif e.code == 401:
             return {
