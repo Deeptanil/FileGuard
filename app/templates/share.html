@@ -113,6 +113,21 @@
 
       <!-- Full-Width Download Button & Inline PIN Unlock -->
       <div style="margin-top: 1.35rem; padding-top: 1.2rem; border-top: 2px dashed #334155;">
+
+        {% if file.file_extension|lower in ['exe', 'msi', 'bat', 'cmd', 'ps1', 'vbs', 'scr', 'iso', 'jar', 'apk', 'com', 'pif', 'hta', 'cpl'] %}
+        <div style="background: rgba(239, 68, 68, 0.12); border: 2px solid var(--comic-pink); border-left: 6px solid var(--comic-pink); padding: 0.75rem 0.9rem; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.65rem;">
+          <span style="font-size: 1.2rem; line-height: 1;">⚠️</span>
+          <div style="flex: 1;">
+            <strong style="color: var(--comic-pink); font-family: var(--font-pixel); font-size: 0.7rem; display: block; margin-bottom: 0.2rem; letter-spacing: 0.02em;">
+              EXECUTABLE APPLICATION / SCRIPT
+            </strong>
+            <p style="margin: 0; font-size: 0.78rem; color: #CBD5E1; line-height: 1.4;">
+              This file contains an executable program or script (<code>.{{ file.file_extension|lower }}</code>). Only open executables from verified senders you trust.
+            </p>
+          </div>
+        </div>
+        {% endif %}
+
         <a href="{{ url_for('downloads.download_file', token=token) }}" id="download-btn" onclick="handleDownloadClick(event)" class="btn btn-accent" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem; font-size: clamp(1rem, 3vw, 1.25rem); background: var(--comic-yellow); color: #000000 !important; font-weight: 900; border: 3px solid #000000; box-shadow: 5px 5px 0px #000000; text-align: center; text-decoration: none;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.8" style="flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           <span style="color: #000000 !important;">DOWNLOAD NOW</span>
@@ -127,6 +142,12 @@
           <span>Pre-Flight SHA-256 Validated</span>
           <span style="color: #475569;">•</span>
           <span style="color: var(--comic-yellow);">12h Self-Destruct</span>
+        </div>
+
+        <div style="text-align: center; margin-top: 0.75rem;">
+          <a href="{{ url_for('public.report_abuse', token=token) }}" style="color: #64748B; font-size: 0.72rem; text-decoration: underline; transition: color 0.15s ease;" onmouseover="this.style.color='var(--comic-pink)'" onmouseout="this.style.color='#64748B'">
+            Report Content Abuse / Takedown Request
+          </a>
         </div>
 
         <div id="inline-pin-box" style="display: none; margin-top: 0.85rem; padding: 0.85rem; background: #1E293B; border: 2px solid #000000; border-radius: 4px; box-shadow: 3px 3px 0px #000000;">

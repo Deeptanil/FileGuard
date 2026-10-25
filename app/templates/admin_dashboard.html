@@ -106,6 +106,14 @@
       <div class="stat-title" style="color: var(--comic-pink);">Integrity Violations</div>
       <div class="stat-value" style="color: {% if integrity_failures > 0 %}var(--comic-pink){% else %}#64748B{% endif %};">{{ integrity_failures }}</div>
     </div>
+    <div class="stat-card" style="border-top: 6px solid {% if pending_abuse_reports > 0 %}var(--comic-pink){% else %}var(--comic-cyan){% endif %};">
+      <div class="stat-title" style="color: {% if pending_abuse_reports > 0 %}var(--comic-pink){% else %}var(--comic-cyan){% endif %};">Abuse Reports</div>
+      <div class="stat-value" style="color: {% if pending_abuse_reports > 0 %}var(--comic-pink){% else %}#64748B{% endif %};">{{ pending_abuse_reports }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 6px solid #64748B;">
+      <div class="stat-title" style="color: #94A3B8;">Quarantined Hashes</div>
+      <div class="stat-value" style="color: #CBD5E1;">{{ total_blocked_hashes }}</div>
+    </div>
   </div>
 
   <!-- Recent Security Events Section -->

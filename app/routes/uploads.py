@@ -8,7 +8,7 @@ from flask import Blueprint, request, jsonify, render_template, current_app, red
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 from app.extensions import db, limiter
-from app.models import FileRecord, utc_now
+from app.models import FileRecord, BlockedHash, utc_now
 from app.storage import save_upload_stream, StorageError, delete_stored_file
 from app.security import (
     inspect_file_type,
@@ -216,6 +216,21 @@ def upload_file():
     if byte_size == 0:
         delete_stored_file(storage_id)
         return jsonify({"error": "Empty file uploads are not permitted"}), 400
+
+    # 3.5. Prohibited Hash Quarantine Check
+    blocked = BlockedHash.query.filter_by(sha256_hash=sha256_hash).first()
+    if blocked:
+        delete_stored_file(storage_id)
+        log_security_event(
+            event_type="BLOCKED_HASH_UPLOAD_ATTEMPT",
+            outcome="BLOCKED",
+            severity="HIGH",
+            ip_address=client_ip,
+            details=f"Prohibited SHA-256 upload attempt: {sha256_hash[:16]}... Reason: {blocked.reason}"
+        )
+        return jsonify({
+            "error": f"Upload rejected: This file matches a prohibited content signature ({blocked.reason}). FileGuard prohibits illegal, abusive, or malicious content."
+        }), 403
 
     # 4. Strict IP Quota Post-Check (Authoritative byte size comparison)
     quota_ok, quota_err, _ = check_ip_upload_quota(client_ip, byte_size)

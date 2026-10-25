@@ -46,6 +46,7 @@ The administrative module provides structured security monitoring and tamper inv
 7. Verification, Testing & Team Contributions
 FileGuard was validated with an automated Pytest test suite of 48 test cases covering functional, cryptographic integrity, security penetration (OWASP WSTG v4.2), and SEO domains (100% pass rate):
 
+
 Team Member Contributions (Listed Alphabetically)
 - Aditya Abhijit (Student ID: 245811404): Engineered the SHA-256 cryptographic pre-flight verification pipeline; built the OS filesystem inode metadata auditing module; created the interactive bit-flip tampering simulator; designed the structured security audit event logger; developed automated test suites for file tampering and missing file detection.
 - Deeptanil Sinha (Student ID: 245811402): Designed the end-to-end full-stack architecture and Neo-Brutalist UI; engineered the in-memory streaming ZIP packager for folder uploads; implemented client-IP quota controls; integrated Neon Serverless PostgreSQL and Backblaze B2 S3 multipart transfers; developed the client-side localStorage vault with batch status synchronization.

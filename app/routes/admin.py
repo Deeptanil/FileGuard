@@ -10,8 +10,17 @@ from flask import (
     jsonify
 )
 from app.extensions import db, limiter
-from app.models import Administrator, FileRecord, SecurityEvent, IntegrityCheck, utc_now
-from app.security import admin_required, generate_csrf_token, validate_csrf
+from app.models import (
+    Administrator,
+    FileRecord,
+    SecurityEvent,
+    IntegrityCheck,
+    BlockedHash,
+    AbuseReport,
+    utc_now
+)
+from app.security import admin_required, generate_csrf_token, validate_csrf, hash_token
+from app.storage import delete_stored_file
 from app.cleanup import run_expired_files_cleanup
 from app.audit import (
     log_security_event,
@@ -106,6 +115,8 @@ def dashboard():
     total_downloads = SecurityEvent.query.filter_by(event_type="FILE_DOWNLOAD_SUCCESS").count()
     expired_denials = SecurityEvent.query.filter_by(event_type="DOWNLOAD_BLOCKED_EXPIRED").count()
     integrity_failures = SecurityEvent.query.filter_by(event_type="INTEGRITY_CHECK_FAIL").count()
+    pending_abuse_reports = AbuseReport.query.filter_by(status="pending").count()
+    total_blocked_hashes = BlockedHash.query.count()
 
     # Storage Usage Calculation (Active bytes stored in S3/disk)
     active_bytes_query = db.session.query(func.sum(FileRecord.file_size)).filter_by(status="active").scalar() or 0
@@ -155,6 +166,8 @@ def dashboard():
         total_downloads=total_downloads,
         expired_denials=expired_denials,
         integrity_failures=integrity_failures,
+        pending_abuse_reports=pending_abuse_reports,
+        total_blocked_hashes=total_blocked_hashes,
         active_bytes=active_bytes_query,
         storage_used_mb=storage_used_mb,
         storage_used_gb=storage_used_gb,
@@ -218,4 +231,99 @@ def trigger_cleanup():
         "message": f"Cleanup complete: {stats['found']} expired detected, {stats['deleted_storage']} files purged from storage.",
         "stats": stats
     })
+
+
+@admin_bp.route("/abuse-reports")
+@admin_required
+def abuse_reports_list():
+    """List all abuse reports."""
+    reports = AbuseReport.query.order_by(AbuseReport.submitted_at.desc()).all()
+    return jsonify([r.to_dict() for r in reports])
+
+
+@admin_bp.route("/abuse-reports/<int:report_id>/resolve", methods=["POST"])
+@admin_required
+def resolve_abuse_report(report_id: int):
+    """Resolve an abuse report with optional instant purge & hash blocklisting."""
+    csrf = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")
+    if not validate_csrf(csrf):
+        return jsonify({"error": "Invalid CSRF token"}), 403
+
+    report = AbuseReport.query.get_or_404(report_id)
+    action = request.form.get("action") or (request.json.get("action") if request.is_json else "resolve")
+    admin_notes = request.form.get("notes") or (request.json.get("notes") if request.is_json else "")
+
+    report.status = "resolved"
+    report.resolved_at = utc_now()
+    report.admin_notes = admin_notes
+
+    # If action is 'purge_and_block', find matching file, shred it, and add hash to BlockedHash
+    if action == "purge_and_block":
+        import re
+        target = report.token_or_url.strip()
+        match = re.search(r"([0-9]{4}-[0-9]{4})", target)
+        token = match.group(1) if match else target
+
+        t_hash = hash_token(token)
+        file_rec = FileRecord.query.filter_by(share_token_hash=t_hash).first()
+        if file_rec:
+            existing_block = BlockedHash.query.filter_by(sha256_hash=file_rec.sha256_reference).first()
+            if not existing_block:
+                block_entry = BlockedHash(
+                    sha256_hash=file_rec.sha256_reference,
+                    reason=f"ABUSE_{report.category.upper()}",
+                    notes=f"Purged via Abuse Report #{report.id}: {admin_notes}"
+                )
+                db.session.add(block_entry)
+
+            delete_stored_file(file_rec.storage_id)
+            file_rec.status = "deleted"
+
+            log_security_event(
+                event_type="ADMIN_ABUSE_TAKEDOWN",
+                outcome="SUCCESS",
+                severity="HIGH",
+                details=f"Admin purged file {file_rec.storage_id} and quarantined hash {file_rec.sha256_reference[:16]}... for Abuse Report #{report.id}"
+            )
+
+    db.session.commit()
+    return jsonify({"success": True, "status": report.status})
+
+
+@admin_bp.route("/blocked-hashes", methods=["GET", "POST"])
+@admin_required
+def manage_blocked_hashes():
+    """Inspect or manually quarantine a SHA-256 file hash."""
+    if request.method == "POST":
+        csrf = request.headers.get("X-CSRFToken") or request.form.get("csrf_token")
+        if not validate_csrf(csrf):
+            return jsonify({"error": "Invalid CSRF token"}), 403
+
+        data = request.get_json(silent=True) or request.form
+        sha256_val = (data.get("sha256") or "").strip().lower()
+        reason = (data.get("reason") or "ADMIN_MANUAL").strip()
+        notes = (data.get("notes") or "").strip()
+
+        if len(sha256_val) != 64:
+            return jsonify({"error": "Invalid SHA-256 hash length (must be 64 hex characters)"}), 400
+
+        existing = BlockedHash.query.filter_by(sha256_hash=sha256_val).first()
+        if existing:
+            return jsonify({"error": "Hash is already in quarantine blocklist"}), 409
+
+        new_block = BlockedHash(sha256_hash=sha256_val, reason=reason, notes=notes)
+        db.session.add(new_block)
+        db.session.commit()
+
+        log_security_event(
+            event_type="ADMIN_HASH_BLOCKED",
+            outcome="SUCCESS",
+            severity="HIGH",
+            details=f"SHA-256 hash {sha256_val[:16]}... quarantined (Reason: {reason})"
+        )
+        return jsonify({"success": True, "entry": new_block.to_dict()}), 201
+
+    blocks = BlockedHash.query.order_by(BlockedHash.blocked_at.desc()).all()
+    return jsonify([b.to_dict() for b in blocks])
+
 

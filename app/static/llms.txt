@@ -8,6 +8,7 @@ FileGuard allows users to upload single files, multiple files, or entire folder 
 - **Website**: https://files.deeptanil.in
 - **Upload Endpoint**: https://files.deeptanil.in/upload
 - **User Activity & History**: https://files.deeptanil.in/history
+- **Abuse & Takedown Reporting**: https://files.deeptanil.in/report
 - **GitHub Repository**: https://github.com/Deeptanil/FileGuard.git
 
 ## Key Capabilities

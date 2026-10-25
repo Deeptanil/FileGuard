@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Report Abuse &amp; Takedown — FileGuard{% endblock %}
+{% block meta_description %}Submit an abuse, CSAM, malware, or DMCA takedown notice for immediate investigation and cloud storage purging on FileGuard.{% endblock %}
+
+{% block content %}
+<div class="container section-block" style="max-width: 760px; padding: 2.5rem 1.25rem;">
+  <div style="margin-bottom: 2rem;">
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--comic-pink); color: #FFF; font-family: var(--font-pixel); font-size: 0.72rem; padding: 0.25rem 0.65rem; border: 2px solid #000; box-shadow: 2px 2px 0px #000; text-transform: uppercase; margin-bottom: 0.75rem;">
+      <span>SAFETY &amp; COMPLIANCE INTAKE</span>
+    </div>
+    <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.4rem); color: #FFFFFF; margin: 0 0 0.5rem; letter-spacing: 0.02em;">
+      REPORT CONTENT ABUSE
+    </h1>
+    <p style="color: #94A3B8; font-size: 0.95rem; margin: 0;">
+      FileGuard enforces zero tolerance for CSAM, malware, and illegal activity. File records are audited and purged immediately upon verification.
+    </p>
+  </div>
+
+  <div class="card" style="background: #0F172A; border: var(--border-heavy); box-shadow: var(--shadow-3d); padding: clamp(1.5rem, 3.5vw, 2.5rem); color: #CBD5E1;">
+
+    {% if success %}
+    <div style="background: rgba(34, 197, 94, 0.15); border: 2px solid var(--comic-lime); padding: 1.25rem; border-radius: 4px; margin-bottom: 1.5rem; text-align: center;">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛡️</div>
+      <h3 style="font-family: var(--font-display); font-size: 1.3rem; color: var(--comic-lime); margin: 0 0 0.5rem;">
+        REPORT RECEIVED (CASE #{{ report_id }})
+      </h3>
+      <p style="font-size: 0.92rem; color: #E2E8F0; margin: 0 0 1rem; line-height: 1.5;">
+        Thank you for submitting this report. Our security operations system has queued this target for immediate automated audit, administrative review, and cloud storage blocklisting.
+      </p>
+      <a href="/" class="btn btn-accent btn-sm" style="background: var(--comic-cyan); color: #000; border: 2px solid #000; box-shadow: 2px 2px 0px #000; font-weight: 800; text-decoration: none; padding: 0.5rem 1.25rem; display: inline-block;">
+        RETURN TO HOME
+      </a>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div style="background: rgba(239, 68, 68, 0.15); border: 2px solid var(--comic-pink); padding: 0.85rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; color: #FCA5A5; font-size: 0.9rem;">
+      <strong>Submission Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if not success %}
+    <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--comic-yellow); padding: 0.85rem 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; color: #E2E8F0; line-height: 1.5;">
+      <strong style="color: var(--comic-yellow);">Note on Ephemeral Lifecycles:</strong> All files on FileGuard automatically self-destruct within 12 hours. Reports involving CSAM, malware, or copyright infringement trigger immediate administrative blocklisting and hash quarantining.
+    </div>
+
+    <form method="POST" action="/report" style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div>
+        <label for="token_or_url" style="display: block; font-family: var(--font-pixel); font-size: 0.72rem; color: var(--comic-cyan); margin-bottom: 0.4rem; text-transform: uppercase;">
+          Sharing Token or File URL *
+        </label>
+        <input 
+          type="text" 
+          id="token_or_url" 
+          name="token_or_url" 
+          required 
+          value="{{ prefill_token if prefill_token else '' }}"
+          placeholder="e.g. 4829-1047 or https://files.deeptanil.in/4829-1047" 
+          class="form-control"
+          style="width: 100%; background: #070D18; color: #FFFFFF; border: 2px solid #334155; padding: 0.75rem; font-size: 0.92rem; border-radius: 4px; font-family: var(--font-mono);"
+        >
+      </div>
+
+      <div>
+        <label for="category" style="display: block; font-family: var(--font-pixel); font-size: 0.72rem; color: var(--comic-cyan); margin-bottom: 0.4rem; text-transform: uppercase;">
+          Violation Category *
+        </label>
+        <select 
+          id="category" 
+          name="category" 
+          required 
+          class="form-control"
+          style="width: 100%; background: #070D18; color: #FFFFFF; border: 2px solid #334155; padding: 0.75rem; font-size: 0.92rem; border-radius: 4px;"
+        >
+          <option value="csam" {% if prefill_category == 'csam' %}selected{% endif %}>Child Sexual Abuse Material (CSAM / CSAE) — CRITICAL PRIORITY</option>
+          <option value="malware" {% if prefill_category == 'malware' %}selected{% endif %}>Malware / Ransomware / Spyware / Weaponized Payload</option>
+          <option value="copyright" {% if prefill_category == 'copyright' %}selected{% endif %}>Copyright Infringement (DMCA Takedown)</option>
+          <option value="personal_data" {% if prefill_category == 'personal_data' %}selected{% endif %}>Doxxing / Unauthorized Personal Data Leak</option>
+          <option value="harassment" {% if prefill_category == 'harassment' %}selected{% endif %}>Harassment / Non-Consensual Imagery</option>
+          <option value="other" {% if prefill_category == 'other' or not prefill_category %}selected{% endif %}>Other Security / Terms of Service Violation</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="reporter_email" style="display: block; font-family: var(--font-pixel); font-size: 0.72rem; color: var(--comic-cyan); margin-bottom: 0.4rem; text-transform: uppercase;">
+          Your Contact Email (Optional / Recommended for DMCA claimants)
+        </label>
+        <input 
+          type="email" 
+          id="reporter_email" 
+          name="reporter_email" 
+          placeholder="rights-holder@example.com" 
+          class="form-control"
+          style="width: 100%; background: #070D18; color: #FFFFFF; border: 2px solid #334155; padding: 0.75rem; font-size: 0.92rem; border-radius: 4px;"
+        >
+      </div>
+
+      <div>
+        <label for="description" style="display: block; font-family: var(--font-pixel); font-size: 0.72rem; color: var(--comic-cyan); margin-bottom: 0.4rem; text-transform: uppercase;">
+          Description / Evidence of Infringement *
+        </label>
+        <textarea 
+          id="description" 
+          name="description" 
+          required 
+          rows="4" 
+          placeholder="Please describe why this content violates FileGuard policies, law, or third-party copyrights..." 
+          class="form-control"
+          style="width: 100%; background: #070D18; color: #FFFFFF; border: 2px solid #334155; padding: 0.75rem; font-size: 0.92rem; border-radius: 4px; line-height: 1.5; resize: vertical;"
+        ></textarea>
+      </div>
+
+      <div style="font-size: 0.8rem; color: #94A3B8; line-height: 1.4;">
+        By submitting this form, you state under penalty of perjury that the information provided is accurate and that you are authorized to submit this report.
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn btn-accent" 
+        style="width: 100%; background: var(--comic-pink); color: #FFFFFF; font-weight: 800; border: 3px solid #000; box-shadow: 4px 4px 0px #000; padding: 0.85rem; font-size: 1rem; text-transform: uppercase; cursor: pointer; margin-top: 0.5rem;"
+      >
+        SUBMIT TAKEDOWN REPORT
+      </button>
+    </form>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+

@@ -175,3 +175,48 @@ class Administrator(db.Model):
     last_login_at = db.Column(db.DateTime, nullable=True)
     active_status = db.Column(db.Boolean, default=True, nullable=False)
 
+
+class BlockedHash(db.Model):
+    """Quarantine blocklist for malicious, abusive, or CSAM/copyrighted SHA-256 file hashes."""
+    __tablename__ = "blocked_hashes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    sha256_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    reason = db.Column(db.String(128), nullable=False)  # CSAM, MALWARE, COPYRIGHT, ABUSE, USER_REPORT
+    blocked_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "sha256_hash": self.sha256_hash,
+            "reason": self.reason,
+            "blocked_at": self.blocked_at.isoformat() + "Z",
+            "notes": self.notes
+        }
+
+
+class AbuseReport(db.Model):
+    """Public content abuse or DMCA takedown submission."""
+    __tablename__ = "abuse_reports"
+
+    id = db.Column(db.Integer, primary_key=True)
+    token_or_url = db.Column(db.String(255), nullable=False)
+    reporter_email = db.Column(db.String(255), nullable=True)
+    category = db.Column(db.String(64), nullable=False)  # csam, malware, copyright, personal_data, harassment, other
+    description = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(32), default="pending", nullable=False)  # pending, resolved, rejected
+    submitted_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    resolved_at = db.Column(db.DateTime, nullable=True)
+    admin_notes = db.Column(db.Text, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "token_or_url": self.token_or_url,
+            "category": self.category,
+            "status": self.status,
+            "submitted_at": self.submitted_at.isoformat() + "Z"
+        }
+
+
