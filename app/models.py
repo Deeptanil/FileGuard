@@ -27,6 +27,10 @@ class FileRecord(db.Model):
     status = db.Column(db.String(32), default="active", nullable=False, index=True)  # active, expired, deleted, tampered
     uploader_ip = db.Column(db.String(64), nullable=True, index=True)
     is_bundle = db.Column(db.Boolean, default=False, nullable=False)
+    malware_status = db.Column(db.String(32), default="pending", nullable=False, index=True)  # pending, scanning, clean, malicious, unscanned, error
+    malware_positives = db.Column(db.Integer, default=0, nullable=False)
+    malware_scan_details = db.Column(db.String(255), nullable=True)
+    scanned_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
@@ -101,7 +105,11 @@ class FileRecord(db.Model):
             "expires_at": self.expires_at.isoformat() + "Z",
             "remaining_seconds": self.remaining_seconds,
             "is_expired": self.is_expired,
-            "status": self.status
+            "status": self.status,
+            "malware_status": self.malware_status,
+            "malware_positives": self.malware_positives,
+            "malware_scan_details": self.malware_scan_details,
+            "scanned_at": self.scanned_at.isoformat() + "Z" if self.scanned_at else None
         }
         if include_sensitive:
             data.update({

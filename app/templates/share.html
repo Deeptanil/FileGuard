@@ -114,6 +114,48 @@
       <!-- Full-Width Download Button & Inline PIN Unlock -->
       <div style="margin-top: 1.35rem; padding-top: 1.2rem; border-top: 2px dashed #334155;">
 
+        {% if is_malicious or file.malware_status == 'malicious' %}
+        <!-- Red Critical Malware Threat Alert -->
+        <div style="background: rgba(239, 68, 68, 0.18); border: 3px solid var(--comic-pink); border-left: 8px solid var(--comic-pink); padding: 1.25rem 1rem; border-radius: 6px; text-align: center; margin-bottom: 1rem;">
+          <div style="font-size: 2.2rem; margin-bottom: 0.35rem;">🛑</div>
+          <strong style="color: var(--comic-pink); font-family: var(--font-pixel); font-size: 0.85rem; display: block; margin-bottom: 0.4rem; letter-spacing: 0.02em;">
+            MALWARE DETECTED — DOWNLOAD BLOCKED
+          </strong>
+          <p style="margin: 0 0 0.75rem; font-size: 0.86rem; color: #E2E8F0; line-height: 1.5;">
+            This file was flagged as a malicious threat by antivirus threat intelligence ({{ file.malware_scan_details or 'threat signatures detected' }}). The storage block has been permanently shredded and delivery is disabled.
+          </p>
+          <div style="display: inline-block; background: #000; color: #FFF; font-family: var(--font-pixel); font-size: 0.68rem; padding: 0.3rem 0.65rem; border: 2px solid var(--comic-pink);">
+            STATUS: PERMANENTLY QUARANTINED
+          </div>
+        </div>
+        {% else %}
+
+        {% if file.malware_status in ['pending', 'scanning'] %}
+        <div style="background: rgba(245, 158, 11, 0.12); border: 2px solid var(--comic-yellow); border-left: 6px solid var(--comic-yellow); padding: 0.65rem 0.85rem; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem;">
+          <span style="font-size: 1.2rem; line-height: 1;">⏳</span>
+          <div style="flex: 1;">
+            <strong style="color: var(--comic-yellow); display: block; font-size: 0.72rem; font-family: var(--font-pixel); margin-bottom: 0.15rem;">
+              ANTIVIRUS ANALYSIS IN PROGRESS
+            </strong>
+            <span style="color: #CBD5E1; line-height: 1.35; font-size: 0.78rem;">
+              Background threat intelligence is currently analyzing this file. Exercise caution before opening untrusted files.
+            </span>
+          </div>
+        </div>
+        {% elif file.malware_status == 'suspicious' %}
+        <div style="background: rgba(245, 158, 11, 0.15); border: 2px solid var(--comic-yellow); border-left: 6px solid var(--comic-yellow); padding: 0.75rem 0.9rem; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.65rem;">
+          <span style="font-size: 1.2rem; line-height: 1;">⚠️</span>
+          <div style="flex: 1;">
+            <strong style="color: var(--comic-yellow); font-family: var(--font-pixel); font-size: 0.72rem; display: block; margin-bottom: 0.2rem; letter-spacing: 0.02em;">
+              POTENTIAL HEURISTIC WARNING (LOW CONFIDENCE)
+            </strong>
+            <p style="margin: 0; font-size: 0.78rem; color: #CBD5E1; line-height: 1.4;">
+              Flagged by {{ file.malware_positives }} engine(s) on VirusTotal. Because this is below our verified threat threshold, the file was not deleted, but caution is strongly advised.
+            </p>
+          </div>
+        </div>
+        {% endif %}
+
         {% if file.file_extension|lower in ['exe', 'msi', 'bat', 'cmd', 'ps1', 'vbs', 'scr', 'iso', 'jar', 'apk', 'com', 'pif', 'hta', 'cpl'] %}
         <div style="background: rgba(239, 68, 68, 0.12); border: 2px solid var(--comic-pink); border-left: 6px solid var(--comic-pink); padding: 0.75rem 0.9rem; border-radius: 4px; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.65rem;">
           <span style="font-size: 1.2rem; line-height: 1;">⚠️</span>
@@ -132,6 +174,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.8" style="flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           <span style="color: #000000 !important;">DOWNLOAD NOW</span>
         </a>
+        {% endif %}
 
         <div style="display: flex; align-items: center; justify-content: center; gap: 0.65rem; margin-top: 0.75rem; font-size: 0.76rem; color: #94A3B8; flex-wrap: wrap; text-align: center;">
           <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--comic-lime); font-weight: 700;">
@@ -140,6 +183,18 @@
           </span>
           <span style="color: #475569;">•</span>
           <span>Pre-Flight SHA-256 Validated</span>
+          <span style="color: #475569;">•</span>
+          {% if file.malware_status == 'clean' %}
+          <span style="color: var(--comic-lime); font-weight: 700;">🛡️ Antivirus: Clean</span>
+          {% elif file.malware_status in ['pending', 'scanning'] %}
+          <span style="color: var(--comic-yellow); font-weight: 700;">⏳ Antivirus: Scanning</span>
+          {% elif file.malware_status == 'suspicious' %}
+          <span style="color: var(--comic-yellow); font-weight: 700;">⚠️ Antivirus: Low Confidence</span>
+          {% elif file.malware_status == 'malicious' %}
+          <span style="color: var(--comic-pink); font-weight: 700;">🛑 Antivirus: Flagged</span>
+          {% else %}
+          <span>Heuristic Validated</span>
+          {% endif %}
           <span style="color: #475569;">•</span>
           <span style="color: var(--comic-yellow);">12h Self-Destruct</span>
         </div>

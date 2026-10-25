@@ -57,6 +57,10 @@ class Config:
     RATELIMIT_DEFAULT = os.getenv("RATELIMIT_DEFAULT", "200 per minute")
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
 
+    # Antivirus / Malware Detection
+    VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
+    VIRUSTOTAL_MIN_POSITIVES = int(os.getenv("VIRUSTOTAL_MIN_POSITIVES", "4"))
+
     # Storage Backend: 'local' (default) or 's3' (Backblaze B2, Cloudflare R2, AWS)
     STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "local").lower()
     S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "")

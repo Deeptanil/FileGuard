@@ -56,6 +56,22 @@ def view_shared_file(token: str):
         )
         return render_template("errors/invalid_share.html"), 404
 
+    # Malware check: if flagged, render malware alert on share view
+    if record.malware_status == "malicious":
+        canonical_base = current_app.config.get("CANONICAL_URL") or request.host_url.rstrip("/")
+        return render_template(
+            "share.html",
+            file=record,
+            token=token,
+            is_malicious=True,
+            is_locked=False,
+            is_unlocked=False,
+            is_owner=False,
+            just_uploaded=False,
+            share_url=f"{canonical_base}/{token}",
+            qr_code_base64=""
+        ), 403
+
     if is_file_expired(record):
         log_security_event(
             event_type=EVENT_DOWNLOAD_BLOCKED_EXP,
@@ -202,6 +218,19 @@ def download_file(token: str):
             details="Download requested with invalid sharing token"
         )
         return render_template("errors/invalid_share.html"), 404
+
+    # Malware quarantine check: block delivery immediately
+    if record.malware_status == "malicious" or record.status == "deleted":
+        log_security_event(
+            event_type="DOWNLOAD_BLOCKED_MALWARE",
+            outcome="BLOCKED",
+            severity="CRITICAL",
+            file_record_id=record.id,
+            details=f"Download blocked: File flagged as malware ({record.malware_scan_details})"
+        )
+        if request.is_json:
+            return jsonify({"error": "Download blocked: File flagged as malicious and permanently purged."}), 410
+        return render_template("expired.html", file=record), 410
 
     # Password authorization check if file is protected
     if record.has_password:

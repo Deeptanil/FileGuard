@@ -65,6 +65,30 @@ def create_app(config_class=None):
                             conn.commit()
                         except Exception:
                             conn.rollback()
+                    if "malware_status" not in existing_cols:
+                        try:
+                            conn.execute(text("ALTER TABLE file_records ADD COLUMN malware_status VARCHAR(32) DEFAULT 'pending'"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
+                    if "malware_positives" not in existing_cols:
+                        try:
+                            conn.execute(text("ALTER TABLE file_records ADD COLUMN malware_positives INTEGER DEFAULT 0"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
+                    if "malware_scan_details" not in existing_cols:
+                        try:
+                            conn.execute(text("ALTER TABLE file_records ADD COLUMN malware_scan_details VARCHAR(255)"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
+                    if "scanned_at" not in existing_cols:
+                        try:
+                            conn.execute(text("ALTER TABLE file_records ADD COLUMN scanned_at TIMESTAMP"))
+                            conn.commit()
+                        except Exception:
+                            conn.rollback()
         except Exception:
             pass
 

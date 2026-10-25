@@ -19,6 +19,7 @@ from app.security import (
     get_client_ip
 )
 from app.audit import log_security_event, EVENT_UPLOAD_SUCCESS, EVENT_UPLOAD_REJECTED
+from app.scanner import dispatch_background_malware_scan
 
 uploads_bp = Blueprint("uploads", __name__)
 
@@ -283,6 +284,12 @@ def upload_file():
         )
         db.session.add(record)
         db.session.commit()
+
+        # 6.5. Dispatch Asynchronous Background Malware Scan
+        try:
+            dispatch_background_malware_scan(current_app._get_current_object(), record.id)
+        except Exception as scan_err:
+            current_app.logger.warning(f"Background malware scan dispatch failed: {scan_err}")
     except Exception as e:
         current_app.logger.error(f"Failed to record file metadata: {e}")
         db.session.rollback()
