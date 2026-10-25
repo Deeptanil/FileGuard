@@ -10,6 +10,63 @@ from app.storage import delete_stored_file
 from app.audit import log_security_event
 
 
+def upload_file_to_virustotal(file_bytes: bytes, filename: str, api_key: str = None) -> dict:
+    """
+    Submit a file to VirusTotal v3 files API for full multi-engine antivirus analysis.
+    Creates the live report on VirusTotal so https://www.virustotal.com/gui/file/{sha256} exists.
+    """
+    if api_key is None:
+        api_key = os.getenv("VIRUSTOTAL_API_KEY", "").strip()
+
+    if not api_key:
+        return {"error": "VirusTotal API key not configured"}
+
+    # File size limit for direct upload is 32 MB
+    if len(file_bytes) > 32 * 1024 * 1024:
+        return {"error": "File exceeds 32 MB direct upload limit for VirusTotal"}
+
+    import uuid
+    boundary = uuid.uuid4().hex
+    safe_filename = filename.replace('"', '_').replace('\r', '').replace('\n', '')
+
+    header = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="{safe_filename}"\r\n'
+        f"Content-Type: application/octet-stream\r\n\r\n"
+    ).encode("utf-8")
+    footer = f"\r\n--{boundary}--\r\n".encode("utf-8")
+    body = header + file_bytes + footer
+
+    req = urllib.request.Request(
+        "https://www.virustotal.com/api/v3/files",
+        data=body,
+        headers={
+            "x-apikey": api_key,
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Accept": "application/json",
+            "User-Agent": "FileGuard-Antivirus-Scanner/1.0"
+        }
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            if response.status in (200, 201):
+                raw = response.read().decode("utf-8")
+                data = json.loads(raw)
+                analysis_id = data.get("data", {}).get("id")
+                return {
+                    "success": True,
+                    "analysis_id": analysis_id,
+                    "message": "File submitted to VirusTotal for live analysis."
+                }
+            return {"error": f"VirusTotal returned status {response.status}"}
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8", errors="replace")
+        return {"error": f"VirusTotal upload failed ({e.code}): {err_msg[:80]}"}
+    except Exception as e:
+        return {"error": f"Connection error during VirusTotal upload: {str(e)[:60]}"}
+
+
 def check_virustotal_hash(sha256_hash: str, api_key: str = None, min_positives: int = None) -> dict:
     """
     Query VirusTotal API v3 for known intelligence on the given SHA-256 hash.
@@ -84,7 +141,8 @@ def check_virustotal_hash(sha256_hash: str, api_key: str = None, min_positives: 
             return {
                 "status": "clean",
                 "positives": 0,
-                "details": "Novel file signature — no threats recorded across 70+ engines"
+                "details": "Novel file signature — not previously seen on VirusTotal",
+                "not_found_on_vt": True
             }
         elif e.code == 429:
             return {
@@ -138,6 +196,21 @@ def execute_scan_for_file_record(app, file_record_id: int):
         record.malware_status = result["status"]
         record.malware_positives = result["positives"]
         record.malware_scan_details = result["details"]
+
+        # If file hash was not in VirusTotal database, automatically submit the file
+        # so VirusTotal scans it with 70+ engines and creates the live report.
+        if result.get("not_found_on_vt") and not app.config.get("TESTING") and api_key:
+            if not getattr(record, "is_e2ee", False) and record.file_size <= 32 * 1024 * 1024:
+                try:
+                    from app.storage import get_decrypted_stream
+                    stream = get_decrypted_stream(record.storage_id)
+                    file_bytes = stream.read()
+                    up_res = upload_file_to_virustotal(file_bytes, record.original_filename, api_key=api_key)
+                    if up_res.get("success"):
+                        record.malware_scan_details = "Submitted to VirusTotal for live analysis across 70+ engines. Report is processing."
+                        record.malware_status = "scanning"
+                except Exception:
+                    pass
 
         if result["status"] == "malicious":
             # 1. Permanently shred file from Backblaze B2/local disk

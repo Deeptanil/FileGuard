@@ -4,7 +4,7 @@ import urllib.error
 from unittest.mock import patch, MagicMock
 import pytest
 from app.models import FileRecord, BlockedHash, utc_now
-from app.scanner import check_virustotal_hash, execute_scan_for_file_record, dispatch_background_malware_scan
+from app.scanner import check_virustotal_hash, execute_scan_for_file_record, dispatch_background_malware_scan, upload_file_to_virustotal
 from app.security import generate_share_token
 from datetime import datetime, timedelta, timezone
 
@@ -102,6 +102,26 @@ def test_check_virustotal_hash_404_novel_file(mock_urlopen):
     result = check_virustotal_hash("e" * 64, api_key="dummy-key")
     assert result["status"] == "clean"
     assert result["positives"] == 0
+    assert result.get("not_found_on_vt") is True
+
+
+@patch("urllib.request.urlopen")
+def test_upload_file_to_virustotal(mock_urlopen):
+    """Verify file upload to VirusTotal v3 returns analysis ID."""
+    mock_resp = MagicMock()
+    mock_resp.status = 200
+    mock_resp.read.return_value = json.dumps({
+        "data": {
+            "type": "analysis",
+            "id": "mock_vt_analysis_id_123"
+        }
+    }).encode("utf-8")
+    mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+    res = upload_file_to_virustotal(b"clean document bytes", "clean.txt", api_key="dummy-key")
+    assert res.get("success") is True
+    assert res.get("analysis_id") == "mock_vt_analysis_id_123"
+
 
 
 @patch("app.scanner.check_virustotal_hash")
