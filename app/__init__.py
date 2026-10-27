@@ -153,14 +153,14 @@ def create_app(config_class=None):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         
-        # Defense-in-depth CSP policy
+        # Defense-in-depth CSP policy (configured for fonts, icons, CDNs, and PostHog analytics)
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://us-assets.i.posthog.com https://us.i.posthog.com; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data:; "
-            "connect-src 'self'"
+            "img-src 'self' data: https://us-assets.i.posthog.com https://us.i.posthog.com; "
+            "connect-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com"
         )
         response.headers["Content-Security-Policy"] = csp
         return response
