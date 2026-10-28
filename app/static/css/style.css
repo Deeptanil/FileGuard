@@ -1509,3 +1509,10 @@ a.badge.badge-active:visited {
   }
 }
 
+#paste-textarea::placeholder,
+#paste-title-input::placeholder {
+  color: #64748B !important;
+  opacity: 1 !important;
+}
+
+
