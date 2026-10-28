@@ -97,6 +97,69 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Global Page Paste Handler:
+  // - Images or files in clipboard -> stages file upload in "Files" mode
+  // - Plain text in clipboard (when not typing in an input) -> switches to "Paste Text" mode
+  window.addEventListener("paste", (e) => {
+    if (!e.clipboardData) return;
+
+    // 1. Check for images or files in clipboard items
+    const items = e.clipboardData.items ? Array.from(e.clipboardData.items) : [];
+    const fileItems = items.filter(item => item.kind === "file");
+
+    if (fileItems.length > 0) {
+      e.preventDefault();
+      const files = [];
+      const timestamp = new Date().toISOString().replace(/[-:T.]/g, "").slice(0, 14);
+
+      for (let i = 0; i < fileItems.length; i++) {
+        const item = fileItems[i];
+        const f = item.getAsFile();
+        if (f) {
+          let name = f.name;
+          if (!name || name === "image.png" || name === "blob") {
+            const ext = f.type ? (f.type.split("/")[1] || "png").replace("jpeg", "jpg") : "png";
+            name = `pasted_image_${timestamp}${fileItems.length > 1 ? `_${i + 1}` : ""}.${ext}`;
+          }
+          files.push(new File([f], name, { type: f.type }));
+        }
+      }
+
+      if (files.length > 0) {
+        if (tabModeFiles) tabModeFiles.click();
+        handleFilesSelect(files);
+        if (dropzone) {
+          dropzone.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        return;
+      }
+    }
+
+    // 2. Check if user is typing into an existing text input or textarea
+    const activeEl = document.activeElement;
+    const isInputFocused = activeEl && (
+      activeEl.tagName === "INPUT" ||
+      activeEl.tagName === "TEXTAREA" ||
+      activeEl.isContentEditable
+    );
+
+    // If typing in an input/textarea, allow standard native paste
+    if (isInputFocused) return;
+
+    // 3. Otherwise, plain text pasted anywhere switches to "Paste Text" tab
+    const pastedText = e.clipboardData.getData("text/plain") || e.clipboardData.getData("text");
+    if (pastedText && pastedText.trim().length > 0) {
+      e.preventDefault();
+      if (tabModeText) tabModeText.click();
+      if (pasteTextarea) {
+        pasteTextarea.value = pastedText;
+        pasteTextarea.dispatchEvent(new Event("input"));
+        pasteTextarea.focus();
+        pasteTextarea.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  });
+
   function showError(msg) {
     if (errorContainer) {
       errorContainer.textContent = msg;
