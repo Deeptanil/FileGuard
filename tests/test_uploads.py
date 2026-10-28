@@ -103,16 +103,27 @@ def test_5_oversized_file_rejected(client, db_session, monkeypatch, app):
     assert res.status_code in (413, 400)
 
 
-def test_6_disallowed_file_type_rejected(client, db_session):
-    """Test 6: A disallowed file type (.exe, .sh) is rejected."""
+def test_6_any_file_type_permitted_under_100mb(client, db_session):
+    """Test 6: Any file types (.c, .ai, code, media) under 100 MB are allowed without restriction."""
     csrf = get_client_with_csrf(client)
-    data = {
-        "file": (io.BytesIO(b"binary executable payload"), "malware.exe"),
+    
+    # Test uploading a .c source code file
+    data_c = {
+        "file": (io.BytesIO(b"#include <stdio.h>\nint main(){ return 0; }"), "program.c"),
         "csrf_token": csrf
     }
-    res = client.post("/api/files", data=data, content_type="multipart/form-data")
-    assert res.status_code == 400
-    assert "Disallowed file type" in res.get_json()["error"]
+    res_c = client.post("/api/files", data=data_c, content_type="multipart/form-data")
+    assert res_c.status_code == 201
+    assert res_c.get_json()["filename"] == "program.c"
+
+    # Test uploading a .ai vector file
+    data_ai = {
+        "file": (io.BytesIO(b"%!PS-Adobe-3.0\n%%Creator: Adobe Illustrator"), "design.ai"),
+        "csrf_token": csrf
+    }
+    res_ai = client.post("/api/files", data=data_ai, content_type="multipart/form-data")
+    assert res_ai.status_code == 201
+    assert res_ai.get_json()["filename"] == "design.ai"
 
 
 def test_7_empty_upload_handled_safely(client, db_session):

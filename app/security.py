@@ -73,9 +73,10 @@ def normalize_token(token: str) -> str:
     """
     Normalize sharing token format.
     Accepts either '4829-1047' or '48291047' and normalizes to canonical '4829-1047'.
+    Supports alphanumeric characters and strips whitespace.
     """
     clean = token.strip().replace("-", "")
-    if len(clean) == 8 and clean.isdigit():
+    if len(clean) == 8 and clean.isalnum():
         return f"{clean[:4]}-{clean[4:]}"
     return token.strip()
 
@@ -160,27 +161,16 @@ def sanitize_filename(filename: str) -> tuple[str, str]:
 
 def inspect_file_type(stream, filename: str) -> tuple[bool, str, str]:
     """
-    Inspect file extension and header magic bytes.
+    Inspect file extension and detect MIME type.
+    Allows all file types (e.g. .c, .ai, code, media, binaries) under the 100 MB limit.
     Returns: (is_allowed, extension, detected_mime_type)
     """
-    allowed_exts = current_app.config["ALLOWED_EXTENSIONS"]
     clean_name, ext = sanitize_filename(filename)
+    allowed_exts = current_app.config.get("ALLOWED_EXTENSIONS")
 
-    if not ext or ext not in allowed_exts:
+    # If allowed_exts is explicitly restricted (and not wildcard/None), enforce; otherwise allow all
+    if allowed_exts and "*" not in allowed_exts and ext not in allowed_exts:
         return False, ext, "application/octet-stream"
-
-    # Read leading bytes for magic signature sniffing
-    stream.seek(0)
-    header = stream.read(32)
-    stream.seek(0)
-
-    # Check magic signature if available
-    expected_sigs = MAGIC_SIGNATURES.get(ext)
-    if expected_sigs:
-        matched = any(header.startswith(sig) for sig in expected_sigs)
-        if not matched:
-            # File content header does not match claimed extension signature
-            return False, ext, "application/octet-stream"
 
     detected_mime = KNOWN_MIME_TYPES.get(ext) or mimetypes.guess_type(clean_name)[0] or "application/octet-stream"
     return True, ext, detected_mime

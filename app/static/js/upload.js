@@ -24,12 +24,78 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const MAX_SIZE_MB = parseInt(dropzone.dataset.maxMb || "100", 10);
   const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-  const ALLOWED_EXTS = (dropzone.dataset.allowedExts || "pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip")
-    .split(",")
-    .map(e => e.trim().toLowerCase());
 
   let selectedFiles = [];
   let selectedIsFolder = false;
+  let currentMode = "files"; // "files" or "text"
+
+  const tabModeFiles = document.getElementById("tab-mode-files");
+  const tabModeText = document.getElementById("tab-mode-text");
+  const fileModeContainer = document.getElementById("file-upload-mode-container");
+  const textModeContainer = document.getElementById("text-paste-mode-container");
+  const pasteTextarea = document.getElementById("paste-textarea");
+  const pasteTitleInput = document.getElementById("paste-title-input");
+  const pasteStats = document.getElementById("paste-stats");
+  const btnClearPaste = document.getElementById("btn-clear-paste");
+  const btnPasteClipboard = document.getElementById("btn-paste-clipboard");
+
+  if (tabModeFiles && tabModeText) {
+    tabModeFiles.addEventListener("click", () => {
+      currentMode = "files";
+      tabModeFiles.style.background = "var(--comic-cyan)";
+      tabModeFiles.style.color = "#000";
+      tabModeText.style.background = "#1E293B";
+      tabModeText.style.color = "#FFF";
+      if (fileModeContainer) fileModeContainer.style.display = "block";
+      if (textModeContainer) textModeContainer.style.display = "none";
+      clearError();
+    });
+
+    tabModeText.addEventListener("click", () => {
+      currentMode = "text";
+      tabModeText.style.background = "var(--comic-cyan)";
+      tabModeText.style.color = "#000";
+      tabModeFiles.style.background = "#1E293B";
+      tabModeFiles.style.color = "#FFF";
+      if (fileModeContainer) fileModeContainer.style.display = "none";
+      if (textModeContainer) textModeContainer.style.display = "block";
+      clearError();
+      if (pasteTextarea) pasteTextarea.focus();
+    });
+  }
+
+  if (pasteTextarea && pasteStats) {
+    pasteTextarea.addEventListener("input", () => {
+      const val = pasteTextarea.value;
+      const chars = val.length;
+      const words = val.trim() ? val.trim().split(/\s+/).length : 0;
+      const bytes = new Blob([val]).size;
+      pasteStats.textContent = `${chars.toLocaleString()} chars • ${words.toLocaleString()} words • ${formatBytes(bytes)}`;
+    });
+  }
+
+  if (btnClearPaste && pasteTextarea) {
+    btnClearPaste.addEventListener("click", () => {
+      pasteTextarea.value = "";
+      if (pasteTitleInput) pasteTitleInput.value = "";
+      pasteTextarea.dispatchEvent(new Event("input"));
+      clearError();
+    });
+  }
+
+  if (btnPasteClipboard && pasteTextarea) {
+    btnPasteClipboard.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          pasteTextarea.value = text;
+          pasteTextarea.dispatchEvent(new Event("input"));
+        }
+      } catch (err) {
+        showError("Could not access clipboard automatically. Please paste manually into the box.");
+      }
+    });
+  }
 
   function showError(msg) {
     if (errorContainer) {
@@ -103,17 +169,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (const file of combinedFiles) {
       totalBytes += file.size;
-
-      const nameParts = file.name.split(".");
-      const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "";
-      if (ext && !ALLOWED_EXTS.includes(ext)) {
-        showError(`Disallowed file extension '.${ext}' in '${file.name}'. Allowed types: ${ALLOWED_EXTS.join(", ")}`);
-        return;
-      }
     }
 
     if (totalBytes > MAX_SIZE_BYTES) {
-      showError(`Total size (${formatBytes(totalBytes)}) exceeds the 100 MB limit.`);
+      showError(`Total size (${formatBytes(totalBytes)}) exceeds the ${MAX_SIZE_MB} MB limit.`);
       return;
     }
 
@@ -405,10 +464,29 @@ document.addEventListener("DOMContentLoaded", () => {
     uploadBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (selectedFiles.length > 0) {
-        startUpload(selectedFiles, selectedIsFolder);
+
+      if (currentMode === "text") {
+        const text = pasteTextarea ? pasteTextarea.value : "";
+        if (!text.trim()) {
+          showError("Please enter or paste text to share.");
+          if (pasteTextarea) pasteTextarea.focus();
+          return;
+        }
+        let filename = pasteTitleInput ? pasteTitleInput.value.trim() : "";
+        if (!filename) {
+          filename = "pasted_text.txt";
+        } else if (!filename.includes(".")) {
+          filename += ".txt";
+        }
+        const textBlob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const textFile = new File([textBlob], filename, { type: "text/plain" });
+        startUpload([textFile], false);
       } else {
-        fileInput.click();
+        if (selectedFiles.length > 0) {
+          startUpload(selectedFiles, selectedIsFolder);
+        } else {
+          fileInput.click();
+        }
       }
     });
   }

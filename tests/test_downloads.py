@@ -301,6 +301,66 @@ def test_banned_user_messaging_and_appeal_email(client, app):
     assert "Multiple malicious file uploads detected" in api_json["error"]
 
 
+def test_token_resolves_both_with_and_without_dash(client, db_session):
+    """Test accessing token with or without hyphen resolves correctly and canonicalizes with dash."""
+    with client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_token_dash_test"
+
+    data = {
+        "file": (io.BytesIO(b"Dual format token test content"), "sample.txt"),
+        "csrf_token": "csrf_token_dash_test"
+    }
+    res_up = client.post("/api/files", data=data, content_type="multipart/form-data")
+    assert res_up.status_code == 201
+    dashed_token = res_up.get_json()["token"]
+    assert "-" in dashed_token
+    undashed_token = dashed_token.replace("-", "")
+
+    # Accessing with dashed token directly loads 200
+    res_dashed = client.get(f"/{dashed_token}")
+    assert res_dashed.status_code == 200
+    assert dashed_token in res_dashed.get_data(as_text=True)
+
+    # Accessing with undashed token seamlessly works and displays dashed canonical token
+    res_undashed = client.get(f"/{undashed_token}")
+    assert res_undashed.status_code == 200
+    assert dashed_token in res_undashed.get_data(as_text=True)
+
+    # Direct API download works with both formats
+    res_down_dashed = client.get(f"/api/files/{dashed_token}/download")
+    assert res_down_dashed.status_code == 200
+    assert res_down_dashed.data == b"Dual format token test content"
+
+    res_down_undashed = client.get(f"/api/files/{undashed_token}/download")
+    assert res_down_undashed.status_code == 200
+    assert res_down_undashed.data == b"Dual format token test content"
+
+
+def test_text_snippet_renders_inline_on_share_page(client, db_session):
+    """Test that text files and pasted snippets render their text content directly on the share page."""
+    with client.session_transaction() as sess:
+        sess["_csrf_token"] = "csrf_text_snippet_test"
+
+    snippet_code = "int main() {\n    printf(\"Hello from FileGuard!\\n\");\n    return 0;\n}"
+    data = {
+        "file": (io.BytesIO(snippet_code.encode("utf-8")), "program.c"),
+        "csrf_token": "csrf_text_snippet_test"
+    }
+    res_up = client.post("/api/files", data=data, content_type="multipart/form-data")
+    assert res_up.status_code == 201
+    token = res_up.get_json()["token"]
+
+    res_page = client.get(f"/{token}")
+    assert res_page.status_code == 200
+    page_html = res_page.get_data(as_text=True)
+
+    # Verify snippet text and buttons are displayed
+    assert "PASTED TEXT" in page_html
+    assert "Hello from FileGuard!" in page_html
+    assert "Download .txt" in page_html
+    assert "Copy Text" in page_html
+
+
 
 
 

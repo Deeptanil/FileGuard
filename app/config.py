@@ -29,16 +29,15 @@ class Config:
     # Canonical sharing URL base
     CANONICAL_URL = os.getenv("CANONICAL_URL", "https://files.deeptanil.in").rstrip("/")
     
-    # File upload controls
+    # File upload controls (allows all file types under 100 MB)
     MAX_CONTENT_LENGTH_MB = int(os.getenv("MAX_CONTENT_LENGTH_MB", "100"))
     MAX_CONTENT_LENGTH = MAX_CONTENT_LENGTH_MB * 1024 * 1024  # bytes
     
-    ALLOWED_EXTENSIONS = set(
+    # None or empty indicates all file extensions permitted under 100 MB
+    raw_allowed = os.getenv("ALLOWED_EXTENSIONS", "*").strip()
+    ALLOWED_EXTENSIONS = None if raw_allowed in ("*", "all", "") else set(
         ext.strip().lower().lstrip(".")
-        for ext in os.getenv(
-            "ALLOWED_EXTENSIONS",
-            "pdf,png,jpg,jpeg,txt,csv,docx,xlsx,pptx,zip,mp4,mov,mp3,m4a,webm"
-        ).split(",")
+        for ext in raw_allowed.split(",")
         if ext.strip()
     )
     
@@ -83,6 +82,7 @@ class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
     STORAGE_BACKEND = "local"
     VIRUSTOTAL_API_KEY = ""
+    ALLOWED_EXTENSIONS = None
 
 
 class ProductionConfig(Config):

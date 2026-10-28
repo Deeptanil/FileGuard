@@ -121,7 +121,7 @@ def upload_file():
 
     max_mb = current_app.config.get("MAX_CONTENT_LENGTH_MB", 100)
     max_bytes = max_mb * 1024 * 1024
-    allowed_exts = current_app.config["ALLOWED_EXTENSIONS"]
+    allowed_exts = current_app.config.get("ALLOWED_EXTENSIONS")
 
     # 3. Handle Single File vs Multiple Files / Folder Bundle
     is_folder_request = request.form.get("is_folder") == "true"
@@ -189,10 +189,10 @@ def upload_file():
             with zipfile.ZipFile(bundle_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
                 for f in valid_files:
                     f_clean_name, f_ext = sanitize_filename(f.filename)
-                    # Verify individual file extension
-                    if f_ext not in allowed_exts and f_ext != "":
+                    # Verify individual file extension if restrictions are configured
+                    if allowed_exts and f_ext not in allowed_exts and f_ext != "":
                         return jsonify({
-                            "error": f"File '{f.filename}' has disallowed type '.{f_ext}'. Allowed types: {', '.join(sorted(allowed_exts))}"
+                            "error": f"File '{f.filename}' has disallowed type '.{f_ext}'."
                         }), 400
 
                     file_data = f.read()

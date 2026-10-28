@@ -17,7 +17,7 @@ from werkzeug.security import check_password_hash
 from app.extensions import db, limiter
 from app.models import FileRecord
 from app.storage import get_storage_path, delete_stored_file, get_decrypted_stream
-from app.security import hash_token, compute_sha256, validate_csrf
+from app.security import hash_token, compute_sha256, validate_csrf, normalize_token
 from app.expiration import is_file_expired
 from app.integrity import verify_file_integrity
 from app.audit import (
@@ -44,6 +44,7 @@ def view_shared_file(token: str):
     if token.lower() in RESERVED_ROOT_PATHS:
         return render_template("errors/404.html"), 404
 
+    norm_token = normalize_token(token)
     token_h = hash_token(token)
     record = FileRecord.query.filter_by(share_token_hash=token_h).first()
 
@@ -57,19 +58,21 @@ def view_shared_file(token: str):
         return render_template("errors/invalid_share.html"), 404
 
     # Malware check: if flagged, render malware alert on share view
+    canonical_base = current_app.config.get("CANONICAL_URL") or request.host_url.rstrip("/")
     if record.malware_status == "malicious":
-        canonical_base = current_app.config.get("CANONICAL_URL") or request.host_url.rstrip("/")
         return render_template(
             "share.html",
             file=record,
-            token=token,
+            token=norm_token,
             is_malicious=True,
             is_locked=False,
             is_unlocked=False,
             is_owner=False,
             just_uploaded=False,
-            share_url=f"{canonical_base}/{token}",
-            qr_code_base64=""
+            share_url=f"{canonical_base}/{norm_token}",
+            qr_code_base64="",
+            is_text_snippet=False,
+            text_content=""
         ), 403
 
     if is_file_expired(record):
@@ -83,30 +86,60 @@ def view_shared_file(token: str):
         return render_template("expired.html", file=record), 410
 
     # Check password lock status
-    is_owner = bool(session.get(f"uploader_{token}"))
+    is_owner = bool(
+        session.get(f"uploader_{norm_token}") or 
+        session.get(f"uploader_{token}")
+    )
     is_unlocked = bool(
         session.get(f"unlocked_{record.id}") or 
+        session.get(f"unlocked_{norm_token}") or 
         session.get(f"unlocked_{token}") or 
         is_owner
     )
     is_locked = bool(record.has_password and not is_unlocked)
 
+    # Check if this is a text snippet or plain text file to display inline
+    is_text_snippet = False
+    text_content = ""
+    if not is_locked and record.status == "active" and record.malware_status != "malicious":
+        ext = (record.file_extension or "").lower()
+        text_extensions = {
+            "txt", "text", "log", "md", "csv", "c", "h", "cpp", "py", "js", "html", 
+            "css", "json", "xml", "yaml", "yml", "sh", "sql", "ini", "conf", "env", 
+            "rs", "go", "java", "ts", "jsx", "tsx", "bat", "ps1", "rb", "php"
+        }
+        if ext in text_extensions or (record.detected_mime_type and record.detected_mime_type.startswith("text/")):
+            if record.file_size <= 2 * 1024 * 1024:
+                try:
+                    from app.storage import get_decrypted_stream
+                    stream = get_decrypted_stream(record.storage_id)
+                    raw_bytes = stream.read()
+                    try:
+                        text_content = raw_bytes.decode("utf-8")
+                        is_text_snippet = True
+                    except UnicodeDecodeError:
+                        text_content = raw_bytes.decode("latin-1")
+                        is_text_snippet = True
+                except Exception:
+                    pass
+
     from app.routes.uploads import generate_qr_base64
-    canonical_base = current_app.config.get("CANONICAL_URL")
     if not canonical_base or "localhost" in canonical_base:
         canonical_base = request.host_url.rstrip("/")
-    share_url = f"{canonical_base}/{token}"
+    share_url = f"{canonical_base}/{norm_token}"
     qr_data = generate_qr_base64(share_url)
 
     return render_template(
         "share.html",
         file=record,
-        token=token,
+        token=norm_token,
         share_url=share_url,
         qr_code_base64=qr_data,
         is_locked=is_locked,
         is_unlocked=is_unlocked,
         is_owner=is_owner,
+        is_text_snippet=is_text_snippet,
+        text_content=text_content,
         just_uploaded=(request.args.get("just_uploaded") == "true")
     )
 
@@ -116,12 +149,13 @@ def view_shared_file(token: str):
 @limiter.limit("15 per minute")
 def unlock_shared_file(token: str):
     """Verify submitted PIN or password and unlock recipient session."""
+    norm_token = normalize_token(token)
     token_h = hash_token(token)
     record = FileRecord.query.filter_by(share_token_hash=token_h).first()
     if not record or is_file_expired(record):
         if request.is_json:
             return jsonify({"error": "File not found or expired."}), 404
-        return redirect(url_for("downloads.view_shared_file", token=token))
+        return redirect(url_for("downloads.view_shared_file", token=norm_token))
 
     json_body = request.get_json(silent=True) or {}
     csrf_token = request.headers.get("X-CSRFToken") or request.form.get("csrf_token") or json_body.get("csrf_token")
@@ -129,25 +163,26 @@ def unlock_shared_file(token: str):
         if request.is_json:
             return jsonify({"error": "Session expired or invalid security token. Please refresh."}), 403
         flash("Session expired or invalid form token. Please try again.", "danger")
-        return redirect(url_for("downloads.view_shared_file", token=token))
+        return redirect(url_for("downloads.view_shared_file", token=norm_token))
 
     password_attempt = (request.form.get("password") or json_body.get("password") or "").strip()
     if record.password_hash and check_password_hash(record.password_hash, password_attempt):
         session[f"unlocked_{record.id}"] = True
         session[f"unlocked_{token}"] = True
+        session[f"unlocked_{norm_token}"] = True
         session.permanent = True
         session.modified = True
         if request.is_json:
             return jsonify({
                 "success": True,
-                "download_url": url_for("downloads.download_file", token=token)
+                "download_url": url_for("downloads.download_file", token=norm_token)
             }), 200
-        return redirect(url_for("downloads.view_shared_file", token=token))
+        return redirect(url_for("downloads.view_shared_file", token=norm_token))
     else:
         if request.is_json:
             return jsonify({"error": "Incorrect PIN or password."}), 403
         flash("Incorrect PIN or password. Access to this transfer is restricted.", "danger")
-        return redirect(url_for("downloads.view_shared_file", token=token))
+        return redirect(url_for("downloads.view_shared_file", token=norm_token))
 
 
 @downloads_bp.route("/api/files/<token>/status")
@@ -241,10 +276,12 @@ def download_file(token: str):
 
     # Password authorization check if file is protected
     if record.has_password:
-        is_owner = bool(session.get(f"uploader_{token}"))
+        norm_token = normalize_token(token)
+        is_owner = bool(session.get(f"uploader_{token}") or session.get(f"uploader_{norm_token}"))
         is_unlocked = bool(
             session.get(f"unlocked_{record.id}") or 
             session.get(f"unlocked_{token}") or 
+            session.get(f"unlocked_{norm_token}") or 
             is_owner
         )
         provided_pwd = request.args.get("password") or request.headers.get("X-File-Password")
@@ -252,6 +289,7 @@ def download_file(token: str):
             is_unlocked = True
             session[f"unlocked_{record.id}"] = True
             session[f"unlocked_{token}"] = True
+            session[f"unlocked_{norm_token}"] = True
             session.permanent = True
             session.modified = True
 
