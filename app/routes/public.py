@@ -27,6 +27,15 @@ def upload_page():
     return redirect(url_for("public.index", _anchor="upload-section"))
 
 
+@public_bp.route("/login")
+def login_route():
+    """Admin login redirect shortcut for direct browser access."""
+    from flask import session
+    if session.get("admin_logged_in"):
+        return redirect(url_for("admin.dashboard"))
+    return redirect(url_for("admin.login"))
+
+
 @public_bp.route("/history")
 def history_page():
     """User upload and viewed files activity/history interface."""

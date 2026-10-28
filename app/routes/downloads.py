@@ -32,7 +32,7 @@ from app.audit import (
 downloads_bp = Blueprint("downloads", __name__)
 
 RESERVED_ROOT_PATHS = {
-    "upload", "history", "admin", "forensics", "static", "api",
+    "login", "upload", "history", "admin", "forensics", "static", "api",
     "robots.txt", "sitemap.xml", "llms.txt", "health", "favicon.ico", "favicon.png", "favicon.svg"
 }
 

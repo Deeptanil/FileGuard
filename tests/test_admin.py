@@ -52,6 +52,28 @@ def test_28_admin_login_success(client):
     assert b"Security Operations Center" in dash_response.data
 
 
+def test_public_header_hides_admin_links_and_login_redirects(app, authenticated_admin_client):
+    """Verify public header never reveals admin controls, and /login redirects appropriately."""
+    unauth_client = app.test_client()
+    # 1. Public header check for unauthenticated normal visitor
+    res_home = unauth_client.get("/")
+    assert res_home.status_code == 200
+    home_html = res_home.get_data(as_text=True)
+    assert "Admin Portal" not in home_html
+    assert "Admin Dashboard" not in home_html
+    assert 'class="nav-link">Forensics<' not in home_html
+
+    # 2. Unauthenticated visitor accessing /login is redirected to /admin/login
+    res_login_unauth = unauth_client.get("/login")
+    assert res_login_unauth.status_code == 302
+    assert "/admin/login" in res_login_unauth.headers.get("Location", "")
+
+    # 3. Authenticated administrator accessing /login is redirected to /admin/dashboard
+    res_login_auth = authenticated_admin_client.get("/login")
+    assert res_login_auth.status_code == 302
+    assert "/admin/dashboard" in res_login_auth.headers.get("Location", "")
+
+
 def test_29_csrf_protection_on_state_changing_requests(authenticated_admin_client):
     """Test 29: State-changing administrative requests enforce CSRF protection."""
     # Attempt cleanup with invalid CSRF token
