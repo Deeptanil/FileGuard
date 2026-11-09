@@ -1,0 +1,9 @@
+FileGuard is a privacy-first, ephemeral encrypted file sharing application.
+
+Key Features:
+- Zero Registration: No user accounts, passwords, or identity tracking.
+- Client & Transit Security: Encrypted with modern TLS 1.3 in transit and AES-256-GCM at rest.
+- Cryptographic Integrity: Pre-flight SHA-256 checksum verification before every download.
+- Automated Ephemeral Purge: All uploaded files and metadata permanently self-destruct after 12 hours.
+- Multi-Content Support: Share single files, folder bundles, or encrypted text snippets.
+- Optional PIN Protection: Secure sensitive transfers with an optional PIN code.
