@@ -51,11 +51,11 @@ htmlcov/
 
 # Node / npm
 node_modules/
-package-lock.json
 
 # Operating System Files
 .DS_Store
 Thumbs.db
+fdroid-patch/
 
 
 android/.gradle/
