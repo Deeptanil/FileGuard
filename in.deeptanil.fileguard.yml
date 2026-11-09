@@ -21,7 +21,7 @@ Repo: https://github.com/Deeptanil/FileGuard.git
 Builds:
   - versionName: 1.0.0
     versionCode: 1
-    commit: ddd5987ee4f23952db26c2d473ef25c42fc5bd1f
+    commit: 2dba8f12b6f38d1981c7f3603e68cb04763b390f
     subdir: android
     gradle:
       - yes
