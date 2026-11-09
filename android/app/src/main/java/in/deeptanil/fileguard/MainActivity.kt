@@ -1,4 +1,6 @@
-package in.deeptanil.fileguard
+package `in`.deeptanil.fileguard
+
+import `in`.deeptanil.fileguard.R
 
 import android.annotation.SuppressLint
 import android.app.DownloadManager
