@@ -1,0 +1,27 @@
+Categories:
+  - Internet
+  - Security
+License: MIT
+AuthorName: Deeptanil
+AuthorEmail: deeptanilsinha27@gmail.com
+SourceCode: https://github.com/Deeptanil/FileGuard
+IssueTracker: https://github.com/Deeptanil/FileGuard/issues
+WebSite: https://files.deeptanil.in
+
+AutoName: FileGuard
+Summary: Ephemeral encrypted file sharing with 12-hour self-destruct
+Description: |-
+  FileGuard is a privacy-first ephemeral file sharing platform.
+  Files are encrypted with AES-256-GCM, validated with pre-flight SHA-256 integrity
+  checks, and permanently purged after 12 hours.
+
+RepoType: git
+Repo: https://github.com/Deeptanil/FileGuard.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 1
+    commit: v1.0.0
+    subdir: android
+    gradle:
+      - yes
