@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (tabModeFiles && tabModeText) {
     tabModeFiles.addEventListener("click", () => {
+      const isAlreadySelected = (currentMode === "files");
       currentMode = "files";
       tabModeFiles.style.background = "var(--comic-cyan)";
       tabModeFiles.style.color = "#000";
@@ -49,9 +50,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (fileModeContainer) fileModeContainer.style.display = "block";
       if (textModeContainer) textModeContainer.style.display = "none";
       clearError();
+
+      if (isAlreadySelected) {
+        if (dropzone) {
+          dropzone.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (fileInput) {
+          fileInput.click();
+        }
+      }
     });
 
     tabModeText.addEventListener("click", () => {
+      const isAlreadySelected = (currentMode === "text");
       currentMode = "text";
       tabModeText.style.background = "var(--comic-cyan)";
       tabModeText.style.color = "#000";
@@ -60,7 +71,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (fileModeContainer) fileModeContainer.style.display = "none";
       if (textModeContainer) textModeContainer.style.display = "block";
       clearError();
-      if (pasteTextarea) pasteTextarea.focus();
+
+      if (isAlreadySelected) {
+        if (textModeContainer) {
+          textModeContainer.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (pasteTextarea) {
+          pasteTextarea.focus();
+        }
+      } else {
+        if (pasteTextarea) pasteTextarea.focus();
+      }
     });
   }
 
